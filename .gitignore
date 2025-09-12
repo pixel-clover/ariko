@@ -1,0 +1,49 @@
+# IDE specific files and directories
+.idea/
+*.iml
+.vscode/
+
+# Temporary files created by editors and the system and folders to ignore
+*.swp
+*~
+*.bak
+*.tmp
+temp/
+tmp/
+out/
+
+# Database files (SQLite, DuckDB, etc.)
+*.duckdb
+*.db
+*.wal
+*.sqlite
+
+# Unity generated files
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Uu]serSettings/
+
+# Visual Studio generated files
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Miscellaneous files and directories to ignore
+# Add any additional file patterns a directory names that should be ignored down here
+
+#Packages/packages-lock.json

@@ -1,0 +1,37 @@
+# Set default behaviour to automatically merge binary files
+* text=auto
+
+# Unity YAML files
+*.unity merge=unityyaml
+*.asset merge=unityyaml
+*.prefab merge=unityyaml
+*.mat merge=unityyaml
+*.anim merge=unityyaml
+*.physicsMaterial merge=unityyaml
+*.physicsMaterial2D merge=unityyaml
+
+# Image files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.psd binary
+*.tga binary
+*.tif binary
+*.tiff binary
+*.gif binary
+*.bmp binary
+*.exr binary
+
+# Audio files
+*.mp3 binary
+*.wav binary
+*.ogg binary
+
+# Model files
+*.fbx binary
+*.obj binary
+*.dae binary
+*.3ds binary
+*.dxf binary
+*.max binary
+*.blend binary

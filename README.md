@@ -1,48 +1,57 @@
-# Unity Project Template
-
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="Assets/UI/Images/unity_logo.svg">
-    <source media="(prefers-color-scheme: dark)" srcset="Assets/UI/Images/unity_logo.svg">
-    <img alt="Unity logo" src="Assets/UI/Images/unity_logo.svg" height="50%" width="50%">
+    <img alt="Ariko Logo" src="logo.svg" height="20%" width="20%">
   </picture>
-</div>
 <br>
 
-[![Unity](https://img.shields.io/badge/Unity-6-green)](https://unity.com)
-[![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/habedi/template-unity-project/blob/main/LICENSE)
+<h2>Ariko Assistant</h2>
 
-This repository contains a generic project template for Unity game engine.
-It is designed to speed up the process of setting up
-new Unity projects and to maintain a consistent structure across different projects.
-I'm sharing this template in the hope that it will be useful to others.
+[![Unity Version](https://img.shields.io/badge/Unity-6-green?style=flat&labelColor=282c34&logo=unity&label=unity%20version)](https://unity.com)
+[![License](https://img.shields.io/badge/License-MIT-007ec6?style=flat&labelColor=282c34&logo=open-source-initiative&label=license)](https://github.com/pixel-clover/ariko/blob/main/LICENSE)
+[![Tests](https://img.shields.io/github/actions/workflow/status/pixel-clover/ariko/tests.yml?branch=main&label=tests&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/actions/workflows/tests.yml)
+[![Latest Release](https://img.shields.io/github/v/release/pixel-clover/ariko?include_prereleases&label=release&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/releases/latest)
 
-See [Assets/README.md](Assets/README.md) for more details about the structure of the `Assets` directory.
+An AI assistant for Unity
 
-## Getting Started 🛠️
+</div>
 
-1. **Clone the repository (or download the ZIP file)**:
-    ```sh
-    git clone https://github.com/habedi/template-unity-project.git
-    ```
+---
 
-2. **Open the project in Unity**:
-    - Open Unity Hub.
-    - Click on `Add` and select the cloned repository folder.
+Ariko is an open-source Unity plugin that integrates AI chat features directly into your workflow.
+It acts as a development partner, helping you write code, understand complex concepts, and debug issues without leaving the Unity Editor.
 
-3. **Customize the template**:
-    - Modify the files and directories in the `Assets` folder to suit your project needs.
+You can think of it as a copilot for your Unity project.
+
+### Core Features (Roadmap)
+
+* **Interactive Chat:** A primary chat window where you can ask questions in natural language.
+* **Context Awareness:** The assistant will know which asset, GameObject, or script you have selected to provide relevant help.
+* **Code Generation:** Generate C# scripts, methods, or snippets based on your prompts.
+* **Project Analysis:** Answer questions about your existing codebase.
+* **Unity API Helper:** Explain how to use Unity components and functions with relevant examples.
 
 > [!IMPORTANT]
-> You might need to configure a few settings in Unity before starting development.
-> For example, you might want to change the default layout, enable or disable certain packages, configure the rendering
-> pipeline, etc.
-> By default, the project uses the Universal Render Pipeline (URP).
+> This project is in early development, so bugs and breaking changes are expected.
+> Please use the [issues page](https://github.com/pixel-clover/ariko/issues) to report bugs or request features.
 
-## Additional Resources 📚
+### Getting Started
 
-- [Unity Documentation](https://docs.unity3d.com/Manual/index.html)
-- [Unity Naming Conventions](https://gist.github.com/habedi/daa01be223c940cd3e59e197143275c1)
-- [CreateUnityProjectStructure.ps1](https://gist.github.com/habedi/c6bbe3cd3351c32c592a19314cf34e14)
-- [URP Setup](https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@7.1/manual/InstallURPIntoAProject.html)
+1.  Download the latest `Ariko.unitypackage` from the [Releases page](https://github.com/pixel-clover/ariko/releases/latest).
+2.  Import the package into your Unity project.
+3.  Open the assistant window from the menu: `Tools > Ariko Assistant`.
+4.  Configure your AI provider settings in the `Assets/Ariko/Editor/ArikoSettings.asset` file.
 
+---
+
+### Contributing
+
+Contributions are always welcome!
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
+
+### License
+
+Akiro is licensed under the MIT License (see [LICENSE](LICENSE)).
+
+### Acknowledgements
+
+- The project logo is from [SVG Repo](https://www.svgrepo.com/svg/125334/reload) with some modifications.

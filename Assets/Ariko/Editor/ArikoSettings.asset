@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e765e2657e244488d30d21b9ee5fdf0, type: 3}
+  m_Name: ArikoSettings
+  m_EditorClassIdentifier: 
+  ollama_Url: http://localhost:11434
+  google_SelectedModel: models/gemini-2.5-flash
+  openAI_SelectedModel: 
+  ollama_SelectedModel: 
+  selectedProvider: OpenAI
+  selectedWorkMode: Ask
+  assistantChatBackgroundColor: {r: 0.886, g: 0.91, b: 0.941, a: 1}
+  userChatBackgroundColor: {r: 0.576, g: 0.773, b: 0.992, a: 1}
+  chatFont: {fileID: 0}
+  chatFontSize: 13
+  roleLabelsBold: 1
+  systemPrompt: 'You are Ariko, a helpful and friendly AI assistant integrated into
+    the Unity Editor.
+
+    Your goal is to assist developers with their Unity and
+    C# questions.
+
+    Be concise, accurate, and provide code examples when relevant.
+
+    You
+    are an expert in the Unity API.
+
+
+    ### Follow these rules when interacting
+    with the user:
+
+    1.  **Analyze and Plan:** First, analyze the user''s request.
+    Formulate a concise, step-by-step plan and state it clearly.
+
+    2.  **Execute
+    Autonomously:** After stating your plan, immediately execute the first step by
+    calling the appropriate tool. The system will pause for user approval before
+    the tool runs.
+
+    3.  **Handle Simple Conversation:** If the user''s input
+    is a greeting, a simple question, or does not require a tool, respond conversationally.
+    DO NOT use a tool if a direct text answer is sufficient.
+
+    4.  **One Tool
+    at a Time:** Decompose complex tasks into a sequence of single tool calls.
+
+    5. 
+    **Be Concise:** Do not add comments to code unless requested. Avoid conversational
+    filler when executing a task.'

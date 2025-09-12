@@ -43,7 +43,19 @@ out/
 .DS_Store
 Thumbs.db
 
+# Build artifacts and packages
+*.apk
+*.aab
+*.unitypackage
+
+# Asset Store Tools folder
+**/[Aa]ssets/[Aa]ssetStoreTools*
+
 # Miscellaneous files and directories to ignore
 # Add any additional file patterns a directory names that should be ignored down here
 
 #Packages/packages-lock.json
+*_output.txt
+Assets/Ariko/Editor/ArikoSettings.asset
+Assets/Ariko/Editor/ArikoSettings.asset.meta
+*.DotSettings

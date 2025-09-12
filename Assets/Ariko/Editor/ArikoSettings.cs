@@ -1,0 +1,70 @@
+using System;
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "ArikoSettings", menuName = "Ariko/Assistant Settings")]
+public class ArikoSettings : ScriptableObject
+{
+    public string ollama_Url = "http://localhost:11434";
+
+    [Header("Saved Model Selections")] public string google_SelectedModel;
+
+    public string openAI_SelectedModel;
+    public string ollama_SelectedModel;
+
+    [Header("Saved UI Selections")] public string selectedProvider = "OpenAI";
+
+    public string selectedWorkMode = "Ask";
+
+    [Header("Customization")] [Tooltip("The background color for Ariko's chat bubbles.")]
+    public Color assistantChatBackgroundColor = new(0.886f, 0.91f, 0.941f, 1.0f);
+
+    [Tooltip("The background color for the user's chat bubbles.")]
+    public Color userChatBackgroundColor = new(0.576f, 0.773f, 0.992f, 1.0f);
+
+    [Tooltip("Font used for chat text (leave null to use default editor font).")]
+    public Font chatFont;
+
+    [Tooltip("Font size for chat text.")] public int chatFontSize = 12;
+
+    [Tooltip("Make the role labels (User or Ariko) bold.")]
+    public bool roleLabelsBold = true;
+
+    [Header("System Prompt")]
+    [TextArea(5, 15)]
+    [Tooltip("The initial instruction given to the AI at the start of each new conversation.")]
+    public string systemPrompt =
+        "You are Ariko, a helpful and friendly AI assistant integrated into the Unity Editor.\n" +
+        "Your goal is to assist developers with their Unity and C# questions.\n" +
+        "Be concise, accurate, and provide code examples when relevant.\n" +
+        "You are an expert in the Unity API." +
+        "\n\n" +
+        "### Follow these rules when interacting with the user:\n" +
+        "1.  **Analyze and Plan:** First, analyze the user's request. Formulate a concise, step-by-step plan and state it clearly.\n" +
+        "2.  **Execute Autonomously:** After stating your plan, immediately execute the first step by calling the appropriate tool. The system will pause for user approval before the tool runs.\n" +
+        "3.  **Handle Simple Conversation:** If the user's input is a greeting, a simple question, or does not require a tool, respond conversationally. DO NOT use a tool if a direct text answer is sufficient.\n" +
+        "4.  **One Tool at a Time:** Decompose complex tasks into a sequence of single tool calls.\n" +
+        "5.  **Be Concise:** Do not add comments to code unless requested. Avoid conversational filler when executing a task.";
+
+
+    [Header("API Configuration")] [NonSerialized]
+    public string google_ApiKey;
+
+    [NonSerialized] public string openAI_ApiKey;
+
+    public void OnEnable()
+    {
+        LoadApiKeysFromEnvironment();
+    }
+
+    public void LoadApiKeysFromEnvironment()
+    {
+        var googleKey = Environment.GetEnvironmentVariable("GOOGLE_API_KEY");
+        if (!string.IsNullOrEmpty(googleKey)) google_ApiKey = googleKey;
+
+        var openAiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+        if (!string.IsNullOrEmpty(openAiKey)) openAI_ApiKey = openAiKey;
+
+        var ollamaUrl = Environment.GetEnvironmentVariable("OLLAMA_URL");
+        if (!string.IsNullOrEmpty(ollamaUrl)) ollama_Url = ollamaUrl;
+    }
+}

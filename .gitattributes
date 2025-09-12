@@ -1,7 +1,7 @@
 # Set default behaviour to automatically merge binary files
 * text=auto
 
-# Unity YAML files
+# Unity YAML files (Use Unity's smart merge tool)
 *.unity merge=unityyaml
 *.asset merge=unityyaml
 *.prefab merge=unityyaml
@@ -10,28 +10,40 @@
 *.physicsMaterial merge=unityyaml
 *.physicsMaterial2D merge=unityyaml
 
-# Image files
-*.png binary
-*.jpg binary
-*.jpeg binary
-*.psd binary
-*.tga binary
-*.tif binary
-*.tiff binary
-*.gif binary
-*.bmp binary
-*.exr binary
+# Image files (Handled by Git LFS)
+*.png filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.jpeg filter=lfs diff=lfs merge=lfs -text
+*.psd filter=lfs diff=lfs merge=lfs -text
+*.tga filter=lfs diff=lfs merge=lfs -text
+*.gif filter=lfs diff=lfs merge=lfs -text
+*.bmp filter=lfs diff=lfs merge=lfs -text
+*.exr filter=lfs diff=lfs merge=lfs -text
+*.tiff filter=lfs diff=lfs merge=lfs -text
+*.hdr filter=lfs diff=lfs merge=lfs -text
 
-# Audio files
-*.mp3 binary
-*.wav binary
-*.ogg binary
+# Audio files (Handled by Git LFS)
+*.mp3 filter=lfs diff=lfs merge=lfs -text
+*.wav filter=lfs diff=lfs merge=lfs -text
+*.ogg filter=lfs diff=lfs merge=lfs -text
+*.aiff filter=lfs diff=lfs merge=lfs -text
+*.flac filter=lfs diff=lfs merge=lfs -text
+*.m4a filter=lfs diff=lfs merge=lfs -text
 
-# Model files
-*.fbx binary
-*.obj binary
-*.dae binary
-*.3ds binary
-*.dxf binary
-*.max binary
-*.blend binary
+# Video files (Handled by Git LFS)
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+*.mov filter=lfs diff=lfs merge=lfs -text
+*.avi filter=lfs diff=lfs merge=lfs -text
+*.mkv filter=lfs diff=lfs merge=lfs -text
+*.wmv filter=lfs diff=lfs merge=lfs -text
+
+# Model files (Handled by Git LFS)
+*.fbx filter=lfs diff=lfs merge=lfs -text
+*.obj filter=lfs diff=lfs merge=lfs -text
+*.blend filter=lfs diff=lfs merge=lfs -text
+
+# Other binary files (Handled by Git LFS)
+*.dll binary
+*.exe binary
+*.pdb binary
+*.so binary

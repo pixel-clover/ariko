@@ -1,0 +1,62 @@
+<!-- xml -->
+<!-- File: Assets/Ariko/Editor/ArikoWindow.uxml -->
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="main-container" style="flex-grow: 1;">
+        <uie:Toolbar>
+            <ui:Button text="New Chat" name="new-chat-button"/>
+            <ui:VisualElement style="flex-grow: 1;"/>
+            <ui:Button text="Settings" name="settings-button"/>
+        </uie:Toolbar>
+
+        <ui:VisualElement name="content-area" style="flex-grow: 1; flex-direction: row;">
+            <ui:VisualElement name="chat-panel" style="flex-grow: 1;">
+                <ui:ScrollView name="chat-history" style="flex-grow: 1; min-height: 0;"/>
+                <ui:VisualElement name="footer" style="flex-shrink: 0;">
+                    <ui:VisualElement class="separator"/>
+                    <ui:VisualElement name="context-area" class="attachment-box">
+                        <ui:VisualElement style="flex-direction: row; align-items: center;">
+                            <ui:Toggle name="auto-context-toggle" label="Auto-Context from Selection"/>
+                            <ui:VisualElement style="flex-grow: 1;"/>
+                            <ui:Button text="Add File..." name="add-file-button"/>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="manual-attachments-list"/>
+                    </ui:VisualElement>
+
+                    <ui:VisualElement class="input-row">
+                        <ui:TextField name="user-input" multiline="true" class="boxed-input"/>
+                        <ui:Button text="Send" name="send-button" class="send-button"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+            </ui:VisualElement>
+
+            <ui:VisualElement name="settings-panel" class="settings-panel"
+                              style="display: none; min-width: 350px; max-width: 500px; padding: 5px;">
+                <ui:Label text="Ariko Assistant Settings" class="header-label"/>
+                <ui:Label text="API Configuration" class="sub-header-label"/>
+                <ui:Label text="API Keys are read from environment variables first." class="help-box"/>
+                <ui:TextField label="Google API Key" name="google-api-key"/>
+                <ui:TextField label="OpenAI API Key" name="openai-api-key"/>
+                <ui:TextField label="Ollama URL" name="ollama-url"/>
+                <ui:Label text="Customization" class="sub-header-label"/>
+                <uie:ColorField label="Ariko BG Color" name="ariko-bg-color"/>
+                <uie:ColorField label="User BG Color" name="user-bg-color"/>
+                <uie:ObjectField label="Chat Font" name="chat-font"
+                                 type="UnityEngine.Font, UnityEngine.TextRenderingModule"/>
+                <uie:IntegerField label="Chat Font Size" name="chat-font-size"/>
+                <ui:Toggle label="Bold role labels" name="role-bold-toggle"/>
+                <ui:Label text="System Prompt" class="sub-header-label"/>
+                <ui:TextField name="system-prompt" multiline="true" style="flex-grow: 1;" class="system-prompt-field"/>
+                <ui:Button text="Save &amp; Close" name="save-settings-button" style="height: 30px;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <uie:Toolbar>
+            <ui:VisualElement name="work-mode-popup-placeholder" style="width: 80px;"/>
+            <ui:VisualElement name="provider-popup-placeholder" style="width: 80px;"/>
+            <ui:VisualElement name="model-popup-placeholder" style="width: 150px;"/>
+            <ui:Label name="fetching-models-label" text="Fetching..." style="display: none;"/>
+            <ui:VisualElement style="flex-grow: 1;"/>
+        </uie:Toolbar>
+    </ui:VisualElement>
+</ui:UXML>

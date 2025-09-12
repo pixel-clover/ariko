@@ -1,0 +1,241 @@
+/* USS for Ariko, styled to look like GitHub Copilot */
+
+/* Light and Dark Theme Variable Definitions */
+:root {
+    /* Default to dark theme */
+    --background-color: rgb(40, 40, 40);
+    --text-color: rgb(220, 220, 220);
+    --input-background-color: rgb(30, 30, 30);
+    --input-border-color: rgb(60, 60, 60);
+    --button-background-color: rgb(80, 80, 80);
+    --button-text-color: rgb(220, 220, 220);
+    --user-message-background-color: rgb(50, 50, 90);
+    --ariko-message-background-color: rgb(55, 55, 55);
+    --code-block-background-color: rgb(20, 20, 20);
+    --code-block-header-background-color: rgb(45, 45, 45);
+    --toolbar-background-color: rgb(50, 50, 50);
+    --separator-color: rgb(70, 70, 70);
+}
+
+.unity-editor-light-theme {
+    --background-color: rgb(245, 245, 245);
+    --text-color: rgb(30, 30, 30);
+    --input-background-color: rgb(255, 255, 255);
+    --input-border-color: rgb(200, 200, 200);
+    --button-background-color: rgb(230, 230, 230);
+    --button-text-color: rgb(30, 30, 30);
+    --user-message-background-color: rgb(220, 220, 255);
+    --ariko-message-background-color: rgb(235, 235, 235);
+    --code-block-background-color: rgb(220, 220, 220);
+    --code-block-header-background-color: rgb(200, 200, 200);
+    --toolbar-background-color: rgb(230, 230, 230);
+    --separator-color: rgb(210, 210, 210);
+}
+
+/* Main Container */
+#main-container {
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* Toolbar */
+.unity-toolbar {
+    background-color: var(--toolbar-background-color);
+    border-bottom-width: 1px;
+    border-bottom-color: var(--input-border-color);
+}
+
+/* Chat History */
+#chat-history {
+    padding: 10px;
+}
+
+/* Separator */
+.separator {
+    height: 1px;
+    background-color: var(--separator-color);
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.chat-message {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    white-space: normal;
+    max-width: 90%;
+}
+
+.user-message {
+    background-color: var(--user-message-background-color);
+    align-self: flex-start;
+    margin-right: 10%;
+}
+
+.ariko-message {
+    background-color: var(--ariko-message-background-color);
+    align-self: flex-start;
+    margin-right: 10%;
+}
+
+/* Input Area */
+.input-row {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px;
+}
+
+.boxed-input {
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+    border-color: var(--input-border-color);
+    border-radius: 6px;
+    padding: 8px;
+    flex-grow: 1;
+    flex-basis: 0;
+    height: 90px;
+}
+
+.send-button {
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+    border-radius: 6px;
+    margin-left: 8px;
+    height: 40px;
+    width: 80px;
+}
+
+/* Code Blocks */
+.code-block-container {
+    background-color: var(--code-block-background-color);
+    border-radius: 6px;
+    margin: 10px 0;
+    border-width: 1px;
+    border-color: var(--input-border-color);
+}
+
+.code-block-header {
+    background-color: var(--code-block-header-background-color);
+    padding: 6px 10px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+.code-block-language {
+    color: var(--text-color);
+    font-size: 12px;
+}
+
+.code-block-copy-button {
+    height: 24px;
+    width: 60px;
+    font-size: 12px;
+}
+
+.code-block-content {
+    padding: 10px;
+    font-size: 13px;
+    color: var(--text-color);
+    white-space: normal;
+}
+
+/* Markdown Elements */
+.markdown-paragraph, .markdown-header {
+    margin-bottom: 10px;
+}
+
+.h1 {
+    font-size: 20px;
+    -unity-font-style: bold;
+}
+
+.h2 {
+    font-size: 18px;
+    -unity-font-style: bold;
+}
+
+.list-item-container {
+    margin-left: 20px;
+    margin-bottom: 5px;
+}
+
+.list-item-bullet {
+    margin-right: 10px;
+}
+
+/* Settings Panel */
+.settings-panel {
+    background-color: var(--background-color);
+    padding: 15px;
+}
+
+.header-label {
+    font-size: 18px;
+    -unity-font-style: bold;
+    margin-bottom: 15px;
+}
+
+.sub-header-label {
+    font-size: 16px;
+    -unity-font-style: bold;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+/* Role Label */
+.role-label {
+    font-size: 14px;
+    -unity-font-style: bold;
+    color: var(--text-color);
+    margin-bottom: 5px;
+}
+
+/* Markdown Content */
+.markdown-header,
+.list-item-text,
+.markdown-paragraph,
+.list-item-bullet {
+    color: var(--text-color);
+}
+
+/* Settings Panel Elements */
+.settings-panel .unity-base-field {
+    margin-bottom: 10px;
+}
+
+.settings-panel .unity-text-field__input,
+.settings-panel .unity-integer-field__input {
+    background-color: var(--input-background-color);
+    color: var(--text-color);
+    border-color: var(--input-border-color);
+    border-radius: 4px;
+    padding: 6px;
+}
+
+.settings-panel .unity-color-field__input {
+    height: 28px;
+    border-radius: 4px;
+}
+
+.settings-panel .unity-object-field__selector {
+    border-radius: 4px;
+}
+
+.settings-panel .unity-toggle__checkmark {
+    background-color: var(--input-background-color);
+    border-color: var(--input-border-color);
+}
+
+.settings-panel Button {
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+    border-radius: 6px;
+    height: 36px;
+}
+
+.system-prompt-field .unity-text-field__input {
+    min-height: 80px;
+}

@@ -12,6 +12,8 @@ public static class KnownModels
         "gpt-4.1",
         "codex",
         "gpt-4o",
+        "gpt-o3-mini",
+        "gpt-o4-mini",
         "gpt-5-nano",
         "gpt-5-mini",
         "gpt-5"
@@ -20,6 +22,7 @@ public static class KnownModels
     public static readonly List<string> Google = new()
     {
         "models/gemini-2.5-pro",
-        "models/gemini-2.5-flash"
+        "models/gemini-2.5-flash",
+        "models/gemini-2.0-flash"
     };
 }

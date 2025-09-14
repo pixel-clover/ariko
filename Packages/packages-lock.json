@@ -192,6 +192,12 @@
                 "com.unity.modules.imgui": "1.0.0"
             }
         },
+        "io.github.pixel-clover.ariko": {
+            "version": "file:io.github.pixel-clover.ariko",
+            "depth": 0,
+            "source": "embedded",
+            "dependencies": {}
+        },
         "com.unity.modules.animation": {
             "version": "1.0.0",
             "depth": 0,

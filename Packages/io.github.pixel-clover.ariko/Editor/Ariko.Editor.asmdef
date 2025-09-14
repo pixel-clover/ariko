@@ -1,8 +1,12 @@
 {
-    "name": "Ariko",
+    "name": "Ariko.Editor",
     "rootNamespace": "",
-    "references": [],
-    "includePlatforms": [],
+    "references": [
+        "io.github.pixel-clover.ariko"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

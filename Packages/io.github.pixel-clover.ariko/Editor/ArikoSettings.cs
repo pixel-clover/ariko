@@ -19,7 +19,7 @@ public class ArikoSettings : ScriptableObject
     public Color assistantChatBackgroundColor = new(0.886f, 0.91f, 0.941f, 1.0f);
 
     [Tooltip("The background color for the user's chat bubbles.")]
-    public Color userChatBackgroundColor = new(0.576f, 0.773f, 0.992f, 1.0f);
+    public Color userChatBackgroundColor = new(0.676f, 0.853f, 0.602f, 1.0f);
 
     [Tooltip("Font used for chat text (leave null to use default editor font).")]
     public Font chatFont;

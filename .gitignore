@@ -58,4 +58,6 @@ Thumbs.db
 *_output.txt
 Assets/Ariko/Editor/ArikoSettings.asset
 Assets/Ariko/Editor/ArikoSettings.asset.meta
+Packages/io.github.pixel-clover.ariko/Editor/ArikoSettings.asset
+Packages/io.github.pixel-clover.ariko/Editor/ArikoSettings.asset.meta
 *.DotSettings

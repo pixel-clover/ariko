@@ -19,9 +19,9 @@ MonoBehaviour:
   selectedProvider: OpenAI
   selectedWorkMode: Ask
   assistantChatBackgroundColor: {r: 0.886, g: 0.91, b: 0.941, a: 1}
-  userChatBackgroundColor: {r: 0.576, g: 0.773, b: 0.992, a: 1}
+  userChatBackgroundColor: {r: 0.676, g: 0.853, b: 0.602, a: 1}
   chatFont: {fileID: 0}
-  chatFontSize: 13
+  chatFontSize: 12
   roleLabelsBold: 1
   systemPrompt: 'You are Ariko, a helpful and friendly AI assistant integrated into
     the Unity Editor.

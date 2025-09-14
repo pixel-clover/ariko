@@ -1,25 +1,26 @@
-# .github/workflows/tests.yml
-
-name: Run Unity Tests
+name: Run Tests
 
 on:
-    push:
-        tags:
-            - 'v*'
+    workflow_dispatch:
+    workflow_call:
     pull_request:
-        branches:|
-        - main
+        branches: [ main ]
+    push:
+        tags: [ 'v*' ]
+
+permissions:
+    contents: read
 
 jobs:
     test:
         name: Run EditMode and PlayMode Tests
         runs-on: ubuntu-latest
         steps:
-            # Step 1: Check out the repository's code.
-            - name: Checkout repository
+            - name: Checkout Repository
               uses: actions/checkout@v4
+              with:
+                  lfs: true
 
-            # Step 2: Cache the Unity Library folder to speed up future runs.
             - name: Cache Unity Library
               uses: actions/cache@v4
               with:
@@ -28,18 +29,19 @@ jobs:
                   restore-keys: |
                       Library-
 
-            # Step 3: Run the tests using the GameCI action.
             - name: Run Unity Tests
               uses: game-ci/unity-test-runner@v4
               env:
+                  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+                  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
                   UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
               with:
                   testMode: All
 
-            # Step 4: Upload the test results as an artifact.
-            - name: Upload test results
+            - name: Upload Test Results
               uses: actions/upload-artifact@v4
-              if: always() # This ensures results are uploaded even if tests fail.
+              if: always()
               with:
                   name: Test-Results
                   path: ${{ runner.temp }}/test-results/**/*.xml
+                  retention-days: 7

@@ -1,23 +1,23 @@
-# .github/workflows/release.yml
-
-name: Create Unity Package Release
+name: Make Release
 
 on:
+    workflow_dispatch:
     push:
-        # This workflow only runs when you push a tag that starts with 'v'
-        tags:
-            - 'v*'
+        tags: [ 'v*' ]
+
+permissions:
+    contents: read
 
 jobs:
     release:
         name: Build and Release
         runs-on: ubuntu-latest
         steps:
-            # Step 1: Check out the repository's code.
-            - name: Checkout repository
+            - name: Checkout Repository
               uses: actions/checkout@v4
+              with:
+                  lfs: true
 
-            # Step 2: Cache the Unity Library folder.
             - name: Cache Unity Library
               uses: actions/cache@v4
               with:
@@ -26,19 +26,18 @@ jobs:
                   restore-keys: |
                       Library-
 
-            # Step 3: Build the .unitypackage by calling our C# script.
-            - name: Build .unitypackage
-              uses: game-ci/unity-builder@v4
-              env:
-                  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-              with:
-                  targetPlatform: StandaloneLinux64 # Required, but doesn't matter for package export.
-                  # This tells the action to run our custom build method.
-                  customParameters: -executeMethod ArikoBuilder.BuildPackage
+            -   name: Build the `.unitypackage` File
+                uses: game-ci/unity-builder@v4
+                env:
+                    UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+                    UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+                    UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+                with:
+                    targetPlatform: StandaloneLinux64
+                    executeMethod: ArikoBuilder.BuildPackage
 
-            # Step 4: Create the GitHub Release and upload the package.
             - name: Create GitHub Release
               uses: softprops/action-gh-release@v2
               with:
-                  # This will upload the file created by our build script.
-                  files: Ariko.unitypackage
+                  files: Builds/Ariko.unitypackage
+                  token: ${{ secrets.GITHUB_TOKEN }}

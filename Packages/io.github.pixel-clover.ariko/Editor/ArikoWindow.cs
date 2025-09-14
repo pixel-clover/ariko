@@ -40,8 +40,11 @@ public class ArikoWindow : EditorWindow
         FindOrCreateSettings();
         llmService = new ArikoLLMService();
 
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/Ariko/Editor/ArikoWindow.uxml");
-        var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Ariko/Editor/ArikoWindow.uss");
+        var visualTree =
+            AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+                "Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uxml");
+        var styleSheet =
+            AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uss");
         rootVisualElement.styleSheets.Add(styleSheet);
         visualTree.CloneTree(rootVisualElement);
 
@@ -286,7 +289,7 @@ public class ArikoWindow : EditorWindow
 
     private void FindOrCreateSettings()
     {
-        var settingsPath = "Assets/Ariko/Editor/ArikoSettings.asset";
+        var settingsPath = "Packages/io.github.pixel-clover.ariko/Editor/ArikoSettings.asset";
         settings = AssetDatabase.LoadAssetAtPath<ArikoSettings>(settingsPath);
         if (settings == null)
         {

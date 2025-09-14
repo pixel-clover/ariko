@@ -1,6 +1,3 @@
-// csharp
-// File: Assets/Ariko/Editor/ArikoLLMService.cs
-
 using System;
 using System.Collections.Generic;
 using System.Text;

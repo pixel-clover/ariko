@@ -1,6 +1,3 @@
-// csharp
-// File: Assets/Ariko/Editor/LLM/GoogleStrategy.cs
-
 using System;
 using System.Collections.Generic;
 using System.Linq;

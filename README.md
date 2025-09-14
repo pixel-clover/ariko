@@ -4,7 +4,7 @@
   </picture>
 <br>
 
-<h2>Ariko AI Assistant</h2>
+<h2>Ariko</h2>
 
 [![Tests](https://img.shields.io/github/actions/workflow/status/pixel-clover/ariko/tests.yml?branch=main&label=tests&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/actions/workflows/tests.yml)
 [![Code Quality](https://img.shields.io/codefactor/grade/github/habedi/tobi?style=flat&label=code%20quality&labelColor=333333&logo=codefactor&logoColor=white)](https://www.codefactor.io/repository/github/pixel-clover/ariko)
@@ -27,6 +27,8 @@ Ariko is an open-source AI assistant for Unity game engine similar to GitHub Cop
 * **Code Generation:** Generate C# scripts, methods, or snippets based on your prompts.
 * **Project Awareness:** Answer questions about your existing project.
 * **Unity API Helper:** Explain how to use Unity components and functions with relevant examples.
+
+See the [ROADMAP.md](ROADMAP.md) file for the project roadmap.
 
 > [!IMPORTANT]
 > This project is in early development, so bugs and breaking changes are expected.
@@ -51,7 +53,7 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
 
 ### License
 
-Akiro is licensed under the MIT License (see [LICENSE](LICENSE)).
+Ariko is licensed under the MIT License (see [LICENSE](LICENSE)).
 
 ### Acknowledgements
 

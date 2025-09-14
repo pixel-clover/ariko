@@ -40,6 +40,11 @@ See the [ROADMAP.md](ROADMAP.md) file for the project roadmap.
 
 To be added.
 
+```shell
+# Install via Package Manager using Git URL
+https://github.com/pixel-clover/ariko.git?path=/Packages/io.github.pixel-clover.ariko
+```
+
 ### Documentation
 
 To be added.

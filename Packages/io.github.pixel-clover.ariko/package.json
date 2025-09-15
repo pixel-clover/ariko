@@ -3,5 +3,5 @@
     "version": "0.1.0-alpha.2",
     "displayName": "Ariko",
     "description": "An AI assistant for Unity",
-    "unity": "2022.3.17f1"
+    "unity": "2022.3"
 }

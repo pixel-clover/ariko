@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,16 +21,16 @@ public class CreateGameObjectTool : IArikoTool
     };
 
     /// <inheritdoc />
-    public string Execute(Dictionary<string, object> arguments)
+    public Task<string> Execute(ToolExecutionContext context)
     {
-        if (arguments.TryGetValue("name", out var nameObj) && nameObj is string name)
+        if (context.Arguments.TryGetValue("name", out var nameObj) && nameObj is string name)
         {
             var go = new GameObject(name);
             Undo.RegisterCreatedObjectUndo(go, "Create GameObject via Ariko");
             Selection.activeGameObject = go;
-            return $"Success: Created new GameObject named '{name}'.";
+            return Task.FromResult($"Success: Created new GameObject named '{name}'.");
         }
 
-        return "Error: Missing required 'name' parameter.";
+        return Task.FromResult("Error: Missing required 'name' parameter.");
     }
 }

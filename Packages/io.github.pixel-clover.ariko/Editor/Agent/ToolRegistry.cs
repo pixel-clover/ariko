@@ -17,6 +17,8 @@ public class ToolRegistry
     {
         // Discover and register all tools. You can use reflection or manual registration.
         RegisterTool(new CreateGameObjectTool());
+        RegisterTool(new CreateFileTool());
+        RegisterTool(new ModifyFileTool());
         // Register other tools here...
     }
 

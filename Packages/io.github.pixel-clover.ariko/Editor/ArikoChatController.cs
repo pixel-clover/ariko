@@ -262,9 +262,21 @@ public class ArikoChatController
             var tool = toolRegistry.GetTool(toolCall.tool_name);
             string executionResult;
             if (tool != null)
-                executionResult = tool.Execute(toolCall.parameters);
+            {
+                var context = new ToolExecutionContext
+                {
+                    Arguments = toolCall.parameters,
+                    Provider = selectedProvider,
+                    Model = selectedModel,
+                    Settings = settings,
+                    ApiKeys = apiKeys
+                };
+                executionResult = await tool.Execute(context);
+            }
             else
+            {
                 executionResult = $"Error: Tool '{toolCall.tool_name}' not found.";
+            }
 
             ActiveSession.Messages.Remove(thinkingMessage);
             var resultMessage = new ChatMessage { Role = "User", Content = $"Observation: {executionResult}" };

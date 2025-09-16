@@ -145,6 +145,7 @@ public class ArikoWindow : EditorWindow
         });
 
         rootVisualElement.Q<Button>("new-chat-button").clicked += controller.ClearChat;
+        rootVisualElement.Q<Button>("clear-history-button").clicked += controller.ClearAllHistory;
         rootVisualElement.Q<Button>("add-file-button").clicked += ArikoSearchWindow.ShowWindow;
         autoContextToggle.RegisterValueChangedCallback(evt => controller.AutoContext = evt.newValue);
 
@@ -308,11 +309,20 @@ public class ArikoWindow : EditorWindow
         historyListScrollView.Clear();
         foreach (var session in controller.ChatHistory)
         {
+            var sessionContainer = new VisualElement();
+            sessionContainer.AddToClassList("history-item-container");
+            if (session == controller.ActiveSession) sessionContainer.AddToClassList("history-item--selected");
+
             var sessionLabel = new Label(session.SessionName);
-            sessionLabel.AddToClassList("history-item");
-            if (session == controller.ActiveSession) sessionLabel.AddToClassList("history-item--selected");
+            sessionLabel.AddToClassList("history-item-label");
             sessionLabel.RegisterCallback<MouseDownEvent>(evt => controller.SwitchToSession(session));
-            historyListScrollView.Add(sessionLabel);
+
+            var deleteButton = new Button(() => controller.DeleteSession(session)) { text = "x" };
+            deleteButton.AddToClassList("history-item-delete-button");
+
+            sessionContainer.Add(sessionLabel);
+            sessionContainer.Add(deleteButton);
+            historyListScrollView.Add(sessionContainer);
         }
     }
 

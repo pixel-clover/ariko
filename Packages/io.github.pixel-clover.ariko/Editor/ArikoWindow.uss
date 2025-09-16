@@ -298,20 +298,65 @@
     border-bottom-width: 1px;
     border-bottom-color: var(--separator-color);
     color: var(--text-color);
+    flex-direction: row;
+    align-items: center;
 }
 
-.history-item {
-    padding: 10px;
+#clear-history-button {
+    font-size: 10px;
+    height: 20px;
+    width: 60px;
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--separator-color);
+}
+
+#clear-history-button:hover {
+    background-color: var(--input-background-color);
+}
+
+.history-item-container {
+    flex-direction: row;
+    align-items: center;
+    padding: 0 10px;
     border-bottom-width: 1px;
     border-bottom-color: var(--separator-color);
+}
+
+.history-item-container:hover {
+    background-color: var(--input-background-color);
+}
+
+.history-item-container:hover > .history-item-delete-button {
+    visibility: visible;
+}
+
+.history-item-label {
+    flex-grow: 1;
     color: var(--text-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding: 10px 0;
 }
 
-.history-item:hover {
-    background-color: var(--input-background-color);
+.history-item-delete-button {
+    visibility: hidden;
+    width: 20px;
+    height: 20px;
+    margin-left: 5px;
+    background-color: transparent;
+    border-width: 0;
+    color: var(--text-color);
+    font-size: 12px;
+}
+
+.history-item-delete-button:hover {
+    background-color: var(--button-background-color);
+}
+
+.history-item--selected .history-item-label {
+    -unity-font-style: bold;
 }
 
 .history-item--selected {

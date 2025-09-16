@@ -11,7 +11,10 @@
 
         <ui:VisualElement name="content-area" style="flex-grow: 1; flex-direction: row;">
             <ui:VisualElement name="history-panel" class="history-panel">
-                <ui:Label text="Chat History" class="history-header"/>
+                <ui:VisualElement name="history-header-container" class="history-header">
+                    <ui:Label text="Chat History" style="flex-grow: 1;"/>
+                    <ui:Button text="Clear All" name="clear-history-button"/>
+                </ui:VisualElement>
                 <ui:ScrollView name="history-list" style="flex-grow: 1;"/>
             </ui:VisualElement>
 

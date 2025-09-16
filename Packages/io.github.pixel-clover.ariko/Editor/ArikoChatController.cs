@@ -178,6 +178,35 @@ public class ArikoChatController
         OnHistoryChanged?.Invoke(); // To update selection highlight
     }
 
+    public void DeleteSession(ChatSession session)
+    {
+        if (session == null || !ChatHistory.Contains(session)) return;
+
+        var wasActiveSession = session == ActiveSession;
+        ChatHistory.Remove(session);
+
+        if (wasActiveSession)
+        {
+            // If we deleted the active session, switch to the most recent one or create a new one
+            if (ChatHistory.Any())
+                SwitchToSession(ChatHistory[0]);
+            else
+                ClearChat(); // Creates a new empty session
+        }
+        else
+        {
+            // If we deleted a non-active session, we just need to update the history panel
+            OnHistoryChanged?.Invoke();
+        }
+    }
+
+    public void ClearAllHistory()
+    {
+        ChatHistory.Clear();
+        // After clearing everything, create a new empty session to start with
+        ClearChat();
+    }
+
     public void CancelCurrentRequest()
     {
         llmService.CancelRequest();

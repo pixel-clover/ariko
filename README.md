@@ -48,7 +48,8 @@ See the [ROADMAP.md](ROADMAP.md) file for the project roadmap.
 
 ### Configuration
 
-To use Ariko, you need to provide an API key for the AI service you want to use (like OpenAI and Google).
+To use Ariko, you need to provide an API key for the AI service you want to use (currently OpenAI and Google).
+To do this, follow these steps:
 
 1.  In the Ariko window, click the "Settings" button. This will open the settings panel.
 2.  Enter API Keys:

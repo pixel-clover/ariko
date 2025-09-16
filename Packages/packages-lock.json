@@ -203,7 +203,9 @@
             "version": "file:io.github.pixel-clover.ariko",
             "depth": 0,
             "source": "embedded",
-            "dependencies": {}
+            "dependencies": {
+                "com.unity.nuget.newtonsoft-json": "3.0.1"
+            }
         },
         "com.unity.modules.animation": {
             "version": "1.0.0",

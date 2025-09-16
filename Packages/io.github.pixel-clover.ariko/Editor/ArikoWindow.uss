@@ -239,3 +239,27 @@
 .system-prompt-field .unity-text-field__input {
     min-height: 80px;
 }
+
+/* New styles for the copy button */
+.message-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px; /* Add some space between header and content */
+}
+
+.copy-button {
+    height: 24px;
+    width: 60px;
+    font-size: 12px;
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+    border-width: 0;
+    border-radius: 4px;
+    margin-left: 10px;
+    padding: 0;
+}
+
+.copy-button:hover {
+    background-color: var(--input-background-color);
+}

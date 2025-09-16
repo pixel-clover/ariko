@@ -248,13 +248,27 @@ public class ArikoWindow : EditorWindow
         var isFirstMessage = chatHistoryScrollView.contentContainer.childCount == 0;
         if (isFirstMessage) messageContainer.style.marginTop = new StyleLength(0f);
 
+        var headerContainer = new VisualElement();
+        headerContainer.AddToClassList("message-header");
+
         var roleLabel = new Label(role) { name = "role" };
         roleLabel.AddToClassList("role-label");
+        headerContainer.Add(roleLabel);
+
+        if (role == "Ariko" && content != "...")
+        {
+            var copyButton = new Button(() => EditorGUIUtility.systemCopyBuffer = content)
+            {
+                text = "Copy"
+            };
+            copyButton.AddToClassList("copy-button");
+            headerContainer.Add(copyButton);
+        }
 
         var contentContainer = new VisualElement { name = "content-container" };
         contentContainer.Add(markdownRenderer.Render(content));
 
-        messageContainer.Add(roleLabel);
+        messageContainer.Add(headerContainer);
         messageContainer.Add(contentContainer);
 
         chatHistoryScrollView.Add(messageContainer);

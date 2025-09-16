@@ -3,6 +3,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:VisualElement name="main-container" style="flex-grow: 1;">
         <uie:Toolbar>
+            <ui:Button text="History" name="history-button"/>
             <ui:Button text="New Chat" name="new-chat-button"/>
             <ui:VisualElement style="flex-grow: 1;"/>
             <ui:Button text="Settings" name="settings-button"/>

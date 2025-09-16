@@ -52,26 +52,30 @@ public class MarkdigRenderer
             case ListBlock list:
                 var listContainer = new VisualElement();
                 listContainer.AddToClassList("list");
+                var itemNumber = 1;
                 foreach (var item in list)
                     if (item is ListItemBlock listItem)
-                        // In Markdig, a ListItemBlock contains other blocks (like ParagraphBlock).
-                        // We need to process these nested blocks.
+                    {
+                        var listItemContainer = new VisualElement();
+                        listItemContainer.AddToClassList("list-item");
+
+                        var bullet = new Label(list.IsOrdered ? $"{itemNumber++}." : "•");
+                        bullet.AddToClassList("list-item-bullet");
+                        listItemContainer.Add(bullet);
+
+                        var contentContainer = new VisualElement();
+                        contentContainer.AddToClassList("list-item-content");
+
                         foreach (var subBlock in listItem)
                         {
                             var itemElement = CreateElementForBlock(subBlock);
-
-                            // When a paragraph is inside a list item, we don't want the default paragraph margin.
                             if (itemElement.ClassListContains("markdown-paragraph")) itemElement.style.marginBottom = 0;
-
-                            // We might want to wrap list item content in another container for styling
-                            var listItemContainer = new VisualElement();
-                            listItemContainer.AddToClassList("list-item");
-                            var bullet = new Label("•");
-                            bullet.AddToClassList("list-item-bullet");
-                            listItemContainer.Add(bullet);
-                            listItemContainer.Add(itemElement);
-                            listContainer.Add(listItemContainer);
+                            contentContainer.Add(itemElement);
                         }
+
+                        listItemContainer.Add(contentContainer);
+                        listContainer.Add(listItemContainer);
+                    }
 
                 return listContainer;
             default:

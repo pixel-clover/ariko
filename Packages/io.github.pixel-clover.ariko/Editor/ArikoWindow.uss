@@ -158,13 +158,25 @@
     -unity-font-style: bold;
 }
 
-.list-item-container {
-    margin-left: 20px;
+.list {
+    margin-left: 15px; /* Indent the whole list */
+    margin-top: 5px;
     margin-bottom: 5px;
 }
 
+.list-item {
+    flex-direction: row; /* Align bullet and content horizontally */
+    margin-bottom: 2px;
+}
+
 .list-item-bullet {
-    margin-right: 10px;
+    margin-right: 5px;
+    min-width: 15px; /* Ensure numbers have enough space */
+    -unity-text-align: right;
+}
+
+.list-item-content {
+    flex-grow: 1;
 }
 
 /* Settings Panel */

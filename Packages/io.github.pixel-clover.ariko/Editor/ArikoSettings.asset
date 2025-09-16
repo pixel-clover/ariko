@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: ArikoSettings
   m_EditorClassIdentifier: 
   ollama_Url: http://localhost:11434
-  google_SelectedModel: models/gemini-2.5-flash
-  openAI_SelectedModel: gpt-5-nano
-  ollama_SelectedModel: embeddinggemma:latest
-  selectedProvider: Google
+  google_SelectedModel: 
+  openAI_SelectedModel: 
+  ollama_SelectedModel: 
+  selectedProvider: OpenAI
   selectedWorkMode: Ask
   assistantChatBackgroundColor: {r: 0.886, g: 0.91, b: 0.941, a: 1}
   userChatBackgroundColor: {r: 0.676, g: 0.853, b: 0.602, a: 1}
@@ -52,7 +52,7 @@ MonoBehaviour:
     DO NOT use a tool if a direct text answer is sufficient.
 
     4.  **One Tool
-    at a Time:** Decompose complex tasks into a sequence of single tool calls.
+    at aTime:** Decompose complex tasks into a sequence of single tool calls.
 
     5. 
     **Be Concise:** Do not add comments to code unless requested. Avoid conversational

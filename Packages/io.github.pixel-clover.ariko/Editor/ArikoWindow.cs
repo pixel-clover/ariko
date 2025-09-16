@@ -19,6 +19,7 @@ public class ArikoWindow : EditorWindow
     // --- State ---
     private ArikoChatController controller;
     private Label fetchingModelsLabel;
+    private Button historyButton;
     private ScrollView historyListScrollView;
     private VisualElement manualAttachmentsList;
     private MarkdigRenderer markdownRenderer;
@@ -94,6 +95,7 @@ public class ArikoWindow : EditorWindow
         userInput = rootVisualElement.Q<TextField>("user-input");
         sendButton = rootVisualElement.Q<Button>("send-button");
         cancelButton = rootVisualElement.Q<Button>("cancel-button");
+        historyButton = rootVisualElement.Q<Button>("history-button");
         autoContextToggle = rootVisualElement.Q<Toggle>("auto-context-toggle");
         manualAttachmentsList = rootVisualElement.Q<VisualElement>("manual-attachments-list");
         fetchingModelsLabel = rootVisualElement.Q<Label>("fetching-models-label");
@@ -155,6 +157,7 @@ public class ArikoWindow : EditorWindow
 
         // Settings Panel
         rootVisualElement.Q<Button>("settings-button").clicked += ToggleSettingsPanel;
+        historyButton.clicked += ToggleHistoryPanel;
         RegisterSettingsCallbacks();
     }
 
@@ -427,6 +430,13 @@ public class ArikoWindow : EditorWindow
             case ArikoLLMService.AIProvider.OpenAI: settings.openAI_SelectedModel = modelName; break;
             case ArikoLLMService.AIProvider.Ollama: settings.ollama_SelectedModel = modelName; break;
         }
+    }
+
+    private void ToggleHistoryPanel()
+    {
+        var historyPanel = rootVisualElement.Q<VisualElement>("history-panel");
+        var isVisible = historyPanel.resolvedStyle.display == DisplayStyle.Flex;
+        historyPanel.style.display = isVisible ? DisplayStyle.None : DisplayStyle.Flex;
     }
 
     private void ToggleSettingsPanel()

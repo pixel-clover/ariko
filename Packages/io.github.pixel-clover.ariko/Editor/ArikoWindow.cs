@@ -11,17 +11,19 @@ public class ArikoWindow : EditorWindow
 {
     private Toggle autoContextToggle;
 
-    // UI Elements
+    // --- UI Elements ---
     private ScrollView chatHistoryScrollView;
+
+    // --- State ---
     private ArikoChatController controller;
     private Label fetchingModelsLabel;
+    private ScrollView historyListScrollView;
     private VisualElement manualAttachmentsList;
     private MarkdigRenderer markdownRenderer;
     private PopupField<string> modelPopup;
     private PopupField<string> providerPopup;
     private Button sendButton;
     private ArikoSettings settings;
-
     private VisualElement thinkingMessage;
     private TextField userInput;
     private PopupField<string> workModePopup;
@@ -37,14 +39,7 @@ public class ArikoWindow : EditorWindow
         ArikoSearchWindow.OnAssetSelected -= HandleAssetSelectedFromSearch;
         Selection.selectionChanged -= UpdateAutoContextLabel;
 
-        if (controller != null)
-        {
-            controller.OnMessageAdded -= HandleMessageAdded;
-            controller.OnChatCleared -= HandleChatCleared;
-            controller.OnResponseStatusChanged -= SetResponsePending;
-            controller.OnModelsFetched -= HandleModelsFetched;
-            controller.OnError -= HandleError;
-        }
+        if (controller != null) UnregisterControllerCallbacks();
     }
 
     public void CreateGUI()
@@ -69,21 +64,27 @@ public class ArikoWindow : EditorWindow
         CreateAndSetupPopups();
         RegisterCallbacks();
 
+        UpdateHistoryPanel(); // Initial population of history panel
+
         controller.FetchModelsForCurrentProvider(providerPopup.value);
 
         ApplyChatStyles();
         ScrollToBottom();
     }
 
+    // --- Lifecycle Methods ---
     [MenuItem("Tools/Ariko Assistant")]
     public static void ShowWindow()
     {
         GetWindow<ArikoWindow>("Ariko Assistant");
     }
 
+    // --- Initialization and Callbacks ---
+
     private void InitializeQueries()
     {
         chatHistoryScrollView = rootVisualElement.Q<ScrollView>("chat-history");
+        historyListScrollView = rootVisualElement.Q<ScrollView>("history-list");
         userInput = rootVisualElement.Q<TextField>("user-input");
         sendButton = rootVisualElement.Q<Button>("send-button");
         autoContextToggle = rootVisualElement.Q<Toggle>("auto-context-toggle");
@@ -115,25 +116,19 @@ public class ArikoWindow : EditorWindow
         // Controller -> View
         controller.OnMessageAdded += HandleMessageAdded;
         controller.OnChatCleared += HandleChatCleared;
+        controller.OnChatReloaded += HandleChatReloaded;
+        controller.OnHistoryChanged += UpdateHistoryPanel;
         controller.OnResponseStatusChanged += SetResponsePending;
         controller.OnModelsFetched += HandleModelsFetched;
         controller.OnError += HandleError;
 
         // View -> Controller
-        sendButton.clicked += () =>
-        {
-            controller.SendMessageToAssistant(userInput.value, providerPopup.value, modelPopup.value,
-                chatHistoryScrollView.childCount);
-            userInput.value = "";
-        };
-
+        sendButton.clicked += SendMessage;
         userInput.RegisterCallback<KeyDownEvent>(evt =>
         {
             if (evt.keyCode == KeyCode.Return && !evt.shiftKey)
             {
-                controller.SendMessageToAssistant(userInput.value, providerPopup.value, modelPopup.value,
-                    chatHistoryScrollView.childCount);
-                userInput.value = "";
+                SendMessage();
                 evt.StopImmediatePropagation();
             }
         });
@@ -153,6 +148,17 @@ public class ArikoWindow : EditorWindow
         // Settings Panel
         rootVisualElement.Q<Button>("settings-button").clicked += ToggleSettingsPanel;
         RegisterSettingsCallbacks();
+    }
+
+    private void UnregisterControllerCallbacks()
+    {
+        controller.OnMessageAdded -= HandleMessageAdded;
+        controller.OnChatCleared -= HandleChatCleared;
+        controller.OnChatReloaded -= HandleChatReloaded;
+        controller.OnHistoryChanged -= UpdateHistoryPanel;
+        controller.OnResponseStatusChanged -= SetResponsePending;
+        controller.OnModelsFetched -= HandleModelsFetched;
+        controller.OnError -= HandleError;
     }
 
     private void RegisterSettingsCallbacks()
@@ -187,19 +193,32 @@ public class ArikoWindow : EditorWindow
         });
     }
 
-    private void HandleMessageAdded(string role, string content)
+    // --- Chat and History Handling ---
+
+    private void SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(userInput.value)) return;
+        controller.SendMessageToAssistant(userInput.value, providerPopup.value, modelPopup.value);
+        userInput.value = "";
+    }
+
+    private void HandleMessageAdded(ChatMessage message)
     {
         // If this is the start of a response, remove the "thinking..." message
-        if (thinkingMessage != null && role == "Ariko" && content != "...")
+        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "...")
         {
             chatHistoryScrollView.Remove(thinkingMessage);
             thinkingMessage = null;
         }
 
-        var message = AddMessageToChat(role, content);
+        var messageElement = AddMessageToChat(message.Role, message.Content);
 
         // If this is a "thinking..." message, store it for later removal
-        if (role == "Ariko" && content == "...") thinkingMessage = message;
+        if (message.Role == "Ariko" && message.Content == "...") thinkingMessage = messageElement;
+
+        // When a message is added to the active session, its name might change (e.g., if it's based on first message)
+        // So we update the history panel to reflect the potential new name.
+        UpdateHistoryPanel();
 
         ScrollToBottom();
     }
@@ -209,6 +228,14 @@ public class ArikoWindow : EditorWindow
         chatHistoryScrollView.Clear();
         controller.ManuallyAttachedAssets.Clear();
         UpdateManualAttachmentsList();
+    }
+
+    private void HandleChatReloaded()
+    {
+        chatHistoryScrollView.Clear();
+        foreach (var message in controller.ActiveSession.Messages) AddMessageToChat(message.Role, message.Content);
+        UpdateManualAttachmentsList(); // Assuming attachments might be session-specific
+        ScrollToBottom();
     }
 
     private void HandleModelsFetched(List<string> models)
@@ -235,8 +262,20 @@ public class ArikoWindow : EditorWindow
     private void HandleError(string error)
     {
         Debug.LogError($"Ariko: {error}");
-        // Optionally, show a dialog or add an error message to the chat
         AddMessageToChat("System", $"Error: {error}");
+    }
+
+    private void UpdateHistoryPanel()
+    {
+        historyListScrollView.Clear();
+        foreach (var session in controller.ChatHistory)
+        {
+            var sessionLabel = new Label(session.SessionName);
+            sessionLabel.AddToClassList("history-item");
+            if (session == controller.ActiveSession) sessionLabel.AddToClassList("history-item--selected");
+            sessionLabel.RegisterCallback<MouseDownEvent>(evt => controller.SwitchToSession(session));
+            historyListScrollView.Add(sessionLabel);
+        }
     }
 
     private VisualElement AddMessageToChat(string role, string content)
@@ -257,10 +296,7 @@ public class ArikoWindow : EditorWindow
 
         if (role == "Ariko" && content != "...")
         {
-            var copyButton = new Button(() => EditorGUIUtility.systemCopyBuffer = content)
-            {
-                text = "Copy"
-            };
+            var copyButton = new Button(() => EditorGUIUtility.systemCopyBuffer = content) { text = "Copy" };
             copyButton.AddToClassList("copy-button");
             headerContainer.Add(copyButton);
         }
@@ -272,6 +308,7 @@ public class ArikoWindow : EditorWindow
         messageContainer.Add(contentContainer);
 
         chatHistoryScrollView.Add(messageContainer);
+        ApplyChatStylesForElement(messageContainer);
         return messageContainer;
     }
 
@@ -286,29 +323,29 @@ public class ArikoWindow : EditorWindow
     {
         if (settings == null) return;
 
-        // Because SetCustomProperty is not available in all Unity versions, we apply styles directly.
-        // This is a compromise to ensure compatibility. The logic is centralized here.
-        rootVisualElement.Query<VisualElement>(className: "chat-message").ForEach(message =>
+        rootVisualElement.Query<VisualElement>(className: "chat-message").ForEach(ApplyChatStylesForElement);
+    }
+
+    private void ApplyChatStylesForElement(VisualElement message)
+    {
+        if (message.ClassListContains("user-message"))
+            message.style.backgroundColor = settings.userChatBackgroundColor;
+        else if (message.ClassListContains("ariko-message"))
+            message.style.backgroundColor = settings.assistantChatBackgroundColor;
+
+        message.Query<Label>().ForEach(label =>
         {
-            if (message.ClassListContains("user-message"))
-                message.style.backgroundColor = settings.userChatBackgroundColor;
-            else if (message.ClassListContains("ariko-message"))
-                message.style.backgroundColor = settings.assistantChatBackgroundColor;
-
-            message.Query<Label>().ForEach(label =>
+            if (label.name != "role")
             {
-                if (label.name != "role")
-                {
-                    if (settings.chatFont != null)
-                        label.style.unityFont = settings.chatFont;
-                    label.style.fontSize = settings.chatFontSize;
-                }
-            });
-
-            var roleLabel = message.Q<Label>("role");
-            if (roleLabel != null)
-                roleLabel.style.unityFontStyleAndWeight = settings.roleLabelsBold ? FontStyle.Bold : FontStyle.Normal;
+                if (settings.chatFont != null)
+                    label.style.unityFont = settings.chatFont;
+                label.style.fontSize = settings.chatFontSize;
+            }
         });
+
+        var roleLabel = message.Q<Label>("role");
+        if (roleLabel != null)
+            roleLabel.style.unityFontStyleAndWeight = settings.roleLabelsBold ? FontStyle.Bold : FontStyle.Normal;
     }
 
     private void ScrollToBottom()
@@ -385,6 +422,7 @@ public class ArikoWindow : EditorWindow
     {
         var settingsPanel = rootVisualElement.Q<VisualElement>("settings-panel");
         var chatPanel = rootVisualElement.Q<VisualElement>("chat-panel");
+        var historyPanel = rootVisualElement.Q<VisualElement>("history-panel");
         var settingsVisible = settingsPanel.resolvedStyle.display == DisplayStyle.Flex;
 
         if (!settingsVisible)
@@ -392,11 +430,13 @@ public class ArikoWindow : EditorWindow
             LoadSettingsToUI();
             settingsPanel.style.display = DisplayStyle.Flex;
             chatPanel.style.display = DisplayStyle.None;
+            historyPanel.style.display = DisplayStyle.None;
         }
         else
         {
             settingsPanel.style.display = DisplayStyle.None;
             chatPanel.style.display = DisplayStyle.Flex;
+            historyPanel.style.display = DisplayStyle.Flex;
         }
     }
 
@@ -411,6 +451,7 @@ public class ArikoWindow : EditorWindow
         panel.Q<TextField>("system-prompt").value = settings.systemPrompt;
         panel.Q<ObjectField>("chat-font").value = settings.chatFont;
         panel.Q<IntegerField>("chat-font-size").value = settings.chatFontSize;
+        panel.Q<IntegerField>("chat-history-size").value = settings.chatHistorySize;
         panel.Q<Toggle>("role-bold-toggle").value = settings.roleLabelsBold;
     }
 
@@ -425,6 +466,7 @@ public class ArikoWindow : EditorWindow
         settings.userChatBackgroundColor = panel.Q<ColorField>("user-bg-color").value;
         settings.chatFont = panel.Q<ObjectField>("chat-font").value as Font;
         settings.chatFontSize = panel.Q<IntegerField>("chat-font-size").value;
+        settings.chatHistorySize = panel.Q<IntegerField>("chat-history-size").value;
         settings.roleLabelsBold = panel.Q<Toggle>("role-bold-toggle").value;
 
         ArikoSettingsManager.SaveSettings(settings);

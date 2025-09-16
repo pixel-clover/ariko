@@ -28,6 +28,9 @@ public class ArikoSettings : ScriptableObject
     [Tooltip("Make the role labels (User or Ariko) bold.")]
     public bool roleLabelsBold = true;
 
+    [Tooltip("How many past chat sessions to keep in history. Set to 0 for infinite.")]
+    public int chatHistorySize = 5;
+
     [Header("System Prompt")]
     [TextArea(5, 15)]
     [Tooltip("The initial instruction given to the AI at the start of each new conversation.")]

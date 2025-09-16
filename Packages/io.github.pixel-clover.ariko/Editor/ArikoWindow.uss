@@ -263,3 +263,41 @@
 .copy-button:hover {
     background-color: var(--input-background-color);
 }
+
+/* Chat History Panel */
+.history-panel {
+    width: 200px;
+    min-width: 150px;
+    max-width: 300px;
+    border-right-width: 1px;
+    border-right-color: var(--separator-color);
+    background-color: var(--toolbar-background-color); /* A slightly different shade */
+    resize: horizontal;
+}
+
+.history-header {
+    font-size: 14px;
+    -unity-font-style: bold;
+    padding: 10px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--separator-color);
+    color: var(--text-color);
+}
+
+.history-item {
+    padding: 10px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--separator-color);
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-item:hover {
+    background-color: var(--input-background-color);
+}
+
+.history-item--selected {
+    background-color: var(--user-message-background-color);
+}

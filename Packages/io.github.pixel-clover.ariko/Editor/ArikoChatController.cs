@@ -11,11 +11,13 @@ public class ArikoChatController
     private readonly Dictionary<string, string> apiKeys = new();
     private readonly ArikoLLMService llmService;
     private readonly ArikoSettings settings;
-    public Action OnChatCleared;
-    public Action<string> OnError;
+    public Action OnChatCleared; // Tells the view to clear the message display
+    public Action OnChatReloaded; // Tells the view to reload with messages from ActiveSession
 
-    // Events for the View to subscribe to
-    public Action<string, string> OnMessageAdded; // role, content
+    // --- Events for the View to subscribe to ---
+    public Action<string> OnError;
+    public Action OnHistoryChanged; // Tells the view to update the history panel
+    public Action<ChatMessage> OnMessageAdded; // Replaces the old OnMessageAdded
     public Action<List<string>> OnModelsFetched;
     public Action<bool> OnResponseStatusChanged; // isPending
 
@@ -23,8 +25,18 @@ public class ArikoChatController
     {
         this.settings = settings;
         llmService = new ArikoLLMService();
+        ChatHistory = new List<ChatSession>();
+
+        // Start with a clean session
+        ActiveSession = new ChatSession();
+        ChatHistory.Add(ActiveSession);
+
         LoadApiKeysFromEnvironment();
     }
+
+    // --- Properties for Chat History ---
+    public List<ChatSession> ChatHistory { get; }
+    public ChatSession ActiveSession { get; private set; }
 
     public List<Object> ManuallyAttachedAssets { get; } = new();
     public bool AutoContext { get; set; } = true;
@@ -48,28 +60,39 @@ public class ArikoChatController
         apiKeys[provider] = key;
     }
 
-    public async void SendMessageToAssistant(string text, string selectedProvider, string selectedModel,
-        int chatHistoryCount)
+    public async void SendMessageToAssistant(string text, string selectedProvider, string selectedModel)
     {
         if (string.IsNullOrWhiteSpace(text)) return;
 
-        OnMessageAdded?.Invoke("User", text);
+        // 1. Add user message to session and notify view
+        var userMessage = new ChatMessage { Role = "User", Content = text };
+        ActiveSession.Messages.Add(userMessage);
+        OnMessageAdded?.Invoke(userMessage);
 
         var context = BuildContextString();
-        var systemPrompt = chatHistoryCount == 0 && !string.IsNullOrEmpty(settings.systemPrompt)
+        var systemPrompt = ActiveSession.Messages.Count <= 1 && !string.IsNullOrEmpty(settings.systemPrompt)
             ? settings.systemPrompt + "\n\n"
             : "";
         var prompt = $"{systemPrompt}{context}\n\nUser Question:\n{text}";
 
         OnResponseStatusChanged?.Invoke(true);
-        OnMessageAdded?.Invoke("Ariko", "...");
+
+        // 2. Add "thinking" message and notify view
+        var thinkingMessage = new ChatMessage { Role = "Ariko", Content = "..." };
+        ActiveSession.Messages.Add(thinkingMessage);
+        OnMessageAdded?.Invoke(thinkingMessage);
 
         var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
         var result = await llmService.SendChatRequest(prompt, provider, selectedModel, settings, apiKeys);
 
         var newContent = result.IsSuccess ? result.Data : result.Error;
-        OnMessageAdded?.Invoke("Ariko", newContent);
 
+        // 3. Replace "thinking" message in session with final message, and notify view
+        // The view will see the "thinking" message arrive, then the final one. It should handle replacing the visual.
+        ActiveSession.Messages.Remove(thinkingMessage);
+        var finalMessage = new ChatMessage { Role = "Ariko", Content = newContent };
+        ActiveSession.Messages.Add(finalMessage);
+        OnMessageAdded?.Invoke(finalMessage);
 
         OnResponseStatusChanged?.Invoke(false);
     }
@@ -89,10 +112,36 @@ public class ArikoChatController
         }
     }
 
+    // Called when the "New Chat" button is clicked
     public void ClearChat()
     {
+        // Don't create a new session if the current one is empty. Just clear the display.
+        if (ActiveSession != null && ActiveSession.Messages.Count == 0)
+        {
+            OnChatCleared?.Invoke();
+            return;
+        }
+
+        ActiveSession = new ChatSession();
+        ChatHistory.Insert(0, ActiveSession);
+
+        // Enforce history size limit (if set)
+        if (settings.chatHistorySize > 0 && ChatHistory.Count > settings.chatHistorySize)
+            ChatHistory.RemoveAt(ChatHistory.Count - 1);
+
         ManuallyAttachedAssets.Clear();
-        OnChatCleared?.Invoke();
+        OnChatCleared?.Invoke(); // Tells view to clear the scrollview
+        OnHistoryChanged?.Invoke(); // Tells view to update history list
+    }
+
+    public void SwitchToSession(ChatSession session)
+    {
+        if (session == null || session == ActiveSession) return;
+
+        ActiveSession = session;
+        ManuallyAttachedAssets.Clear(); // Context is per-session for now
+        OnChatReloaded?.Invoke();
+        OnHistoryChanged?.Invoke(); // To update selection highlight
     }
 
     private string BuildContextString()

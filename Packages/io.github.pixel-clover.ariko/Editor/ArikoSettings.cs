@@ -42,29 +42,6 @@ public class ArikoSettings : ScriptableObject
         "1.  **Analyze and Plan:** First, analyze the user's request. Formulate a concise, step-by-step plan and state it clearly.\n" +
         "2.  **Execute Autonomously:** After stating your plan, immediately execute the first step by calling the appropriate tool. The system will pause for user approval before the tool runs.\n" +
         "3.  **Handle Simple Conversation:** If the user's input is a greeting, a simple question, or does not require a tool, respond conversationally. DO NOT use a tool if a direct text answer is sufficient.\n" +
-        "4.  **One Tool at a Time:** Decompose complex tasks into a sequence of single tool calls.\n" +
+        "4.  **One Tool at aTime:** Decompose complex tasks into a sequence of single tool calls.\n" +
         "5.  **Be Concise:** Do not add comments to code unless requested. Avoid conversational filler when executing a task.";
-
-
-    [Header("API Configuration")] [NonSerialized]
-    public string google_ApiKey;
-
-    [NonSerialized] public string openAI_ApiKey;
-
-    public void OnEnable()
-    {
-        LoadApiKeysFromEnvironment();
-    }
-
-    public void LoadApiKeysFromEnvironment()
-    {
-        var googleKey = Environment.GetEnvironmentVariable("GOOGLE_API_KEY");
-        if (!string.IsNullOrEmpty(googleKey)) google_ApiKey = googleKey;
-
-        var openAiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-        if (!string.IsNullOrEmpty(openAiKey)) openAI_ApiKey = openAiKey;
-
-        var ollamaUrl = Environment.GetEnvironmentVariable("OLLAMA_URL");
-        if (!string.IsNullOrEmpty(ollamaUrl)) ollama_Url = ollamaUrl;
-    }
 }

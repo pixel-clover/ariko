@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -25,89 +26,81 @@ public class ArikoLLMService
         };
     }
 
-    public void SendChatRequest(string prompt, AIProvider provider, string modelName, ArikoSettings settings,
-        Action<WebRequestResult<string>> onComplete)
+    public async Task<WebRequestResult<string>> SendChatRequest(string prompt, AIProvider provider, string modelName, ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         if (string.IsNullOrEmpty(modelName))
         {
-            onComplete?.Invoke(new WebRequestResult<string>(null, "Error: No AI model selected."));
-            return;
+            return new WebRequestResult<string>(null, "Error: No AI model selected.");
         }
 
         if (!strategies.TryGetValue(provider, out var strategy))
         {
-            onComplete?.Invoke(new WebRequestResult<string>(null, "Error: Provider not supported."));
-            return;
+            return new WebRequestResult<string>(null, "Error: Provider not supported.");
         }
 
-        var url = strategy.GetChatUrl(modelName, settings);
-        var authToken = strategy.GetAuthHeader(settings);
+        var url = strategy.GetChatUrl(modelName, settings, apiKeys);
+        var authToken = strategy.GetAuthHeader(settings, apiKeys);
         var jsonBody = strategy.BuildChatRequestBody(prompt, modelName);
 
-        SendPostRequest(url, authToken, jsonBody, onComplete, strategy.ParseChatResponse);
+        return await SendPostRequest(url, authToken, jsonBody, strategy.ParseChatResponse);
     }
 
-    public void FetchAvailableModels(AIProvider provider, ArikoSettings settings,
-        Action<WebRequestResult<List<string>>> onComplete)
+    public async Task<WebRequestResult<List<string>>> FetchAvailableModels(AIProvider provider, ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         if (!strategies.TryGetValue(provider, out var strategy))
         {
-            onComplete?.Invoke(new WebRequestResult<List<string>>(null, "Error: Provider not supported."));
-            return;
+            return new WebRequestResult<List<string>>(null, "Error: Provider not supported.");
         }
 
-        var url = strategy.GetModelsUrl(settings);
-        var authToken = strategy.GetAuthHeader(settings);
+        var url = strategy.GetModelsUrl(settings, apiKeys);
+        var authToken = strategy.GetAuthHeader(settings, apiKeys);
 
-        SendGetRequest(url, authToken, onComplete, strategy.ParseModelsResponse);
+        return await SendGetRequest(url, authToken, strategy.ParseModelsResponse);
     }
 
-    private void SendGetRequest(string url, string authToken, Action<WebRequestResult<List<string>>> onComplete,
-        Func<string, List<string>> parser)
+    private async Task<WebRequestResult<List<string>>> SendGetRequest(string url, string authToken, Func<string, List<string>> parser)
     {
-        var request = UnityWebRequest.Get(url);
+        using var request = UnityWebRequest.Get(url);
         if (!string.IsNullOrEmpty(authToken)) request.SetRequestHeader("Authorization", authToken);
-        var op = request.SendWebRequest();
-        op.completed += _ => HandleApiResponse(request, onComplete, parser);
+
+        await request.SendWebRequest().AsTask();
+
+        return HandleApiResponse(request, parser);
     }
 
-    private void SendPostRequest(string url, string authToken, string jsonBody,
-        Action<WebRequestResult<string>> onComplete, Func<string, string> parser)
+    private async Task<WebRequestResult<string>> SendPostRequest(string url, string authToken, string jsonBody, Func<string, string> parser)
     {
-        var request = new UnityWebRequest(url, "POST");
+        using var request = new UnityWebRequest(url, "POST");
         var bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
         if (!string.IsNullOrEmpty(authToken)) request.SetRequestHeader("Authorization", authToken);
-        var op = request.SendWebRequest();
-        op.completed += _ => HandleApiResponse(request, onComplete, parser);
+
+        await request.SendWebRequest().AsTask();
+
+        return HandleApiResponse(request, parser);
     }
 
-    private void HandleApiResponse<T>(UnityWebRequest request, Action<WebRequestResult<T>> onComplete,
-        Func<string, T> parser)
+    private WebRequestResult<T> HandleApiResponse<T>(UnityWebRequest request, Func<string, T> parser)
     {
         if (request.result == UnityWebRequest.Result.Success)
         {
             try
             {
                 var parsedData = parser(request.downloadHandler.text);
-                onComplete?.Invoke(new WebRequestResult<T>(parsedData, null));
+                return new WebRequestResult<T>(parsedData, null);
             }
             catch (Exception ex)
             {
                 var error = $"Failed to parse response: {ex.Message}";
                 Debug.LogError($"Ariko: {error}\nResponse: {request.downloadHandler.text}");
-                onComplete?.Invoke(new WebRequestResult<T>(default, error));
+                return new WebRequestResult<T>(default, error);
             }
         }
-        else
-        {
-            var error = $"API request failed: {request.error}\nDetails: {request.downloadHandler.text}";
-            Debug.LogError($"Ariko: {error}");
-            onComplete?.Invoke(new WebRequestResult<T>(default, error));
-        }
 
-        request.Dispose();
+        var requestError = $"API request failed: {request.error}\nDetails: {request.downloadHandler.text}";
+        Debug.LogError($"Ariko: {requestError}");
+        return new WebRequestResult<T>(default, requestError);
     }
 }

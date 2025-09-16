@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -10,18 +9,27 @@ using Object = UnityEngine.Object;
 
 public class ArikoWindow : EditorWindow
 {
-    private readonly List<Object> manuallyAttachedAssets = new();
-    private Toggle autoContextToggle;
-    private ScrollView chatHistoryScrollView;
-    private Label fetchingModelsLabel;
-    private ArikoLLMService llmService;
-    private VisualElement manualAttachmentsList;
-    private PopupField<string> modelPopup;
-    private PopupField<string> providerPopup;
-    private Button sendButton;
+    private ArikoChatController controller;
     private ArikoSettings settings;
+
+    // UI Elements
+    private ScrollView chatHistoryScrollView;
     private TextField userInput;
+    private Button sendButton;
+    private Toggle autoContextToggle;
+    private VisualElement manualAttachmentsList;
+    private Label fetchingModelsLabel;
+    private PopupField<string> providerPopup;
+    private PopupField<string> modelPopup;
     private PopupField<string> workModePopup;
+
+    private VisualElement thinkingMessage;
+
+    [MenuItem("Tools/Ariko Assistant")]
+    public static void ShowWindow()
+    {
+        GetWindow<ArikoWindow>("Ariko Assistant");
+    }
 
     private void OnEnable()
     {
@@ -33,56 +41,37 @@ public class ArikoWindow : EditorWindow
     {
         ArikoSearchWindow.OnAssetSelected -= HandleAssetSelectedFromSearch;
         Selection.selectionChanged -= UpdateAutoContextLabel;
+
+        if (controller != null)
+        {
+            controller.OnMessageAdded -= HandleMessageAdded;
+            controller.OnChatCleared -= HandleChatCleared;
+            controller.OnResponseStatusChanged -= SetResponsePending;
+            controller.OnModelsFetched -= HandleModelsFetched;
+            controller.OnError -= HandleError;
+        }
     }
 
     public void CreateGUI()
     {
-        FindOrCreateSettings();
-        llmService = new ArikoLLMService();
+        settings = ArikoSettingsManager.LoadSettings();
+        controller = new ArikoChatController(settings);
 
-        var visualTree =
-            AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                "Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uxml");
-        var styleSheet =
-            AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uss");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uxml");
+        var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uss");
         rootVisualElement.styleSheets.Add(styleSheet);
         visualTree.CloneTree(rootVisualElement);
 
-        rootVisualElement.AddToClassList(EditorGUIUtility.isProSkin
-            ? "unity-editor-dark-theme"
-            : "unity-editor-light-theme");
+        rootVisualElement.AddToClassList(EditorGUIUtility.isProSkin ? "unity-editor-dark-theme" : "unity-editor-light-theme");
 
         InitializeQueries();
         CreateAndSetupPopups();
         RegisterCallbacks();
 
-        settings.LoadApiKeysFromEnvironment();
-        FetchModelsForCurrentProvider();
+        controller.FetchModelsForCurrentProvider(providerPopup.value);
 
         ApplyChatStyles();
-
-        chatHistoryScrollView.schedule.Execute(() =>
-        {
-            var firstChild = chatHistoryScrollView.contentContainer.Children().FirstOrDefault();
-            if (firstChild != null)
-                chatHistoryScrollView.ScrollTo(firstChild);
-        });
-        userInput.RegisterCallback<KeyDownEvent>(evt =>
-        {
-            if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
-            {
-                if (evt.shiftKey) return;
-
-                SendMessageToAssistant();
-                evt.StopImmediatePropagation();
-            }
-        });
-    }
-
-    [MenuItem("Tools/Ariko Assistant")]
-    public static void ShowWindow()
-    {
-        GetWindow<ArikoWindow>("Ariko Assistant");
+        ScrollToBottom();
     }
 
     private void InitializeQueries()
@@ -101,8 +90,7 @@ public class ArikoWindow : EditorWindow
         providerPopup = new PopupField<string>(new List<string>(), 0);
         providerPlaceholder.Add(providerPopup);
         providerPopup.choices.AddRange(Enum.GetNames(typeof(ArikoLLMService.AIProvider)).ToList());
-        if (providerPopup.choices.Count > 0)
-            providerPopup.SetValueWithoutNotify(providerPopup.choices.First());
+        providerPopup.SetValueWithoutNotify(settings.selectedProvider ?? providerPopup.choices.First());
 
         var modelPlaceholder = rootVisualElement.Q<VisualElement>("model-popup-placeholder");
         modelPopup = new PopupField<string>(new List<string>(), 0);
@@ -112,20 +100,47 @@ public class ArikoWindow : EditorWindow
         workModePopup = new PopupField<string>(new List<string>(), 0);
         workModePlaceholder.Add(workModePopup);
         workModePopup.choices.AddRange(Enum.GetNames(typeof(WorkMode)).ToList());
-        if (workModePopup.choices.Count > 0)
-            workModePopup.SetValueWithoutNotify(workModePopup.choices.First());
+        workModePopup.SetValueWithoutNotify(settings.selectedWorkMode ?? workModePopup.choices.First());
     }
 
     private void RegisterCallbacks()
     {
-        rootVisualElement.Q<Button>("new-chat-button").clicked += ClearChat;
-        rootVisualElement.Q<Button>("settings-button").clicked += ToggleSettingsPanel;
+        // Controller -> View
+        controller.OnMessageAdded += HandleMessageAdded;
+        controller.OnChatCleared += HandleChatCleared;
+        controller.OnResponseStatusChanged += SetResponsePending;
+        controller.OnModelsFetched += HandleModelsFetched;
+        controller.OnError += HandleError;
+
+        // View -> Controller
+        sendButton.clicked += () => {
+            controller.SendMessageToAssistant(userInput.value, providerPopup.value, modelPopup.value, chatHistoryScrollView.childCount);
+            userInput.value = "";
+        };
+
+        userInput.RegisterCallback<KeyDownEvent>(evt =>
+        {
+            if (evt.keyCode == KeyCode.Return && !evt.shiftKey)
+            {
+                controller.SendMessageToAssistant(userInput.value, providerPopup.value, modelPopup.value, chatHistoryScrollView.childCount);
+                userInput.value = "";
+                evt.StopImmediatePropagation();
+            }
+        });
+
+        rootVisualElement.Q<Button>("new-chat-button").clicked += controller.ClearChat;
         rootVisualElement.Q<Button>("add-file-button").clicked += ArikoSearchWindow.ShowWindow;
-        sendButton.clicked += SendMessageToAssistant;
+        autoContextToggle.RegisterValueChangedCallback(evt => controller.AutoContext = evt.newValue);
 
-        providerPopup.RegisterValueChangedCallback(evt => FetchModelsForCurrentProvider());
+        providerPopup.RegisterValueChangedCallback(evt => {
+            settings.selectedProvider = evt.newValue;
+            controller.FetchModelsForCurrentProvider(evt.newValue);
+        });
         modelPopup.RegisterValueChangedCallback(evt => SetSelectedModelForProvider(evt.newValue));
+        workModePopup.RegisterValueChangedCallback(evt => settings.selectedWorkMode = evt.newValue);
 
+        // Settings Panel
+        rootVisualElement.Q<Button>("settings-button").clicked += ToggleSettingsPanel;
         RegisterSettingsCallbacks();
     }
 
@@ -133,75 +148,91 @@ public class ArikoWindow : EditorWindow
     {
         var settingsPanel = rootVisualElement.Q<VisualElement>("settings-panel");
         settingsPanel.Q<Button>("save-settings-button").clicked += SaveAndCloseSettings;
-        settingsPanel.Q<ColorField>("ariko-bg-color").RegisterValueChangedCallback(evt =>
-        {
+
+        settingsPanel.Q<ColorField>("ariko-bg-color").RegisterValueChangedCallback(evt => {
             settings.assistantChatBackgroundColor = evt.newValue;
             ApplyChatStyles();
         });
-        settingsPanel.Q<ColorField>("user-bg-color").RegisterValueChangedCallback(evt =>
-        {
+        settingsPanel.Q<ColorField>("user-bg-color").RegisterValueChangedCallback(evt => {
             settings.userChatBackgroundColor = evt.newValue;
             ApplyChatStyles();
         });
-        settingsPanel.Q<ObjectField>("chat-font").RegisterValueChangedCallback(evt =>
-        {
+        settingsPanel.Q<ObjectField>("chat-font").RegisterValueChangedCallback(evt => {
             settings.chatFont = evt.newValue as Font;
             ApplyChatStyles();
         });
-        settingsPanel.Q<IntegerField>("chat-font-size").RegisterValueChangedCallback(evt =>
-        {
+        settingsPanel.Q<IntegerField>("chat-font-size").RegisterValueChangedCallback(evt => {
             settings.chatFontSize = evt.newValue;
             ApplyChatStyles();
         });
-        settingsPanel.Q<Toggle>("role-bold-toggle").RegisterValueChangedCallback(evt =>
-        {
+        settingsPanel.Q<Toggle>("role-bold-toggle").RegisterValueChangedCallback(evt => {
             settings.roleLabelsBold = evt.newValue;
             ApplyChatStyles();
         });
     }
 
-    private void SendMessageToAssistant()
+    private void HandleMessageAdded(string role, string content)
     {
-        var text = userInput.value;
-        if (string.IsNullOrWhiteSpace(text)) return;
-
-        AddMessageToChat("User", text);
-        userInput.value = "";
-
-        var context = BuildContextString();
-        var systemPrompt = !chatHistoryScrollView.Children().Any() && !string.IsNullOrEmpty(settings.systemPrompt)
-            ? settings.systemPrompt + "\n\n"
-            : "";
-        var prompt = $"{systemPrompt}{context}\n\nUser Question:\n{text}";
-
-        SetResponsePending(true);
-        var thinkingMessage = AddMessageToChat("Ariko", "...");
-
-        var model = GetSelectedModelForProvider();
-        var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), providerPopup.value);
-
-        llmService.SendChatRequest(prompt, provider, model, settings, result =>
+        // If this is the start of a response, remove the "thinking..." message
+        if (thinkingMessage != null && role == "Ariko" && content != "...")
         {
-            var contentContainer = thinkingMessage.Q<VisualElement>("content-container");
-            contentContainer.Clear();
+            chatHistoryScrollView.Remove(thinkingMessage);
+            thinkingMessage = null;
+        }
 
-            var newContent = result.IsSuccess ? MarkdownParser.Parse(result.Data) : MarkdownParser.Parse(result.Error);
-            contentContainer.Add(newContent);
+        var message = AddMessageToChat(role, content);
 
-            SetResponsePending(false);
-            ScrollChatToBottom();
-        });
+        // If this is a "thinking..." message, store it for later removal
+        if (role == "Ariko" && content == "...")
+        {
+            thinkingMessage = message;
+        }
+
+        ScrollToBottom();
     }
 
-    // csharp
+    private void HandleChatCleared()
+    {
+        chatHistoryScrollView.Clear();
+        controller.ManuallyAttachedAssets.Clear();
+        UpdateManualAttachmentsList();
+    }
+
+    private void HandleModelsFetched(List<string> models)
+    {
+        fetchingModelsLabel.style.display = DisplayStyle.None;
+        modelPopup.SetEnabled(true);
+
+        modelPopup.choices.Clear();
+        modelPopup.choices.AddRange(models);
+
+        var currentModel = GetSelectedModelForProvider();
+        if (modelPopup.choices.Contains(currentModel))
+        {
+            modelPopup.SetValueWithoutNotify(currentModel);
+        }
+        else
+        {
+            var newModel = modelPopup.choices.FirstOrDefault();
+            modelPopup.SetValueWithoutNotify(newModel);
+            SetSelectedModelForProvider(newModel);
+        }
+    }
+
+    private void HandleError(string error)
+    {
+        Debug.LogError($"Ariko: {error}");
+        // Optionally, show a dialog or add an error message to the chat
+        AddMessageToChat("System", $"Error: {error}");
+    }
+
     private VisualElement AddMessageToChat(string role, string content)
     {
         var messageContainer = new VisualElement();
         messageContainer.AddToClassList("chat-message");
-        messageContainer.AddToClassList(role == "User" ? "user-message" : "ariko-message");
+        messageContainer.AddToClassList(role.ToLower() + "-message");
 
-        // If this is the first message in the chat, override the top margin (USS :first-child isn't supported)
-        var isFirstMessage = chatHistoryScrollView != null && chatHistoryScrollView.contentContainer.childCount == 0;
+        var isFirstMessage = chatHistoryScrollView.contentContainer.childCount == 0;
         if (isFirstMessage) messageContainer.style.marginTop = new StyleLength(0f);
 
         var roleLabel = new Label(role) { name = "role" };
@@ -213,133 +244,79 @@ public class ArikoWindow : EditorWindow
         messageContainer.Add(roleLabel);
         messageContainer.Add(contentContainer);
 
-        StyleChatMessage(messageContainer);
-
         chatHistoryScrollView.Add(messageContainer);
-
-        ScrollChatToBottom();
         return messageContainer;
-    }
-
-    private void StyleChatMessage(VisualElement message)
-    {
-        if (message == null || settings == null) return;
-
-        if (message.ClassListContains("user-message"))
-            message.style.backgroundColor = settings.userChatBackgroundColor;
-        else if (message.ClassListContains("ariko-message"))
-            message.style.backgroundColor = settings.assistantChatBackgroundColor;
-
-        // Apply font styles to all labels within the message content
-        message.Query<Label>().ForEach(label =>
-        {
-            // Role labels have their own styling, so we exclude them here
-            if (label.name != "role")
-            {
-                if (settings.chatFont != null)
-                    label.style.unityFont = settings.chatFont;
-                label.style.fontSize = settings.chatFontSize;
-            }
-        });
-
-        var roleLabel = message.Q<Label>("role");
-        if (roleLabel != null)
-            roleLabel.style.unityFontStyleAndWeight = settings.roleLabelsBold ? FontStyle.Bold : FontStyle.Normal;
-    }
-
-    private void ApplyChatStyles()
-    {
-        if (chatHistoryScrollView == null) return;
-        var messages = chatHistoryScrollView.Query<VisualElement>(className: "chat-message").ToList();
-        foreach (var message in messages) StyleChatMessage(message);
-    }
-
-    private void ScrollChatToBottom()
-    {
-        chatHistoryScrollView.schedule.Execute(() =>
-            chatHistoryScrollView.verticalScroller.value = chatHistoryScrollView.verticalScroller.highValue);
-    }
-
-    private void FetchModelsForCurrentProvider()
-    {
-        fetchingModelsLabel.style.display = DisplayStyle.Flex;
-        modelPopup.SetEnabled(false);
-        var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), providerPopup.value);
-
-        llmService.FetchAvailableModels(provider, settings, result =>
-        {
-            modelPopup.choices.Clear();
-            modelPopup.choices.AddRange(result.IsSuccess ? result.Data : new List<string> { "Error" });
-
-            var currentModel = GetSelectedModelForProvider();
-            if (modelPopup.choices.Contains(currentModel))
-            {
-                modelPopup.SetValueWithoutNotify(currentModel);
-            }
-            else
-            {
-                modelPopup.SetValueWithoutNotify(modelPopup.choices.FirstOrDefault());
-                SetSelectedModelForProvider(modelPopup.value);
-            }
-
-            fetchingModelsLabel.style.display = DisplayStyle.None;
-            modelPopup.SetEnabled(true);
-        });
-    }
-
-    private void FindOrCreateSettings()
-    {
-        var settingsPath = "Packages/io.github.pixel-clover.ariko/Editor/ArikoSettings.asset";
-        settings = AssetDatabase.LoadAssetAtPath<ArikoSettings>(settingsPath);
-        if (settings == null)
-        {
-            settings = CreateInstance<ArikoSettings>();
-            AssetDatabase.CreateAsset(settings, settingsPath);
-            AssetDatabase.SaveAssets();
-        }
-    }
-
-    private void ClearChat()
-    {
-        chatHistoryScrollView.Clear();
-        manuallyAttachedAssets.Clear();
-        UpdateManualAttachmentsList();
     }
 
     private void SetResponsePending(bool isPending)
     {
         sendButton.SetEnabled(!isPending);
         userInput.SetEnabled(!isPending);
+        if (!isPending)
+        {
+            fetchingModelsLabel.style.display = DisplayStyle.None;
+        }
     }
 
-    private string BuildContextString()
+    private void ApplyChatStyles()
     {
-        var contextBuilder = new StringBuilder();
-        if (autoContextToggle.value && Selection.activeObject != null)
-        {
-            contextBuilder.AppendLine("--- Current Selection Context ---");
-            AppendAssetInfo(Selection.activeObject, contextBuilder);
-        }
+        if (settings == null) return;
 
-        if (manuallyAttachedAssets.Any())
+        // Because SetCustomProperty is not available in all Unity versions, we apply styles directly.
+        // This is a compromise to ensure compatibility. The logic is centralized here.
+        rootVisualElement.Query<VisualElement>(className: "chat-message").ForEach(message =>
         {
-            contextBuilder.AppendLine("--- Manually Attached Context ---");
-            foreach (var asset in manuallyAttachedAssets) AppendAssetInfo(asset, contextBuilder);
-        }
+            if (message.ClassListContains("user-message"))
+                message.style.backgroundColor = settings.userChatBackgroundColor;
+            else if (message.ClassListContains("ariko-message"))
+                message.style.backgroundColor = settings.assistantChatBackgroundColor;
 
-        return contextBuilder.ToString();
+            message.Query<Label>().ForEach(label =>
+            {
+                if (label.name != "role")
+                {
+                    if (settings.chatFont != null)
+                        label.style.unityFont = settings.chatFont;
+                    label.style.fontSize = settings.chatFontSize;
+                }
+            });
+
+            var roleLabel = message.Q<Label>("role");
+            if (roleLabel != null)
+                roleLabel.style.unityFontStyleAndWeight = settings.roleLabelsBold ? FontStyle.Bold : FontStyle.Normal;
+        });
     }
 
-    private void AppendAssetInfo(Object asset, StringBuilder builder)
+    private void ScrollToBottom()
     {
-        if (asset is MonoScript script)
-            builder.AppendLine($"[File: {script.name}.cs]\n```csharp\n{script.text}\n```");
-        else if (asset is TextAsset textAsset)
-            builder.AppendLine($"[File: {textAsset.name}]\n```\n{textAsset.text}\n```");
-        else
-            builder.AppendLine(
-                $"[Asset: {asset.name} ({asset.GetType().Name}) at path {AssetDatabase.GetAssetPath(asset)}]");
-        builder.AppendLine();
+        chatHistoryScrollView.schedule.Execute(() => chatHistoryScrollView.verticalScroller.value = chatHistoryScrollView.verticalScroller.highValue);
+    }
+
+    private void HandleAssetSelectedFromSearch(Object selectedAsset)
+    {
+        if (selectedAsset != null && !controller.ManuallyAttachedAssets.Contains(selectedAsset))
+        {
+            controller.ManuallyAttachedAssets.Add(selectedAsset);
+            UpdateManualAttachmentsList();
+        }
+    }
+
+    private void UpdateManualAttachmentsList()
+    {
+        manualAttachmentsList.Clear();
+        foreach (var asset in controller.ManuallyAttachedAssets)
+        {
+            var container = new VisualElement { style = { flexDirection = FlexDirection.Row } };
+            var objectField = new ObjectField { value = asset, objectType = typeof(Object) };
+            objectField.SetEnabled(false);
+            var removeButton = new Button(() => {
+                controller.ManuallyAttachedAssets.Remove(asset);
+                UpdateManualAttachmentsList();
+            }) { text = "x" };
+            container.Add(objectField);
+            container.Add(removeButton);
+            manualAttachmentsList.Add(container);
+        }
     }
 
     private void UpdateAutoContextLabel()
@@ -351,48 +328,19 @@ public class ArikoWindow : EditorWindow
             var path = AssetDatabase.GetAssetPath(Selection.activeObject);
             labelText = string.IsNullOrEmpty(path) ? Selection.activeObject.name : path;
         }
-
         autoContextToggle.label = labelText;
-    }
-
-    private void HandleAssetSelectedFromSearch(Object selectedAsset)
-    {
-        if (selectedAsset != null && !manuallyAttachedAssets.Contains(selectedAsset))
-        {
-            manuallyAttachedAssets.Add(selectedAsset);
-            UpdateManualAttachmentsList();
-        }
-    }
-
-    private void UpdateManualAttachmentsList()
-    {
-        manualAttachmentsList.Clear();
-        foreach (var asset in manuallyAttachedAssets)
-        {
-            var container = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-            var objectField = new ObjectField { value = asset, objectType = typeof(Object) };
-            objectField.SetEnabled(false);
-            var removeButton = new Button(() =>
-            {
-                manuallyAttachedAssets.Remove(asset);
-                UpdateManualAttachmentsList();
-            }) { text = "x" };
-            container.Add(objectField);
-            container.Add(removeButton);
-            manualAttachmentsList.Add(container);
-        }
     }
 
     private string GetSelectedModelForProvider()
     {
         var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), providerPopup.value);
-        switch (provider)
+        return provider switch
         {
-            case ArikoLLMService.AIProvider.Google: return settings.google_SelectedModel;
-            case ArikoLLMService.AIProvider.OpenAI: return settings.openAI_SelectedModel;
-            case ArikoLLMService.AIProvider.Ollama: return settings.ollama_SelectedModel;
-            default: return null;
-        }
+            ArikoLLMService.AIProvider.Google => settings.google_SelectedModel,
+            ArikoLLMService.AIProvider.OpenAI => settings.openAI_SelectedModel,
+            ArikoLLMService.AIProvider.Ollama => settings.ollama_SelectedModel,
+            _ => null
+        };
     }
 
     private void SetSelectedModelForProvider(string modelName)
@@ -404,17 +352,13 @@ public class ArikoWindow : EditorWindow
             case ArikoLLMService.AIProvider.OpenAI: settings.openAI_SelectedModel = modelName; break;
             case ArikoLLMService.AIProvider.Ollama: settings.ollama_SelectedModel = modelName; break;
         }
-
-        EditorUtility.SetDirty(settings);
     }
 
     private void ToggleSettingsPanel()
     {
         var settingsPanel = rootVisualElement.Q<VisualElement>("settings-panel");
         var chatPanel = rootVisualElement.Q<VisualElement>("chat-panel");
-
-        // Use resolvedStyle to get the actual runtime visibility (avoids 'Undefined' inline style on first click)
-        var settingsVisible = settingsPanel != null && settingsPanel.resolvedStyle.display == DisplayStyle.Flex;
+        var settingsVisible = settingsPanel.resolvedStyle.display == DisplayStyle.Flex;
 
         if (!settingsVisible)
         {
@@ -432,8 +376,8 @@ public class ArikoWindow : EditorWindow
     private void LoadSettingsToUI()
     {
         var panel = rootVisualElement.Q<VisualElement>("settings-panel");
-        panel.Q<TextField>("google-api-key").value = settings.google_ApiKey;
-        panel.Q<TextField>("openai-api-key").value = settings.openAI_ApiKey;
+        panel.Q<TextField>("google-api-key").value = controller.GetApiKey("Google");
+        panel.Q<TextField>("openai-api-key").value = controller.GetApiKey("OpenAI");
         panel.Q<TextField>("ollama-url").value = settings.ollama_Url;
         panel.Q<ColorField>("ariko-bg-color").value = settings.assistantChatBackgroundColor;
         panel.Q<ColorField>("user-bg-color").value = settings.userChatBackgroundColor;
@@ -446,8 +390,8 @@ public class ArikoWindow : EditorWindow
     private void SaveAndCloseSettings()
     {
         var panel = rootVisualElement.Q<VisualElement>("settings-panel");
-        settings.google_ApiKey = panel.Q<TextField>("google-api-key").value;
-        settings.openAI_ApiKey = panel.Q<TextField>("openai-api-key").value;
+        controller.SetApiKey("Google", panel.Q<TextField>("google-api-key").value);
+        controller.SetApiKey("OpenAI", panel.Q<TextField>("openai-api-key").value);
         settings.ollama_Url = panel.Q<TextField>("ollama-url").value;
         settings.systemPrompt = panel.Q<TextField>("system-prompt").value;
         settings.assistantChatBackgroundColor = panel.Q<ColorField>("ariko-bg-color").value;
@@ -456,17 +400,10 @@ public class ArikoWindow : EditorWindow
         settings.chatFontSize = panel.Q<IntegerField>("chat-font-size").value;
         settings.roleLabelsBold = panel.Q<Toggle>("role-bold-toggle").value;
 
-        EditorUtility.SetDirty(settings);
-        AssetDatabase.SaveAssets();
-
+        ArikoSettingsManager.SaveSettings(settings);
         ApplyChatStyles();
-
         ToggleSettingsPanel();
     }
 
-    private enum WorkMode
-    {
-        Ask,
-        Agent
-    }
+    private enum WorkMode { Ask, Agent }
 }

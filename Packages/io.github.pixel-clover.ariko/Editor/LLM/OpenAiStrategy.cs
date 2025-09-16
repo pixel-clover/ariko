@@ -1,44 +1,45 @@
-using System;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 public class OpenAiStrategy : IApiProviderStrategy
 {
-    public string GetModelsUrl(ArikoSettings settings)
+    public string GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         return "https://api.openai.com/v1/models";
     }
 
-    public string GetChatUrl(string modelName, ArikoSettings settings)
+    public string GetChatUrl(string modelName, ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         return "https://api.openai.com/v1/chat/completions";
     }
 
-    public string GetAuthHeader(ArikoSettings settings)
+    public string GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        return $"Bearer {settings.openAI_ApiKey}";
+        apiKeys.TryGetValue("OpenAI", out var key);
+        return $"Bearer {key}";
     }
 
     public string BuildChatRequestBody(string prompt, string modelName)
     {
         var payload = new OpenAIPayload
         {
-            model = modelName,
-            messages = new[] { new MessagePayload { role = "user", content = prompt } }
+            Model = modelName,
+            Messages = new[] { new MessagePayload { Role = "user", Content = prompt } }
         };
-        return JsonUtility.ToJson(payload);
+        return JsonConvert.SerializeObject(payload);
     }
 
     public string ParseChatResponse(string json)
     {
-        return JsonUtility.FromJson<OpenAIResponse>(json).choices[0].message.content;
+        var response = JsonConvert.DeserializeObject<OpenAIResponse>(json);
+        return response.Choices?.FirstOrDefault()?.Message?.Content ?? "Error: No content found in response.";
     }
 
     public List<string> ParseModelsResponse(string json)
     {
-        var allAvailableModels = JsonUtility.FromJson<OpenAIModelsResponse>(json).data
-            .Select(m => m.id)
+        var allAvailableModels = JsonConvert.DeserializeObject<OpenAIModelsResponse>(json).Data
+            .Select(m => m.Id)
             .ToList();
 
         var filteredModels = allAvailableModels
@@ -48,47 +49,49 @@ public class OpenAiStrategy : IApiProviderStrategy
         return filteredModels;
     }
 
-    [Serializable]
     private class MessagePayload
     {
-        public string role;
-        public string content;
+        [JsonProperty("role")]
+        public string Role { get; set; }
+        [JsonProperty("content")]
+        public string Content { get; set; }
     }
 
-    [Serializable]
     private class OpenAIPayload
     {
-        public string model;
-        public MessagePayload[] messages;
+        [JsonProperty("model")]
+        public string Model { get; set; }
+        [JsonProperty("messages")]
+        public MessagePayload[] Messages { get; set; }
     }
 
-    [Serializable]
-    private struct OpenAIResponse
+    private class OpenAIResponse
     {
-        public Choice[] choices;
+        [JsonProperty("choices")]
+        public Choice[] Choices { get; set; }
     }
 
-    [Serializable]
-    private struct Choice
+    private class Choice
     {
-        public Message message;
+        [JsonProperty("message")]
+        public Message Message { get; set; }
     }
 
-    [Serializable]
-    private struct Message
+    private class Message
     {
-        public string content;
+        [JsonProperty("content")]
+        public string Content { get; set; }
     }
 
-    [Serializable]
-    private struct OpenAIModelsResponse
+    private class OpenAIModelsResponse
     {
-        public OpenAIModel[] data;
+        [JsonProperty("data")]
+        public OpenAIModel[] Data { get; set; }
     }
 
-    [Serializable]
-    private struct OpenAIModel
+    private class OpenAIModel
     {
-        public string id;
+        [JsonProperty("id")]
+        public string Id { get; set; }
     }
 }

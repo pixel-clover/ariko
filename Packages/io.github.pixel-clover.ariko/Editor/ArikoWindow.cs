@@ -12,15 +12,10 @@ public class ArikoWindow : EditorWindow
 {
     private Button approveButton;
     private Toggle autoContextToggle;
-
     private Button cancelButton;
-
-    // --- UI Elements ---
     private ScrollView chatHistoryScrollView;
     private VisualElement confirmationDialog;
     private Label confirmationLabel;
-
-    // --- State ---
     public ArikoChatController controller;
     private Button denyButton;
     private Label emptyStateLabel;
@@ -76,7 +71,6 @@ public class ArikoWindow : EditorWindow
 
         InitializeQueries();
 
-        // After cloning the UXML, set texts and tooltips
         if (historyButton != null)
         {
             historyButton.text = ArikoUIStrings.HistoryButton;
@@ -123,14 +117,14 @@ public class ArikoWindow : EditorWindow
             cancelButton.tooltip = ArikoUIStrings.TipCancel;
         }
 
-        // Label for the input (keeps layout tidy and serves as subtle guidance)
-        if (userInput != null) userInput.tooltip = ArikoUIStrings.TipInput;
+        if (userInput != null)
+        {
+            userInput.tooltip = ArikoUIStrings.TipInput;
+        }
 
-        // Status label (added in UXML as 'status-label')
         statusLabel = rootVisualElement.Q<Label>("status-label");
         SetStatus(ArikoUIStrings.StatusReady);
 
-        // Empty state label overlay (simple, non-intrusive hint)
         emptyStateLabel = new Label(ArikoUIStrings.EmptyState);
         emptyStateLabel.AddToClassList("empty-state-label");
         emptyStateLabel.pickingMode = PickingMode.Ignore;
@@ -139,7 +133,7 @@ public class ArikoWindow : EditorWindow
         CreateAndSetupPopups();
         RegisterCallbacks();
 
-        UpdateHistoryPanel(); // Initial population of history panel
+        UpdateHistoryPanel();
 
         await FetchModelsForCurrentProviderAsync(providerPopup.value);
 
@@ -148,8 +142,6 @@ public class ArikoWindow : EditorWindow
         UpdateEmptyState();
     }
 
-    // --- Lifecycle Methods ---
-    // 1) Add a shortcut to open the window (Ctrl+Alt+A on Linux/Windows, Cmd+Alt+A on macOS).
     [MenuItem("Tools/Ariko Assistant %&a")]
     public static void ShowWindow()
     {
@@ -164,7 +156,6 @@ public class ArikoWindow : EditorWindow
             return;
         }
 
-        // Ensure the provider and model are set to the current dropdown values
         var provider = providerPopup.value;
         var model = modelPopup.value;
 
@@ -178,8 +169,6 @@ public class ArikoWindow : EditorWindow
             HandleError("An unexpected error occurred. See console for details.");
         }
     }
-
-    // --- Initialization and Callbacks ---
 
     private void InitializeQueries()
     {
@@ -220,7 +209,6 @@ public class ArikoWindow : EditorWindow
 
     private void RegisterCallbacks()
     {
-        // Controller -> View
         controller.OnMessageAdded += HandleMessageAdded;
         controller.OnChatCleared += HandleChatCleared;
         controller.OnChatReloaded += HandleChatReloaded;
@@ -230,7 +218,6 @@ public class ArikoWindow : EditorWindow
         controller.OnError += HandleError;
         controller.OnToolCallConfirmationRequested += HandleToolCallConfirmationRequested;
 
-        // View -> Controller
         sendButton.clicked += SendMessage;
         cancelButton.clicked += controller.CancelCurrentRequest;
         userInput.RegisterCallback<KeyDownEvent>(evt =>
@@ -268,7 +255,6 @@ public class ArikoWindow : EditorWindow
         modelPopup.RegisterValueChangedCallback(evt => SetSelectedModelForProvider(evt.newValue));
         workModePopup.RegisterValueChangedCallback(evt => settings.selectedWorkMode = evt.newValue);
 
-        // Settings Panel
         rootVisualElement.Q<Button>("settings-button").clicked += ToggleSettingsPanel;
         historyButton.clicked += ToggleHistoryPanel;
         RegisterSettingsCallbacks();
@@ -318,8 +304,6 @@ public class ArikoWindow : EditorWindow
         });
     }
 
-    // --- Chat and History Handling ---
-
     private void HandleToolCallConfirmationRequested(ToolCall toolCall)
     {
         confirmationLabel.text = $"Thought: {toolCall.thought}\nAction: {toolCall.tool_name}";
@@ -330,7 +314,6 @@ public class ArikoWindow : EditorWindow
     private async void SendMessage()
     {
         if (string.IsNullOrWhiteSpace(userInput.value)) return;
-        // Create a temporary variable to hold the value, in case it changes before the async operation completes
         var textToSend = userInput.value;
         userInput.value = "";
         try
@@ -367,8 +350,7 @@ public class ArikoWindow : EditorWindow
 
     private void HandleMessageAdded(ChatMessage message)
     {
-        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." &&
-            chatHistoryScrollView.Contains(thinkingMessage))
+        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." && chatHistoryScrollView.Contains(thinkingMessage))
         {
             chatHistoryScrollView.Remove(thinkingMessage);
             thinkingMessage = null;
@@ -535,9 +517,9 @@ public class ArikoWindow : EditorWindow
 
         var roleLabel = message.Q<Label>("role");
         if (roleLabel != null)
+        {
             roleLabel.style.unityFontStyleAndWeight = settings.roleLabelsBold ? FontStyle.Bold : FontStyle.Normal;
-
-        // The color for error messages is now handled by the USS file.
+        }
     }
 
     private void ScrollToBottom()
@@ -689,7 +671,6 @@ public class ArikoWindow : EditorWindow
 
     private static bool IsColorLight(Color color)
     {
-        // Calculate luminance
         var luminance = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
         return luminance > 0.5;
     }

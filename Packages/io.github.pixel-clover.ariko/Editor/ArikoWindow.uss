@@ -1,8 +1,4 @@
-/* USS for Ariko, styled to look like GitHub Copilot */
-
-/* Light and Dark Theme Variable Definitions */
 :root {
-    /* Default to dark theme */
     --background-color: rgb(40, 40, 40);
     --text-color: rgb(220, 220, 220);
     --input-background-color: rgb(30, 30, 30);
@@ -32,13 +28,11 @@
     --separator-color: rgb(210, 210, 210);
 }
 
-/* Main Container */
 #main-container {
     background-color: var(--background-color);
     color: var(--text-color);
 }
 
-/* Subtle status text on the bottom toolbar */
 .status-label {
     color: var(--text-color);
     opacity: 0.7;
@@ -46,7 +40,6 @@
     font-size: 12px;
 }
 
-/* Empty state hint inside the chat area */
 .empty-state-label {
     opacity: 0.6;
     -unity-text-align: middle-center;
@@ -54,19 +47,16 @@
     white-space: normal;
 }
 
-/* Toolbar */
 .unity-toolbar {
     background-color: var(--toolbar-background-color);
     border-bottom-width: 1px;
     border-bottom-color: var(--input-border-color);
 }
 
-/* Chat History */
 #chat-history {
     padding: 10px;
 }
 
-/* Separator */
 .separator {
     height: 1px;
     background-color: var(--separator-color);
@@ -80,7 +70,7 @@
     margin-bottom: 10px;
     white-space: normal;
     max-width: 90%;
-    color: var(--text-color); /* Ensure all text within the message inherits the theme color */
+    color: var(--text-color);
 }
 
 .user-message {
@@ -90,15 +80,14 @@
 }
 
 .error-message {
-    background-color: var(--ariko-message-background-color); /* Or a specific error background */
-    color: rgb(255, 100, 100); /* A light red for dark theme */
+    background-color: var(--ariko-message-background-color);
+    color: rgb(255, 100, 100);
 }
 
 .unity-editor-light-theme .error-message {
-    color: rgb(200, 0, 0); /* A darker red for light theme */
+    color: rgb(200, 0, 0);
 }
 
-/* Input Area */
 .input-row {
     flex-direction: row;
     align-items: center;
@@ -110,7 +99,7 @@
     color: var(--text-color);
     border-color: var(--input-border-color);
     border-radius: 6px;
-    padding: 8px;
+    padding: 0;
     flex-grow: 1;
     flex-basis: 0;
     font-size: 14px;
@@ -121,7 +110,7 @@
 .boxed-input .unity-text-field__input {
     -unity-text-align: upper-left;
     margin: 0;
-    padding: 0;
+    padding: 8px;
 }
 
 .send-button, .cancel-button {
@@ -133,7 +122,6 @@
     width: 80px;
 }
 
-/* Code Blocks */
 .code-block-container {
     background-color: var(--code-block-background-color);
     border-radius: 6px;
@@ -170,10 +158,9 @@
     white-space: normal;
 }
 
-/* Markdown Elements */
 .markdown-paragraph, .markdown-header {
     margin-bottom: 10px;
-    white-space: normal; /* Ensure text wraps */
+    white-space: normal;
 }
 
 .h1 {
@@ -187,19 +174,19 @@
 }
 
 .list {
-    margin-left: 15px; /* Indent the whole list */
+    margin-left: 15px;
     margin-top: 5px;
     margin-bottom: 5px;
 }
 
 .list-item {
-    flex-direction: row; /* Align bullet and content horizontally */
+    flex-direction: row;
     margin-bottom: 2px;
 }
 
 .list-item-bullet {
     margin-right: 5px;
-    min-width: 15px; /* Ensure numbers have enough space */
+    min-width: 15px;
     -unity-text-align: middle-right;
 }
 
@@ -207,7 +194,6 @@
     flex-grow: 1;
 }
 
-/* Settings Panel */
 .settings-panel {
     background-color: var(--background-color);
     padding: 15px;
@@ -226,7 +212,6 @@
     margin-bottom: 5px;
 }
 
-/* Role Label */
 .role-label {
     font-size: 14px;
     -unity-font-style: bold;
@@ -234,7 +219,6 @@
     margin-bottom: 5px;
 }
 
-/* Markdown Content */
 .markdown-header,
 .list-item-text,
 .markdown-paragraph,
@@ -242,7 +226,6 @@
     color: var(--text-color);
 }
 
-/* Settings Panel Elements */
 .settings-panel .unity-base-field {
     margin-bottom: 10px;
 }
@@ -281,12 +264,11 @@
     min-height: 80px;
 }
 
-/* New styles for the copy button */
 .message-header {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px; /* Add some space between header and content */
+    margin-bottom: 5px;
 }
 
 .copy-button {
@@ -305,14 +287,13 @@
     background-color: var(--input-background-color);
 }
 
-/* Chat History Panel */
 .history-panel {
     width: 200px;
     min-width: 150px;
     max-width: 300px;
     border-right-width: 1px;
     border-right-color: var(--separator-color);
-    background-color: var(--toolbar-background-color); /* A slightly different shade */
+    background-color: var(--toolbar-background-color);
 }
 
 .history-header {
@@ -387,7 +368,6 @@
     background-color: var(--user-message-background-color);
 }
 
-/* Confirmation Dialog */
 .confirmation-dialog {
     border-top-width: 1px;
     border-top-color: var(--separator-color);

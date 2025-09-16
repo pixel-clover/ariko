@@ -1,5 +1,3 @@
-<!-- xml -->
-<!-- File: Assets/Ariko/Editor/ArikoWindow.uxml -->
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:VisualElement name="main-container" style="flex-grow: 1;">
         <uie:Toolbar>

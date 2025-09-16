@@ -9,24 +9,31 @@ using Object = UnityEngine.Object;
 
 public class ArikoWindow : EditorWindow
 {
-    private Toggle autoContextToggle;
-
     // --- UI Elements ---
     private ScrollView chatHistoryScrollView;
+    private ScrollView historyListScrollView;
+    private TextField userInput;
+    private Button sendButton;
+    private Button cancelButton;
+    private Toggle autoContextToggle;
+    private VisualElement manualAttachmentsList;
+    private PopupField<string> providerPopup;
+    private PopupField<string> modelPopup;
+    private PopupField<string> workModePopup;
+    private Label fetchingModelsLabel;
+    private VisualElement thinkingMessage;
 
     // --- State ---
     private ArikoChatController controller;
-    private Label fetchingModelsLabel;
-    private ScrollView historyListScrollView;
-    private VisualElement manualAttachmentsList;
-    private MarkdigRenderer markdownRenderer;
-    private PopupField<string> modelPopup;
-    private PopupField<string> providerPopup;
-    private Button sendButton;
     private ArikoSettings settings;
-    private VisualElement thinkingMessage;
-    private TextField userInput;
-    private PopupField<string> workModePopup;
+    private MarkdigRenderer markdownRenderer;
+
+    // --- Lifecycle Methods ---
+    [MenuItem("Tools/Ariko Assistant")]
+    public static void ShowWindow()
+    {
+        GetWindow<ArikoWindow>("Ariko Assistant");
+    }
 
     private void OnEnable()
     {
@@ -39,7 +46,10 @@ public class ArikoWindow : EditorWindow
         ArikoSearchWindow.OnAssetSelected -= HandleAssetSelectedFromSearch;
         Selection.selectionChanged -= UpdateAutoContextLabel;
 
-        if (controller != null) UnregisterControllerCallbacks();
+        if (controller != null)
+        {
+            UnregisterControllerCallbacks();
+        }
     }
 
     public void CreateGUI()
@@ -48,17 +58,12 @@ public class ArikoWindow : EditorWindow
         controller = new ArikoChatController(settings);
         markdownRenderer = new MarkdigRenderer(settings);
 
-        var visualTree =
-            AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                "Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uxml");
-        var styleSheet =
-            AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uss");
+        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uxml");
+        var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uss");
         rootVisualElement.styleSheets.Add(styleSheet);
         visualTree.CloneTree(rootVisualElement);
 
-        rootVisualElement.AddToClassList(EditorGUIUtility.isProSkin
-            ? "unity-editor-dark-theme"
-            : "unity-editor-light-theme");
+        rootVisualElement.AddToClassList(EditorGUIUtility.isProSkin ? "unity-editor-dark-theme" : "unity-editor-light-theme");
 
         InitializeQueries();
         CreateAndSetupPopups();
@@ -72,13 +77,6 @@ public class ArikoWindow : EditorWindow
         ScrollToBottom();
     }
 
-    // --- Lifecycle Methods ---
-    [MenuItem("Tools/Ariko Assistant")]
-    public static void ShowWindow()
-    {
-        GetWindow<ArikoWindow>("Ariko Assistant");
-    }
-
     // --- Initialization and Callbacks ---
 
     private void InitializeQueries()
@@ -87,6 +85,7 @@ public class ArikoWindow : EditorWindow
         historyListScrollView = rootVisualElement.Q<ScrollView>("history-list");
         userInput = rootVisualElement.Q<TextField>("user-input");
         sendButton = rootVisualElement.Q<Button>("send-button");
+        cancelButton = rootVisualElement.Q<Button>("cancel-button");
         autoContextToggle = rootVisualElement.Q<Toggle>("auto-context-toggle");
         manualAttachmentsList = rootVisualElement.Q<VisualElement>("manual-attachments-list");
         fetchingModelsLabel = rootVisualElement.Q<Label>("fetching-models-label");
@@ -124,6 +123,7 @@ public class ArikoWindow : EditorWindow
 
         // View -> Controller
         sendButton.clicked += SendMessage;
+        cancelButton.clicked += controller.CancelCurrentRequest;
         userInput.RegisterCallback<KeyDownEvent>(evt =>
         {
             if (evt.keyCode == KeyCode.Return && !evt.shiftKey)
@@ -214,7 +214,10 @@ public class ArikoWindow : EditorWindow
         var messageElement = AddMessageToChat(message.Role, message.Content);
 
         // If this is a "thinking..." message, store it for later removal
-        if (message.Role == "Ariko" && message.Content == "...") thinkingMessage = messageElement;
+        if (message.Role == "Ariko" && message.Content == "...")
+        {
+            thinkingMessage = messageElement;
+        }
 
         // When a message is added to the active session, its name might change (e.g., if it's based on first message)
         // So we update the history panel to reflect the potential new name.
@@ -233,7 +236,10 @@ public class ArikoWindow : EditorWindow
     private void HandleChatReloaded()
     {
         chatHistoryScrollView.Clear();
-        foreach (var message in controller.ActiveSession.Messages) AddMessageToChat(message.Role, message.Content);
+        foreach (var message in controller.ActiveSession.Messages)
+        {
+            AddMessageToChat(message.Role, message.Content);
+        }
         UpdateManualAttachmentsList(); // Assuming attachments might be session-specific
         ScrollToBottom();
     }
@@ -272,7 +278,10 @@ public class ArikoWindow : EditorWindow
         {
             var sessionLabel = new Label(session.SessionName);
             sessionLabel.AddToClassList("history-item");
-            if (session == controller.ActiveSession) sessionLabel.AddToClassList("history-item--selected");
+            if (session == controller.ActiveSession)
+            {
+                sessionLabel.AddToClassList("history-item--selected");
+            }
             sessionLabel.RegisterCallback<MouseDownEvent>(evt => controller.SwitchToSession(session));
             historyListScrollView.Add(sessionLabel);
         }
@@ -314,9 +323,15 @@ public class ArikoWindow : EditorWindow
 
     private void SetResponsePending(bool isPending)
     {
-        sendButton.SetEnabled(!isPending);
         userInput.SetEnabled(!isPending);
-        if (!isPending) fetchingModelsLabel.style.display = DisplayStyle.None;
+
+        sendButton.style.display = isPending ? DisplayStyle.None : DisplayStyle.Flex;
+        cancelButton.style.display = isPending ? DisplayStyle.Flex : DisplayStyle.None;
+
+        if (!isPending)
+        {
+            fetchingModelsLabel.style.display = DisplayStyle.None;
+        }
     }
 
     private void ApplyChatStyles()

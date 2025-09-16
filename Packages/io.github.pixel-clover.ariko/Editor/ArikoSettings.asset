@@ -14,15 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ollama_Url: http://localhost:11434
   google_SelectedModel: models/gemini-2.5-flash
-  openAI_SelectedModel: 
-  ollama_SelectedModel: 
-  selectedProvider: OpenAI
+  openAI_SelectedModel: gpt-5-nano
+  ollama_SelectedModel: embeddinggemma:latest
+  selectedProvider: Google
   selectedWorkMode: Ask
   assistantChatBackgroundColor: {r: 0.886, g: 0.91, b: 0.941, a: 1}
   userChatBackgroundColor: {r: 0.676, g: 0.853, b: 0.602, a: 1}
   chatFont: {fileID: 0}
   chatFontSize: 12
   roleLabelsBold: 1
+  chatHistorySize: 5
   systemPrompt: 'You are Ariko, a helpful and friendly AI assistant integrated into
     the Unity Editor.
 

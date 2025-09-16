@@ -7,6 +7,8 @@ using UnityEngine.Networking;
 
 public class ArikoLLMService
 {
+    private UnityWebRequest activeRequest;
+
     public enum AIProvider
     {
         Google,
@@ -24,6 +26,14 @@ public class ArikoLLMService
             { AIProvider.OpenAI, new OpenAiStrategy() },
             { AIProvider.Ollama, new OllamaStrategy() }
         };
+    }
+
+    public void CancelRequest()
+    {
+        if (activeRequest != null && !activeRequest.isDone)
+        {
+            activeRequest.Abort();
+        }
     }
 
     public async Task<WebRequestResult<string>> SendChatRequest(string prompt, AIProvider provider, string modelName,
@@ -57,9 +67,22 @@ public class ArikoLLMService
         Func<string, List<string>> parser)
     {
         using var request = UnityWebRequest.Get(url);
+        activeRequest = request;
         if (!string.IsNullOrEmpty(authToken)) request.SetRequestHeader("Authorization", authToken);
 
-        await request.SendWebRequest().AsTask();
+        try
+        {
+            await request.SendWebRequest().AsTask();
+        }
+        catch (Exception ex) when (ex is OperationCanceledException)
+        {
+            // This catches the exception thrown when the task is cancelled by Abort().
+            return new WebRequestResult<List<string>>(default, "Request cancelled by user.");
+        }
+        finally
+        {
+            activeRequest = null;
+        }
 
         return HandleApiResponse(request, parser);
     }
@@ -68,19 +91,37 @@ public class ArikoLLMService
         Func<string, string> parser)
     {
         using var request = new UnityWebRequest(url, "POST");
+        activeRequest = request;
+
         var bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
         if (!string.IsNullOrEmpty(authToken)) request.SetRequestHeader("Authorization", authToken);
 
-        await request.SendWebRequest().AsTask();
+        try
+        {
+            await request.SendWebRequest().AsTask();
+        }
+        catch (Exception ex) when (ex is OperationCanceledException)
+        {
+            return new WebRequestResult<string>(default, "Request cancelled by user.");
+        }
+        finally
+        {
+            activeRequest = null;
+        }
 
         return HandleApiResponse(request, parser);
     }
 
     private WebRequestResult<T> HandleApiResponse<T>(UnityWebRequest request, Func<string, T> parser)
     {
+        if (request.result == UnityWebRequest.Result.Aborted)
+        {
+            return new WebRequestResult<T>(default, "Request cancelled by user.");
+        }
+
         if (request.result == UnityWebRequest.Result.Success)
             try
             {

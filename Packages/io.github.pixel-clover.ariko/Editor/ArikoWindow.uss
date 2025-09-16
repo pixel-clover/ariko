@@ -96,7 +96,7 @@
     height: 90px;
 }
 
-.send-button {
+.send-button, .cancel-button {
     background-color: var(--button-background-color);
     color: var(--button-text-color);
     border-radius: 6px;
@@ -145,6 +145,7 @@
 /* Markdown Elements */
 .markdown-paragraph, .markdown-header {
     margin-bottom: 10px;
+    white-space: normal; /* Ensure text wraps */
 }
 
 .h1 {

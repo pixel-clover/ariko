@@ -11,15 +11,19 @@ public class ArikoChatController
     private readonly Dictionary<string, string> apiKeys = new();
     private readonly ArikoLLMService llmService;
     private readonly ArikoSettings settings;
-    public Action OnChatCleared; // Tells the view to clear the message display
-    public Action OnChatReloaded; // Tells the view to reload with messages from ActiveSession
+
+    // --- Properties for Chat History ---
+    public List<ChatSession> ChatHistory { get; private set; }
+    public ChatSession ActiveSession { get; private set; }
 
     // --- Events for the View to subscribe to ---
     public Action<string> OnError;
-    public Action OnHistoryChanged; // Tells the view to update the history panel
-    public Action<ChatMessage> OnMessageAdded; // Replaces the old OnMessageAdded
     public Action<List<string>> OnModelsFetched;
     public Action<bool> OnResponseStatusChanged; // isPending
+    public Action OnChatCleared; // Tells the view to clear the message display
+    public Action<ChatMessage> OnMessageAdded; // Replaces the old OnMessageAdded
+    public Action OnChatReloaded; // Tells the view to reload with messages from ActiveSession
+    public Action OnHistoryChanged; // Tells the view to update the history panel
 
     public ArikoChatController(ArikoSettings settings)
     {
@@ -33,10 +37,6 @@ public class ArikoChatController
 
         LoadApiKeysFromEnvironment();
     }
-
-    // --- Properties for Chat History ---
-    public List<ChatSession> ChatHistory { get; }
-    public ChatSession ActiveSession { get; private set; }
 
     public List<Object> ManuallyAttachedAssets { get; } = new();
     public bool AutoContext { get; set; } = true;
@@ -127,7 +127,9 @@ public class ArikoChatController
 
         // Enforce history size limit (if set)
         if (settings.chatHistorySize > 0 && ChatHistory.Count > settings.chatHistorySize)
+        {
             ChatHistory.RemoveAt(ChatHistory.Count - 1);
+        }
 
         ManuallyAttachedAssets.Clear();
         OnChatCleared?.Invoke(); // Tells view to clear the scrollview
@@ -142,6 +144,11 @@ public class ArikoChatController
         ManuallyAttachedAssets.Clear(); // Context is per-session for now
         OnChatReloaded?.Invoke();
         OnHistoryChanged?.Invoke(); // To update selection highlight
+    }
+
+    public void CancelCurrentRequest()
+    {
+        llmService.CancelRequest();
     }
 
     private string BuildContextString()

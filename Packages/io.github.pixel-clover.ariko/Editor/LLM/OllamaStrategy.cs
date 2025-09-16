@@ -1,6 +1,6 @@
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 
 public class OllamaStrategy : IApiProviderStrategy
 {
@@ -44,40 +44,32 @@ public class OllamaStrategy : IApiProviderStrategy
 
     private class MessagePayload
     {
-        [JsonProperty("role")]
-        public string Role { get; set; }
+        [JsonProperty("role")] public string Role { get; set; }
 
-        [JsonProperty("content")]
-        public string Content { get; set; }
+        [JsonProperty("content")] public string Content { get; set; }
     }
 
     private class OllamaPayload
     {
-        [JsonProperty("model")]
-        public string Model { get; set; }
+        [JsonProperty("model")] public string Model { get; set; }
 
-        [JsonProperty("messages")]
-        public MessagePayload[] Messages { get; set; }
+        [JsonProperty("messages")] public MessagePayload[] Messages { get; set; }
 
-        [JsonProperty("stream")]
-        public bool Stream { get; set; }
+        [JsonProperty("stream")] public bool Stream { get; set; }
     }
 
     private struct OllamaResponse
     {
-        [JsonProperty("message")]
-        public MessagePayload Message { get; set; }
+        [JsonProperty("message")] public MessagePayload Message { get; set; }
     }
 
     private struct OllamaModelsResponse
     {
-        [JsonProperty("models")]
-        public List<OllamaModel> Models { get; set; }
+        [JsonProperty("models")] public List<OllamaModel> Models { get; set; }
     }
 
     private struct OllamaModel
     {
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("name")] public string Name { get; set; }
     }
 }

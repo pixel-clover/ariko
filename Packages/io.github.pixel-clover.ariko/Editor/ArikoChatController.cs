@@ -2,26 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 public class ArikoChatController
 {
+    private readonly Dictionary<string, string> apiKeys = new();
     private readonly ArikoLLMService llmService;
     private readonly ArikoSettings settings;
-    private readonly Dictionary<string, string> apiKeys = new();
-
-    public List<Object> ManuallyAttachedAssets { get; } = new();
-    public bool AutoContext { get; set; } = true;
+    public Action OnChatCleared;
+    public Action<string> OnError;
 
     // Events for the View to subscribe to
     public Action<string, string> OnMessageAdded; // role, content
-    public Action OnChatCleared;
-    public Action<bool> OnResponseStatusChanged; // isPending
     public Action<List<string>> OnModelsFetched;
-    public Action<string> OnError;
+    public Action<bool> OnResponseStatusChanged; // isPending
 
     public ArikoChatController(ArikoSettings settings)
     {
@@ -29,6 +25,9 @@ public class ArikoChatController
         llmService = new ArikoLLMService();
         LoadApiKeysFromEnvironment();
     }
+
+    public List<Object> ManuallyAttachedAssets { get; } = new();
+    public bool AutoContext { get; set; } = true;
 
     public void LoadApiKeysFromEnvironment()
     {
@@ -39,10 +38,18 @@ public class ArikoChatController
         if (!string.IsNullOrEmpty(ollamaUrl)) settings.ollama_Url = ollamaUrl;
     }
 
-    public string GetApiKey(string provider) => apiKeys.TryGetValue(provider, out var key) ? key : null;
-    public void SetApiKey(string provider, string key) => apiKeys[provider] = key;
+    public string GetApiKey(string provider)
+    {
+        return apiKeys.TryGetValue(provider, out var key) ? key : null;
+    }
 
-    public async void SendMessageToAssistant(string text, string selectedProvider, string selectedModel, int chatHistoryCount)
+    public void SetApiKey(string provider, string key)
+    {
+        apiKeys[provider] = key;
+    }
+
+    public async void SendMessageToAssistant(string text, string selectedProvider, string selectedModel,
+        int chatHistoryCount)
     {
         if (string.IsNullOrWhiteSpace(text)) return;
 

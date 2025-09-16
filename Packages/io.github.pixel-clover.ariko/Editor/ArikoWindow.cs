@@ -9,27 +9,22 @@ using Object = UnityEngine.Object;
 
 public class ArikoWindow : EditorWindow
 {
-    private ArikoChatController controller;
-    private ArikoSettings settings;
+    private Toggle autoContextToggle;
 
     // UI Elements
     private ScrollView chatHistoryScrollView;
-    private TextField userInput;
-    private Button sendButton;
-    private Toggle autoContextToggle;
-    private VisualElement manualAttachmentsList;
+    private ArikoChatController controller;
     private Label fetchingModelsLabel;
-    private PopupField<string> providerPopup;
+    private VisualElement manualAttachmentsList;
+    private MarkdigRenderer markdownRenderer;
     private PopupField<string> modelPopup;
-    private PopupField<string> workModePopup;
+    private PopupField<string> providerPopup;
+    private Button sendButton;
+    private ArikoSettings settings;
 
     private VisualElement thinkingMessage;
-
-    [MenuItem("Tools/Ariko Assistant")]
-    public static void ShowWindow()
-    {
-        GetWindow<ArikoWindow>("Ariko Assistant");
-    }
+    private TextField userInput;
+    private PopupField<string> workModePopup;
 
     private void OnEnable()
     {
@@ -56,13 +51,19 @@ public class ArikoWindow : EditorWindow
     {
         settings = ArikoSettingsManager.LoadSettings();
         controller = new ArikoChatController(settings);
+        markdownRenderer = new MarkdigRenderer(settings);
 
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uxml");
-        var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uss");
+        var visualTree =
+            AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+                "Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uxml");
+        var styleSheet =
+            AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uss");
         rootVisualElement.styleSheets.Add(styleSheet);
         visualTree.CloneTree(rootVisualElement);
 
-        rootVisualElement.AddToClassList(EditorGUIUtility.isProSkin ? "unity-editor-dark-theme" : "unity-editor-light-theme");
+        rootVisualElement.AddToClassList(EditorGUIUtility.isProSkin
+            ? "unity-editor-dark-theme"
+            : "unity-editor-light-theme");
 
         InitializeQueries();
         CreateAndSetupPopups();
@@ -72,6 +73,12 @@ public class ArikoWindow : EditorWindow
 
         ApplyChatStyles();
         ScrollToBottom();
+    }
+
+    [MenuItem("Tools/Ariko Assistant")]
+    public static void ShowWindow()
+    {
+        GetWindow<ArikoWindow>("Ariko Assistant");
     }
 
     private void InitializeQueries()
@@ -113,8 +120,10 @@ public class ArikoWindow : EditorWindow
         controller.OnError += HandleError;
 
         // View -> Controller
-        sendButton.clicked += () => {
-            controller.SendMessageToAssistant(userInput.value, providerPopup.value, modelPopup.value, chatHistoryScrollView.childCount);
+        sendButton.clicked += () =>
+        {
+            controller.SendMessageToAssistant(userInput.value, providerPopup.value, modelPopup.value,
+                chatHistoryScrollView.childCount);
             userInput.value = "";
         };
 
@@ -122,7 +131,8 @@ public class ArikoWindow : EditorWindow
         {
             if (evt.keyCode == KeyCode.Return && !evt.shiftKey)
             {
-                controller.SendMessageToAssistant(userInput.value, providerPopup.value, modelPopup.value, chatHistoryScrollView.childCount);
+                controller.SendMessageToAssistant(userInput.value, providerPopup.value, modelPopup.value,
+                    chatHistoryScrollView.childCount);
                 userInput.value = "";
                 evt.StopImmediatePropagation();
             }
@@ -132,7 +142,8 @@ public class ArikoWindow : EditorWindow
         rootVisualElement.Q<Button>("add-file-button").clicked += ArikoSearchWindow.ShowWindow;
         autoContextToggle.RegisterValueChangedCallback(evt => controller.AutoContext = evt.newValue);
 
-        providerPopup.RegisterValueChangedCallback(evt => {
+        providerPopup.RegisterValueChangedCallback(evt =>
+        {
             settings.selectedProvider = evt.newValue;
             controller.FetchModelsForCurrentProvider(evt.newValue);
         });
@@ -149,23 +160,28 @@ public class ArikoWindow : EditorWindow
         var settingsPanel = rootVisualElement.Q<VisualElement>("settings-panel");
         settingsPanel.Q<Button>("save-settings-button").clicked += SaveAndCloseSettings;
 
-        settingsPanel.Q<ColorField>("ariko-bg-color").RegisterValueChangedCallback(evt => {
+        settingsPanel.Q<ColorField>("ariko-bg-color").RegisterValueChangedCallback(evt =>
+        {
             settings.assistantChatBackgroundColor = evt.newValue;
             ApplyChatStyles();
         });
-        settingsPanel.Q<ColorField>("user-bg-color").RegisterValueChangedCallback(evt => {
+        settingsPanel.Q<ColorField>("user-bg-color").RegisterValueChangedCallback(evt =>
+        {
             settings.userChatBackgroundColor = evt.newValue;
             ApplyChatStyles();
         });
-        settingsPanel.Q<ObjectField>("chat-font").RegisterValueChangedCallback(evt => {
+        settingsPanel.Q<ObjectField>("chat-font").RegisterValueChangedCallback(evt =>
+        {
             settings.chatFont = evt.newValue as Font;
             ApplyChatStyles();
         });
-        settingsPanel.Q<IntegerField>("chat-font-size").RegisterValueChangedCallback(evt => {
+        settingsPanel.Q<IntegerField>("chat-font-size").RegisterValueChangedCallback(evt =>
+        {
             settings.chatFontSize = evt.newValue;
             ApplyChatStyles();
         });
-        settingsPanel.Q<Toggle>("role-bold-toggle").RegisterValueChangedCallback(evt => {
+        settingsPanel.Q<Toggle>("role-bold-toggle").RegisterValueChangedCallback(evt =>
+        {
             settings.roleLabelsBold = evt.newValue;
             ApplyChatStyles();
         });
@@ -183,10 +199,7 @@ public class ArikoWindow : EditorWindow
         var message = AddMessageToChat(role, content);
 
         // If this is a "thinking..." message, store it for later removal
-        if (role == "Ariko" && content == "...")
-        {
-            thinkingMessage = message;
-        }
+        if (role == "Ariko" && content == "...") thinkingMessage = message;
 
         ScrollToBottom();
     }
@@ -239,7 +252,7 @@ public class ArikoWindow : EditorWindow
         roleLabel.AddToClassList("role-label");
 
         var contentContainer = new VisualElement { name = "content-container" };
-        contentContainer.Add(MarkdownParser.Parse(content));
+        contentContainer.Add(markdownRenderer.Render(content));
 
         messageContainer.Add(roleLabel);
         messageContainer.Add(contentContainer);
@@ -252,10 +265,7 @@ public class ArikoWindow : EditorWindow
     {
         sendButton.SetEnabled(!isPending);
         userInput.SetEnabled(!isPending);
-        if (!isPending)
-        {
-            fetchingModelsLabel.style.display = DisplayStyle.None;
-        }
+        if (!isPending) fetchingModelsLabel.style.display = DisplayStyle.None;
     }
 
     private void ApplyChatStyles()
@@ -289,7 +299,8 @@ public class ArikoWindow : EditorWindow
 
     private void ScrollToBottom()
     {
-        chatHistoryScrollView.schedule.Execute(() => chatHistoryScrollView.verticalScroller.value = chatHistoryScrollView.verticalScroller.highValue);
+        chatHistoryScrollView.schedule.Execute(() =>
+            chatHistoryScrollView.verticalScroller.value = chatHistoryScrollView.verticalScroller.highValue);
     }
 
     private void HandleAssetSelectedFromSearch(Object selectedAsset)
@@ -309,7 +320,8 @@ public class ArikoWindow : EditorWindow
             var container = new VisualElement { style = { flexDirection = FlexDirection.Row } };
             var objectField = new ObjectField { value = asset, objectType = typeof(Object) };
             objectField.SetEnabled(false);
-            var removeButton = new Button(() => {
+            var removeButton = new Button(() =>
+            {
                 controller.ManuallyAttachedAssets.Remove(asset);
                 UpdateManualAttachmentsList();
             }) { text = "x" };
@@ -328,6 +340,7 @@ public class ArikoWindow : EditorWindow
             var path = AssetDatabase.GetAssetPath(Selection.activeObject);
             labelText = string.IsNullOrEmpty(path) ? Selection.activeObject.name : path;
         }
+
         autoContextToggle.label = labelText;
     }
 
@@ -405,5 +418,9 @@ public class ArikoWindow : EditorWindow
         ToggleSettingsPanel();
     }
 
-    private enum WorkMode { Ask, Agent }
+    private enum WorkMode
+    {
+        Ask,
+        Agent
+    }
 }

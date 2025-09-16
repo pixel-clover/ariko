@@ -26,17 +26,13 @@ public class ArikoLLMService
         };
     }
 
-    public async Task<WebRequestResult<string>> SendChatRequest(string prompt, AIProvider provider, string modelName, ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public async Task<WebRequestResult<string>> SendChatRequest(string prompt, AIProvider provider, string modelName,
+        ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        if (string.IsNullOrEmpty(modelName))
-        {
-            return new WebRequestResult<string>(null, "Error: No AI model selected.");
-        }
+        if (string.IsNullOrEmpty(modelName)) return new WebRequestResult<string>(null, "Error: No AI model selected.");
 
         if (!strategies.TryGetValue(provider, out var strategy))
-        {
             return new WebRequestResult<string>(null, "Error: Provider not supported.");
-        }
 
         var url = strategy.GetChatUrl(modelName, settings, apiKeys);
         var authToken = strategy.GetAuthHeader(settings, apiKeys);
@@ -45,12 +41,11 @@ public class ArikoLLMService
         return await SendPostRequest(url, authToken, jsonBody, strategy.ParseChatResponse);
     }
 
-    public async Task<WebRequestResult<List<string>>> FetchAvailableModels(AIProvider provider, ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public async Task<WebRequestResult<List<string>>> FetchAvailableModels(AIProvider provider, ArikoSettings settings,
+        Dictionary<string, string> apiKeys)
     {
         if (!strategies.TryGetValue(provider, out var strategy))
-        {
             return new WebRequestResult<List<string>>(null, "Error: Provider not supported.");
-        }
 
         var url = strategy.GetModelsUrl(settings, apiKeys);
         var authToken = strategy.GetAuthHeader(settings, apiKeys);
@@ -58,7 +53,8 @@ public class ArikoLLMService
         return await SendGetRequest(url, authToken, strategy.ParseModelsResponse);
     }
 
-    private async Task<WebRequestResult<List<string>>> SendGetRequest(string url, string authToken, Func<string, List<string>> parser)
+    private async Task<WebRequestResult<List<string>>> SendGetRequest(string url, string authToken,
+        Func<string, List<string>> parser)
     {
         using var request = UnityWebRequest.Get(url);
         if (!string.IsNullOrEmpty(authToken)) request.SetRequestHeader("Authorization", authToken);
@@ -68,7 +64,8 @@ public class ArikoLLMService
         return HandleApiResponse(request, parser);
     }
 
-    private async Task<WebRequestResult<string>> SendPostRequest(string url, string authToken, string jsonBody, Func<string, string> parser)
+    private async Task<WebRequestResult<string>> SendPostRequest(string url, string authToken, string jsonBody,
+        Func<string, string> parser)
     {
         using var request = new UnityWebRequest(url, "POST");
         var bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
@@ -85,7 +82,6 @@ public class ArikoLLMService
     private WebRequestResult<T> HandleApiResponse<T>(UnityWebRequest request, Func<string, T> parser)
     {
         if (request.result == UnityWebRequest.Result.Success)
-        {
             try
             {
                 var parsedData = parser(request.downloadHandler.text);
@@ -97,7 +93,6 @@ public class ArikoLLMService
                 Debug.LogError($"Ariko: {error}\nResponse: {request.downloadHandler.text}");
                 return new WebRequestResult<T>(default, error);
             }
-        }
 
         var requestError = $"API request failed: {request.error}\nDetails: {request.downloadHandler.text}";
         Debug.LogError($"Ariko: {requestError}");

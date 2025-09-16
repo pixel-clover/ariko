@@ -1,6 +1,6 @@
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 
 public class GoogleStrategy : IApiProviderStrategy
 {
@@ -35,7 +35,8 @@ public class GoogleStrategy : IApiProviderStrategy
     {
         // Handle cases where the response might not have candidates.
         var response = JsonConvert.DeserializeObject<GoogleResponse>(json);
-        return response.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text ?? "Error: No content found in response.";
+        return response.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text ??
+               "Error: No content found in response.";
     }
 
     public List<string> ParseModelsResponse(string json)
@@ -53,43 +54,36 @@ public class GoogleStrategy : IApiProviderStrategy
 
     private class GooglePayload
     {
-        [JsonProperty("contents")]
-        public Content[] Contents { get; set; }
+        [JsonProperty("contents")] public Content[] Contents { get; set; }
     }
 
     private class Content
     {
-        [JsonProperty("parts")]
-        public Part[] Parts { get; set; }
+        [JsonProperty("parts")] public Part[] Parts { get; set; }
     }
 
     private class Part
     {
-        [JsonProperty("text")]
-        public string Text { get; set; }
+        [JsonProperty("text")] public string Text { get; set; }
     }
 
     private class GoogleResponse
     {
-        [JsonProperty("candidates")]
-        public Candidate[] Candidates { get; set; }
+        [JsonProperty("candidates")] public Candidate[] Candidates { get; set; }
     }
 
     private class Candidate
     {
-        [JsonProperty("content")]
-        public Content Content { get; set; }
+        [JsonProperty("content")] public Content Content { get; set; }
     }
 
     private class GoogleModelsResponse
     {
-        [JsonProperty("models")]
-        public GoogleModel[] Models { get; set; }
+        [JsonProperty("models")] public GoogleModel[] Models { get; set; }
     }
 
     private class GoogleModel
     {
-        [JsonProperty("name")]
-        public string Name { get; set; }
+        [JsonProperty("name")] public string Name { get; set; }
     }
 }

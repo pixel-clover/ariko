@@ -1,6 +1,6 @@
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 
 public class OpenAiStrategy : IApiProviderStrategy
 {
@@ -51,47 +51,40 @@ public class OpenAiStrategy : IApiProviderStrategy
 
     private class MessagePayload
     {
-        [JsonProperty("role")]
-        public string Role { get; set; }
-        [JsonProperty("content")]
-        public string Content { get; set; }
+        [JsonProperty("role")] public string Role { get; set; }
+
+        [JsonProperty("content")] public string Content { get; set; }
     }
 
     private class OpenAIPayload
     {
-        [JsonProperty("model")]
-        public string Model { get; set; }
-        [JsonProperty("messages")]
-        public MessagePayload[] Messages { get; set; }
+        [JsonProperty("model")] public string Model { get; set; }
+
+        [JsonProperty("messages")] public MessagePayload[] Messages { get; set; }
     }
 
     private class OpenAIResponse
     {
-        [JsonProperty("choices")]
-        public Choice[] Choices { get; set; }
+        [JsonProperty("choices")] public Choice[] Choices { get; set; }
     }
 
     private class Choice
     {
-        [JsonProperty("message")]
-        public Message Message { get; set; }
+        [JsonProperty("message")] public Message Message { get; set; }
     }
 
     private class Message
     {
-        [JsonProperty("content")]
-        public string Content { get; set; }
+        [JsonProperty("content")] public string Content { get; set; }
     }
 
     private class OpenAIModelsResponse
     {
-        [JsonProperty("data")]
-        public OpenAIModel[] Data { get; set; }
+        [JsonProperty("data")] public OpenAIModel[] Data { get; set; }
     }
 
     private class OpenAIModel
     {
-        [JsonProperty("id")]
-        public string Id { get; set; }
+        [JsonProperty("id")] public string Id { get; set; }
     }
 }

@@ -14,6 +14,7 @@ public static class ArikoSettingsManager
             AssetDatabase.CreateAsset(settings, SettingsPath);
             AssetDatabase.SaveAssets();
         }
+
         return settings;
     }
 

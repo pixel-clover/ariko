@@ -8,25 +8,67 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
+/// <summary>
+///     Manages the logic for the Ariko chat window, including sending requests to the LLM,
+///     managing chat history, and handling context from the Unity Editor.
+/// </summary>
 public class ArikoChatController
 {
     private readonly Dictionary<string, string> apiKeys = new();
     private readonly ArikoLLMService llmService;
     private readonly ArikoSettings settings;
     private readonly ToolRegistry toolRegistry;
-    public Action OnChatCleared; // Tells the view to clear the message display
-    public Action OnChatReloaded; // Tells the view to reload with messages from ActiveSession
+
+    /// <summary>
+    ///     Event triggered when the chat is cleared, instructing the view to clear the message display.
+    /// </summary>
+    public Action OnChatCleared;
+
+    /// <summary>
+    ///     Event triggered when a different chat session is loaded, instructing the view to reload messages.
+    /// </summary>
+    public Action OnChatReloaded;
 
     // --- Events for the View to subscribe to ---
+    /// <summary>
+    ///     Event triggered when an error occurs, providing the error message.
+    /// </summary>
     public Action<string> OnError;
-    public Action OnHistoryChanged; // Tells the view to update the history panel
-    public Action<ChatMessage> OnMessageAdded; // Replaces the old OnMessageAdded
+
+    /// <summary>
+    ///     Event triggered when the chat history changes (e.g., a session is added or deleted).
+    /// </summary>
+    public Action OnHistoryChanged;
+
+    /// <summary>
+    ///     Event triggered when a new message is added to the active session.
+    /// </summary>
+    public Action<ChatMessage> OnMessageAdded;
+
+    /// <summary>
+    ///     Event triggered when the list of available models for a provider has been fetched.
+    /// </summary>
     public Action<List<string>> OnModelsFetched;
+
+    /// <summary>
+    ///     Event triggered when the assistant's response status changes.
+    /// </summary>
+    /// <remarks>
+    ///     The boolean parameter is true if the assistant is currently generating a response, and false otherwise.
+    /// </remarks>
     public Action<bool> OnResponseStatusChanged; // isPending
+
+    /// <summary>
+    ///     Event triggered when an agent requests to execute a tool, requiring user confirmation.
+    /// </summary>
     public Action<ToolCall> OnToolCallConfirmationRequested;
+
     private ToolCall pendingToolCall;
 
-
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="ArikoChatController" /> class.
+    /// </summary>
+    /// <param name="settings">The Ariko settings asset.</param>
     public ArikoChatController(ArikoSettings settings)
     {
         this.settings = settings;
@@ -51,12 +93,29 @@ public class ArikoChatController
     }
 
     // --- Properties for Chat History ---
+    /// <summary>
+    ///     Gets the list of all chat sessions.
+    /// </summary>
     public List<ChatSession> ChatHistory { get; }
+
+    /// <summary>
+    ///     Gets the currently active chat session.
+    /// </summary>
     public ChatSession ActiveSession { get; private set; }
 
+    /// <summary>
+    ///     Gets the list of assets manually attached to the current chat context.
+    /// </summary>
     public List<Object> ManuallyAttachedAssets { get; } = new();
+
+    /// <summary>
+    ///     Gets or sets a value indicating whether to automatically include the current selection as context.
+    /// </summary>
     public bool AutoContext { get; set; } = true;
 
+    /// <summary>
+    ///     Loads API keys from environment variables.
+    /// </summary>
     public void LoadApiKeysFromEnvironment()
     {
         apiKeys["Google"] = Environment.GetEnvironmentVariable("GOOGLE_API_KEY") ?? "";
@@ -66,16 +125,33 @@ public class ArikoChatController
         if (!string.IsNullOrEmpty(ollamaUrl)) settings.ollama_Url = ollamaUrl;
     }
 
+    /// <summary>
+    ///     Gets the API key for a specific provider.
+    /// </summary>
+    /// <param name="provider">The name of the AI provider (e.g., "Google", "OpenAI").</param>
+    /// <returns>The API key for the specified provider, or null if not found.</returns>
     public string GetApiKey(string provider)
     {
         return apiKeys.TryGetValue(provider, out var key) ? key : null;
     }
 
+    /// <summary>
+    ///     Sets the API key for a specific provider.
+    /// </summary>
+    /// <param name="provider">The name of the AI provider.</param>
+    /// <param name="key">The API key.</param>
     public void SetApiKey(string provider, string key)
     {
         apiKeys[provider] = key;
     }
 
+    /// <summary>
+    ///     Sends a message from the user to the AI assistant.
+    /// </summary>
+    /// <param name="text">The user's message text.</param>
+    /// <param name="selectedProvider">The AI provider to use for the request.</param>
+    /// <param name="selectedModel">The specific model to use for the request.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task SendMessageToAssistant(string text, string selectedProvider, string selectedModel)
     {
         if (string.IsNullOrWhiteSpace(text)) return;
@@ -163,6 +239,12 @@ public class ArikoChatController
         }
     }
 
+    /// <summary>
+    ///     Responds to a tool execution confirmation request from the user.
+    /// </summary>
+    /// <param name="userApproved">True if the user approved the tool execution; otherwise, false.</param>
+    /// <param name="selectedProvider">The AI provider to use for the subsequent request.</param>
+    /// <param name="selectedModel">The specific model to use for the subsequent request.</param>
     public async void RespondToToolConfirmation(bool userApproved, string selectedProvider, string selectedModel)
     {
         if (pendingToolCall == null) return;
@@ -260,6 +342,11 @@ public class ArikoChatController
         }
     }
 
+    /// <summary>
+    ///     Fetches the available models for the currently selected AI provider.
+    /// </summary>
+    /// <param name="selectedProvider">The AI provider to fetch models from.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task FetchModelsForCurrentProvider(string selectedProvider)
     {
         var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
@@ -296,7 +383,9 @@ public class ArikoChatController
     }
 
 
-    // Called when the "New Chat" button is clicked
+    /// <summary>
+    ///     Clears the current chat session and starts a new one.
+    /// </summary>
     public void ClearChat()
     {
         // Don't create a new session if the current one is empty. Just clear the display.
@@ -318,6 +407,10 @@ public class ArikoChatController
         OnHistoryChanged?.Invoke(); // Tells view to update history list
     }
 
+    /// <summary>
+    ///     Switches the active chat to the specified session.
+    /// </summary>
+    /// <param name="session">The chat session to make active.</param>
     public void SwitchToSession(ChatSession session)
     {
         if (session == null || session == ActiveSession) return;
@@ -328,6 +421,10 @@ public class ArikoChatController
         OnHistoryChanged?.Invoke(); // To update selection highlight
     }
 
+    /// <summary>
+    ///     Deletes a specific chat session from the history.
+    /// </summary>
+    /// <param name="session">The chat session to delete.</param>
     public void DeleteSession(ChatSession session)
     {
         if (session == null || !ChatHistory.Contains(session)) return;
@@ -350,6 +447,9 @@ public class ArikoChatController
         }
     }
 
+    /// <summary>
+    ///     Deletes all chat sessions from the history.
+    /// </summary>
     public void ClearAllHistory()
     {
         ChatHistory.Clear();
@@ -357,6 +457,9 @@ public class ArikoChatController
         ClearChat();
     }
 
+    /// <summary>
+    ///     Cancels the currently ongoing AI assistant request.
+    /// </summary>
     public void CancelCurrentRequest()
     {
         llmService.CancelRequest();

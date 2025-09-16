@@ -1,8 +1,18 @@
 using System.Text.RegularExpressions;
 using UnityEngine;
 
+/// <summary>
+///     A simple, regex-based syntax highlighter that uses Unity's rich text tags.
+/// </summary>
 public static class SyntaxHighlighter
 {
+    /// <summary>
+    ///     Highlights the given code string using the specified language definition and theme.
+    /// </summary>
+    /// <param name="code">The source code to highlight.</param>
+    /// <param name="lang">The language definition containing regex patterns and keywords.</param>
+    /// <param name="theme">The syntax theme containing the colors.</param>
+    /// <returns>The highlighted code with Unity rich text tags.</returns>
     public static string Highlight(string code, LanguageDefinition lang, SyntaxTheme theme)
     {
         if (lang == null || theme == null) return code;

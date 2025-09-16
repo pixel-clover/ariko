@@ -3,8 +3,15 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+///     A test class for demonstrating and testing the "Explain Error" feature of Ariko.
+/// </summary>
 public class FeatureTest
 {
+    /// <summary>
+    ///     Runs the feature test. It generates a test error, retrieves it from the console,
+    ///     and sends it to Ariko for an explanation.
+    /// </summary>
     [MenuItem("Tools/Ariko Tests/Run Feature Test")]
     public static void RunTest()
     {

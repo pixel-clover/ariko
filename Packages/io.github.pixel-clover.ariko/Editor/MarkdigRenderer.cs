@@ -10,17 +10,29 @@ using UnityEngine.UIElements;
 
 // Required for AssetDatabase
 
+/// <summary>
+///     Renders a Markdown string into a Unity UI Elements VisualElement hierarchy.
+/// </summary>
 public class MarkdigRenderer
 {
     private readonly MarkdownPipeline pipeline;
     private readonly ArikoSettings settings;
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="MarkdigRenderer" /> class.
+    /// </summary>
+    /// <param name="settings">The Ariko settings to use for styling.</param>
     public MarkdigRenderer(ArikoSettings settings)
     {
         pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
         this.settings = settings;
     }
 
+    /// <summary>
+    ///     Renders the specified markdown text into a VisualElement.
+    /// </summary>
+    /// <param name="markdownText">The markdown text to render.</param>
+    /// <returns>A VisualElement containing the rendered markdown.</returns>
     public VisualElement Render(string markdownText)
     {
         var document = Markdown.Parse(markdownText, pipeline);

@@ -8,6 +8,11 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
+/// <summary>
+///     The main editor window for the Ariko AI Assistant.
+///     This class is responsible for creating the UI, handling user input,
+///     and coordinating with the <see cref="ArikoChatController" />.
+/// </summary>
 public class ArikoWindow : EditorWindow
 {
     private Button approveButton;
@@ -16,7 +21,12 @@ public class ArikoWindow : EditorWindow
     private ScrollView chatHistoryScrollView;
     private VisualElement confirmationDialog;
     private Label confirmationLabel;
+
+    /// <summary>
+    ///     The chat controller that manages the logic of the conversation.
+    /// </summary>
     public ArikoChatController controller;
+
     private Button denyButton;
     private Label emptyStateLabel;
     private Label fetchingModelsLabel;
@@ -51,6 +61,11 @@ public class ArikoWindow : EditorWindow
         }
     }
 
+    /// <summary>
+    ///     Called by the Unity Editor to create the UI for the window.
+    ///     This method loads the UXML and USS, queries for UI elements,
+    ///     and registers all necessary callbacks.
+    /// </summary>
     public async void CreateGUI()
     {
         settings = ArikoSettingsManager.LoadSettings();
@@ -117,10 +132,7 @@ public class ArikoWindow : EditorWindow
             cancelButton.tooltip = ArikoUIStrings.TipCancel;
         }
 
-        if (userInput != null)
-        {
-            userInput.tooltip = ArikoUIStrings.TipInput;
-        }
+        if (userInput != null) userInput.tooltip = ArikoUIStrings.TipInput;
 
         statusLabel = rootVisualElement.Q<Label>("status-label");
         SetStatus(ArikoUIStrings.StatusReady);
@@ -142,12 +154,20 @@ public class ArikoWindow : EditorWindow
         UpdateEmptyState();
     }
 
+    /// <summary>
+    ///     Shows the Ariko Assistant window.
+    ///     Can be accessed from the "Tools/Ariko Assistant" menu or with the shortcut Ctrl+Alt+A (Cmd+Alt+A on macOS).
+    /// </summary>
     [MenuItem("Tools/Ariko Assistant %&a")]
     public static void ShowWindow()
     {
         GetWindow<ArikoWindow>(ArikoUIStrings.WindowTitle);
     }
 
+    /// <summary>
+    ///     Allows external scripts to send a message to the Ariko Assistant.
+    /// </summary>
+    /// <param name="message">The message to send.</param>
     public async void SendExternalMessage(string message)
     {
         if (controller == null)
@@ -350,7 +370,8 @@ public class ArikoWindow : EditorWindow
 
     private void HandleMessageAdded(ChatMessage message)
     {
-        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." && chatHistoryScrollView.Contains(thinkingMessage))
+        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." &&
+            chatHistoryScrollView.Contains(thinkingMessage))
         {
             chatHistoryScrollView.Remove(thinkingMessage);
             thinkingMessage = null;
@@ -517,9 +538,7 @@ public class ArikoWindow : EditorWindow
 
         var roleLabel = message.Q<Label>("role");
         if (roleLabel != null)
-        {
             roleLabel.style.unityFontStyleAndWeight = settings.roleLabelsBold ? FontStyle.Bold : FontStyle.Normal;
-        }
     }
 
     private void ScrollToBottom()

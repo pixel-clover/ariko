@@ -2,10 +2,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+/// <summary>
+///     Manages the collection of available tools for the Ariko agent.
+/// </summary>
 public class ToolRegistry
 {
     private readonly Dictionary<string, IArikoTool> tools = new();
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="ToolRegistry" /> class
+    ///     and registers all available tools.
+    /// </summary>
     public ToolRegistry()
     {
         // Discover and register all tools. You can use reflection or manual registration.
@@ -13,18 +20,31 @@ public class ToolRegistry
         // Register other tools here...
     }
 
+    /// <summary>
+    ///     Registers a tool with the registry.
+    /// </summary>
+    /// <param name="tool">The tool to register.</param>
     public void RegisterTool(IArikoTool tool)
     {
         tools[tool.Name] = tool;
     }
 
+    /// <summary>
+    ///     Retrieves a tool from the registry by its name.
+    /// </summary>
+    /// <param name="name">The name of the tool to retrieve.</param>
+    /// <returns>The tool instance, or null if not found.</returns>
     public IArikoTool GetTool(string name)
     {
         tools.TryGetValue(name, out var tool);
         return tool;
     }
 
-    // This generates the text that describes the tools to the LLM.
+    /// <summary>
+    ///     Generates a string that describes all registered tools,
+    ///     formatted for inclusion in a prompt for the LLM.
+    /// </summary>
+    /// <returns>A string containing the definitions of all tools.</returns>
     public string GetToolDefinitionsForPrompt()
     {
         var builder = new StringBuilder();

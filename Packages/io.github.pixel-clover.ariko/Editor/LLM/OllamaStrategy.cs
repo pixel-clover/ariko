@@ -2,8 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
+/// <summary>
+///     Implements the <see cref="IApiProviderStrategy" /> for a local Ollama server.
+/// </summary>
 public class OllamaStrategy : IApiProviderStrategy
 {
+    /// <inheritdoc />
     public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         if (string.IsNullOrEmpty(settings.ollama_Url))
@@ -11,6 +15,7 @@ public class OllamaStrategy : IApiProviderStrategy
         return WebRequestResult<string>.Success($"{settings.ollama_Url}/api/tags");
     }
 
+    /// <inheritdoc />
     public WebRequestResult<string> GetChatUrl(string modelName, ArikoSettings settings,
         Dictionary<string, string> apiKeys)
     {
@@ -19,11 +24,13 @@ public class OllamaStrategy : IApiProviderStrategy
         return WebRequestResult<string>.Success($"{settings.ollama_Url}/api/chat");
     }
 
+    /// <inheritdoc />
     public WebRequestResult<string> GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         return WebRequestResult<string>.Success(null);
     }
 
+    /// <inheritdoc />
     public string BuildChatRequestBody(string prompt, string modelName)
     {
         var payload = new OllamaPayload
@@ -35,12 +42,14 @@ public class OllamaStrategy : IApiProviderStrategy
         return JsonConvert.SerializeObject(payload);
     }
 
+    /// <inheritdoc />
     public string ParseChatResponse(string json)
     {
         var response = JsonConvert.DeserializeObject<OllamaResponse>(json);
         return response.Message.Content;
     }
 
+    /// <inheritdoc />
     public List<string> ParseModelsResponse(string json)
     {
         var response = JsonConvert.DeserializeObject<OllamaModelsResponse>(json);

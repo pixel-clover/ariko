@@ -1,6 +1,9 @@
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+///     Adds a context menu item to Unity components to ask Ariko for an explanation.
+/// </summary>
 public static class ComponentContextMenu
 {
     [MenuItem("CONTEXT/Component/Ask Ariko to Explain")]

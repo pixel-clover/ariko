@@ -2,8 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
+/// <summary>
+///     Implements the <see cref="IApiProviderStrategy" /> for the Google AI (Gemini) API.
+/// </summary>
 public class GoogleStrategy : IApiProviderStrategy
 {
+    /// <inheritdoc />
     public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         if (!apiKeys.TryGetValue("Google", out var key) || string.IsNullOrEmpty(key))
@@ -13,6 +17,7 @@ public class GoogleStrategy : IApiProviderStrategy
             $"https://generativelanguage.googleapis.com/v1beta/models?key={key}");
     }
 
+    /// <inheritdoc />
     public WebRequestResult<string> GetChatUrl(string modelName, ArikoSettings settings,
         Dictionary<string, string> apiKeys)
     {
@@ -23,12 +28,14 @@ public class GoogleStrategy : IApiProviderStrategy
             $"https://generativelanguage.googleapis.com/v1beta/{modelName}:generateContent?key={key}");
     }
 
+    /// <inheritdoc />
     public WebRequestResult<string> GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         // Google API uses API key in URL, not in header
         return WebRequestResult<string>.Success(null);
     }
 
+    /// <inheritdoc />
     public string BuildChatRequestBody(string prompt, string modelName)
     {
         var payload = new GooglePayload
@@ -38,6 +45,7 @@ public class GoogleStrategy : IApiProviderStrategy
         return JsonConvert.SerializeObject(payload);
     }
 
+    /// <inheritdoc />
     public string ParseChatResponse(string json)
     {
         // Handle cases where the response might not have candidates.
@@ -46,6 +54,7 @@ public class GoogleStrategy : IApiProviderStrategy
                "No content found in response.";
     }
 
+    /// <inheritdoc />
     public List<string> ParseModelsResponse(string json)
     {
         var allAvailableModels = JsonConvert.DeserializeObject<GoogleModelsResponse>(json).Models

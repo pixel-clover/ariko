@@ -5,6 +5,10 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+///     Adds context menu items to the Unity Console window to ask Ariko to explain log entries.
+///     Uses reflection to support multiple Unity versions.
+/// </summary>
 public static class ConsoleContextMenu
 {
     [MenuItem("CONTEXT/LogEntry/Ask Ariko to Explain")]
@@ -29,7 +33,11 @@ public static class ConsoleContextMenu
             Debug.LogError("Ariko: No Console entry selected or Unity internals changed.");
     }
 
-    // Public for testability.
+    /// <summary>
+    ///     Processes a log entry object to extract the error message and stack trace, then sends it to Ariko.
+    ///     This method is public for testability.
+    /// </summary>
+    /// <param name="logEntry">The log entry object from the Unity Editor's internal API.</param>
     public static void ProcessLogEntry(object logEntry)
     {
         if (logEntry == null)

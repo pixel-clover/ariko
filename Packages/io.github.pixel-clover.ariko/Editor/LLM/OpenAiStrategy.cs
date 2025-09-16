@@ -2,19 +2,25 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 
+/// <summary>
+///     Implements the <see cref="IApiProviderStrategy" /> for the OpenAI API.
+/// </summary>
 public class OpenAiStrategy : IApiProviderStrategy
 {
+    /// <inheritdoc />
     public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         return WebRequestResult<string>.Success("https://api.openai.com/v1/models");
     }
 
+    /// <inheritdoc />
     public WebRequestResult<string> GetChatUrl(string modelName, ArikoSettings settings,
         Dictionary<string, string> apiKeys)
     {
         return WebRequestResult<string>.Success("https://api.openai.com/v1/chat/completions");
     }
 
+    /// <inheritdoc />
     public WebRequestResult<string> GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         if (!apiKeys.TryGetValue("OpenAI", out var key) || string.IsNullOrEmpty(key))
@@ -23,6 +29,7 @@ public class OpenAiStrategy : IApiProviderStrategy
         return WebRequestResult<string>.Success($"Bearer {key}");
     }
 
+    /// <inheritdoc />
     public string BuildChatRequestBody(string prompt, string modelName)
     {
         var payload = new OpenAIPayload
@@ -33,12 +40,14 @@ public class OpenAiStrategy : IApiProviderStrategy
         return JsonConvert.SerializeObject(payload);
     }
 
+    /// <inheritdoc />
     public string ParseChatResponse(string json)
     {
         var response = JsonConvert.DeserializeObject<OpenAIResponse>(json);
         return response.Choices?.FirstOrDefault()?.Message?.Content ?? "No content found in response.";
     }
 
+    /// <inheritdoc />
     public List<string> ParseModelsResponse(string json)
     {
         var allAvailableModels = JsonConvert.DeserializeObject<OpenAIModelsResponse>(json).Data

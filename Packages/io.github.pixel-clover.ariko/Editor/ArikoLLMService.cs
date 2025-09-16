@@ -6,12 +6,29 @@ using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
+/// <summary>
+///     Service class for handling communication with various Large Language Model (LLM) providers.
+/// </summary>
 public class ArikoLLMService
 {
+    /// <summary>
+    ///     Defines the supported AI providers.
+    /// </summary>
     public enum AIProvider
     {
+        /// <summary>
+        ///     Google AI (e.g., Gemini).
+        /// </summary>
         Google,
+
+        /// <summary>
+        ///     OpenAI (e.g., GPT-4).
+        /// </summary>
         OpenAI,
+
+        /// <summary>
+        ///     Ollama for locally hosted models.
+        /// </summary>
         Ollama
     }
 
@@ -19,6 +36,9 @@ public class ArikoLLMService
     private readonly Dictionary<AIProvider, IApiProviderStrategy> strategies;
     private UnityWebRequest activeRequest;
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="ArikoLLMService" /> class.
+    /// </summary>
     public ArikoLLMService()
     {
         strategies = new Dictionary<AIProvider, IApiProviderStrategy>
@@ -29,11 +49,23 @@ public class ArikoLLMService
         };
     }
 
+    /// <summary>
+    ///     Cancels the currently active web request, if any.
+    /// </summary>
     public void CancelRequest()
     {
         if (activeRequest != null && !activeRequest.isDone) activeRequest.Abort();
     }
 
+    /// <summary>
+    ///     Sends a chat request to the specified AI provider.
+    /// </summary>
+    /// <param name="prompt">The complete prompt to send to the model.</param>
+    /// <param name="provider">The AI provider to use.</param>
+    /// <param name="modelName">The specific model to query.</param>
+    /// <param name="settings">The Ariko settings.</param>
+    /// <param name="apiKeys">A dictionary of API keys for the providers.</param>
+    /// <returns>A web request result containing the AI's response text or an error.</returns>
     public async Task<WebRequestResult<string>> SendChatRequest(string prompt, AIProvider provider, string modelName,
         ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
@@ -54,6 +86,13 @@ public class ArikoLLMService
         return await SendPostRequest(urlResult.Data, authResult.Data, jsonBody, strategy.ParseChatResponse);
     }
 
+    /// <summary>
+    ///     Fetches the list of available models from the specified AI provider.
+    /// </summary>
+    /// <param name="provider">The AI provider to query.</param>
+    /// <param name="settings">The Ariko settings.</param>
+    /// <param name="apiKeys">A dictionary of API keys for the providers.</param>
+    /// <returns>A web request result containing a list of model names or an error.</returns>
     public async Task<WebRequestResult<List<string>>> FetchAvailableModels(AIProvider provider, ArikoSettings settings,
         Dictionary<string, string> apiKeys)
     {

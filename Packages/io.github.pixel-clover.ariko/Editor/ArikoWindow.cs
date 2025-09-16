@@ -18,7 +18,7 @@ public class ArikoWindow : EditorWindow
     private ScrollView chatHistoryScrollView;
 
     // --- State ---
-    private ArikoChatController controller;
+    public ArikoChatController controller;
     private Label fetchingModelsLabel;
     private Button historyButton;
     private ScrollView historyListScrollView;
@@ -85,6 +85,29 @@ public class ArikoWindow : EditorWindow
     public static void ShowWindow()
     {
         GetWindow<ArikoWindow>("Ariko Assistant");
+    }
+
+    public async void SendExternalMessage(string message)
+    {
+        if (controller == null)
+        {
+            Debug.LogError("Ariko: Chat controller is not initialized.");
+            return;
+        }
+
+        // Ensure the provider and model are set to the current dropdown values
+        var provider = providerPopup.value;
+        var model = modelPopup.value;
+
+        try
+        {
+            await controller.SendMessageToAssistant(message, provider, model);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Ariko: An unexpected error occurred while sending external message: {e.Message}");
+            HandleError("An unexpected error occurred. See console for details.");
+        }
     }
 
     // --- Initialization and Callbacks ---

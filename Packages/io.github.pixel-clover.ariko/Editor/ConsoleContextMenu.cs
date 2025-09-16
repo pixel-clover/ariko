@@ -1,4 +1,5 @@
 // csharp
+
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -68,14 +69,15 @@ public static class ConsoleContextMenu
             return false;
 
         var focused = EditorWindow.focusedWindow;
-        var consoleWindow = (focused != null && consoleWindowType.IsInstanceOfType(focused))
+        var consoleWindow = focused != null && consoleWindowType.IsInstanceOfType(focused)
             ? focused
             : Resources.FindObjectsOfTypeAll(consoleWindowType).FirstOrDefault() as EditorWindow;
 
         if (consoleWindow == null)
             return false;
 
-        var activeTextField = consoleWindowType.GetField("m_ActiveText", BindingFlags.Instance | BindingFlags.NonPublic);
+        var activeTextField =
+            consoleWindowType.GetField("m_ActiveText", BindingFlags.Instance | BindingFlags.NonPublic);
         var activeText = activeTextField?.GetValue(consoleWindow) as string;
 
         if (string.IsNullOrEmpty(activeText))
@@ -93,9 +95,10 @@ public static class ConsoleContextMenu
     private static void SendToAriko(string errorText, string stackTrace)
     {
         var arikoWindow = EditorWindow.GetWindow<ArikoWindow>("Ariko Assistant");
-        var prompt = "Explain this Unity error and stack trace. Identify the likely cause. Provide a corrected C# code snippet.\n\n" +
-                     $"\\*\\*Error:\\*\\*\n```\\n{errorText}\\n```\n\n" +
-                     $"\\*\\*Stack Trace:\\*\\*\n```\\n{stackTrace}\\n```";
+        var prompt =
+            "Explain this Unity error and stack trace. Identify the likely cause. Provide a corrected C# code snippet.\n\n" +
+            $"\\*\\*Error:\\*\\*\n```\\n{errorText}\\n```\n\n" +
+            $"\\*\\*Stack Trace:\\*\\*\n```\\n{stackTrace}\\n```";
 
         EditorApplication.delayCall += () =>
         {

@@ -20,19 +20,16 @@ public static class ComponentContextMenu
         var arikoWindow = EditorWindow.GetWindow<ArikoWindow>("Ariko Assistant");
 
         // 2. Prepare the prompt and send it
-        var prompt = $"Explain the Unity {componentName} component. Describe its key properties and provide a C# example for its usage.";
+        var prompt =
+            $"Explain the Unity {componentName} component. Describe its key properties and provide a C# example for its usage.";
 
         // The window and its controller might not be initialized yet, so we wait for the next editor update.
         EditorApplication.delayCall += () =>
         {
             if (arikoWindow != null && arikoWindow.controller != null)
-            {
                 arikoWindow.SendExternalMessage(prompt);
-            }
             else
-            {
                 Debug.LogError("Ariko: The Ariko window is not available to process the request.");
-            }
         };
     }
 }

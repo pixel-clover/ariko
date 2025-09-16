@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
@@ -12,6 +13,7 @@ public class ArikoChatController
     private readonly Dictionary<string, string> apiKeys = new();
     private readonly ArikoLLMService llmService;
     private readonly ArikoSettings settings;
+    private readonly ToolRegistry toolRegistry;
     public Action OnChatCleared; // Tells the view to clear the message display
     public Action OnChatReloaded; // Tells the view to reload with messages from ActiveSession
 
@@ -21,11 +23,15 @@ public class ArikoChatController
     public Action<ChatMessage> OnMessageAdded; // Replaces the old OnMessageAdded
     public Action<List<string>> OnModelsFetched;
     public Action<bool> OnResponseStatusChanged; // isPending
+    public Action<ToolCall> OnToolCallConfirmationRequested;
+    private ToolCall pendingToolCall;
+
 
     public ArikoChatController(ArikoSettings settings)
     {
         this.settings = settings;
         llmService = new ArikoLLMService();
+        toolRegistry = new ToolRegistry();
 
         ChatHistory = ChatHistoryStorage.LoadHistory();
         if (ChatHistory == null || ChatHistory.Count == 0)
@@ -74,40 +80,184 @@ public class ArikoChatController
     {
         if (string.IsNullOrWhiteSpace(text)) return;
 
-        // 1. Add user message to session and notify view
+        // Add user message to session and notify view
         var userMessage = new ChatMessage { Role = "User", Content = text };
         ActiveSession.Messages.Add(userMessage);
         OnMessageAdded?.Invoke(userMessage);
 
-        var context = BuildContextString();
-        var systemPrompt = ActiveSession.Messages.Count <= 1 && !string.IsNullOrEmpty(settings.systemPrompt)
-            ? settings.systemPrompt + "\n\n"
-            : "";
-        var prompt = $"{systemPrompt}{context}\n\nUser Question:\n{text}";
+        if (settings.selectedWorkMode == "Agent")
+        {
+            await SendAgentRequest(text, selectedProvider, selectedModel);
+        }
+        else
+        {
+            var context = BuildContextString();
+            var systemPrompt = ActiveSession.Messages.Count <= 1 && !string.IsNullOrEmpty(settings.systemPrompt)
+                ? settings.systemPrompt + "\n\n"
+                : "";
+            var prompt = $"{systemPrompt}{context}\n\nUser Question:\n{text}";
 
+            OnResponseStatusChanged?.Invoke(true);
+
+            var thinkingMessage = new ChatMessage { Role = "Ariko", Content = "..." };
+            ActiveSession.Messages.Add(thinkingMessage);
+            OnMessageAdded?.Invoke(thinkingMessage);
+
+            var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
+            var result = await llmService.SendChatRequest(prompt, provider, selectedModel, settings, apiKeys);
+
+            string newContent;
+            if (result.IsSuccess)
+                newContent = result.Data;
+            else
+                newContent = GetFormattedErrorMessage(result.Error, result.ErrorType);
+
+            ActiveSession.Messages.Remove(thinkingMessage);
+            var finalMessage = new ChatMessage { Role = "Ariko", Content = newContent, IsError = !result.IsSuccess };
+            ActiveSession.Messages.Add(finalMessage);
+            OnMessageAdded?.Invoke(finalMessage);
+
+            OnResponseStatusChanged?.Invoke(false);
+        }
+    }
+
+    private async Task SendAgentRequest(string text, string selectedProvider, string selectedModel)
+    {
         OnResponseStatusChanged?.Invoke(true);
 
-        // 2. Add "thinking" message and notify view
         var thinkingMessage = new ChatMessage { Role = "Ariko", Content = "..." };
         ActiveSession.Messages.Add(thinkingMessage);
         OnMessageAdded?.Invoke(thinkingMessage);
 
+        var toolDefinitions = toolRegistry.GetToolDefinitionsForPrompt();
+        var systemPrompt = settings.agentSystemPrompt;
+        var prompt = $"{systemPrompt}\n\n{toolDefinitions}\n\nUser Request:\n{text}";
+
         var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
         var result = await llmService.SendChatRequest(prompt, provider, selectedModel, settings, apiKeys);
 
-        string newContent;
-        if (result.IsSuccess)
-            newContent = result.Data;
-        else
-            newContent = GetFormattedErrorMessage(result.Error, result.ErrorType);
-
-        // 3. Replace "thinking" message in session with final message, and notify view
         ActiveSession.Messages.Remove(thinkingMessage);
-        var finalMessage = new ChatMessage { Role = "Ariko", Content = newContent, IsError = !result.IsSuccess };
-        ActiveSession.Messages.Add(finalMessage);
-        OnMessageAdded?.Invoke(finalMessage);
-
         OnResponseStatusChanged?.Invoke(false);
+
+        if (result.IsSuccess)
+        {
+            if (TryParseToolCall(result.Data, out var toolCall))
+            {
+                pendingToolCall = toolCall;
+                OnToolCallConfirmationRequested?.Invoke(toolCall);
+            }
+            else
+            {
+                // It's a conversational response
+                var finalMessage = new ChatMessage { Role = "Ariko", Content = result.Data };
+                ActiveSession.Messages.Add(finalMessage);
+                OnMessageAdded?.Invoke(finalMessage);
+            }
+        }
+        else
+        {
+            var errorMessage = GetFormattedErrorMessage(result.Error, result.ErrorType);
+            var finalMessage = new ChatMessage { Role = "Ariko", Content = errorMessage, IsError = true };
+            ActiveSession.Messages.Add(finalMessage);
+            OnMessageAdded?.Invoke(finalMessage);
+        }
+    }
+
+    public async void RespondToToolConfirmation(bool userApproved, string selectedProvider, string selectedModel)
+    {
+        if (pendingToolCall == null) return;
+
+        var toolCall = pendingToolCall;
+        pendingToolCall = null; // Clear the pending call
+
+        if (userApproved)
+        {
+            var thinkingMessage = new ChatMessage
+                { Role = "Ariko", Content = $"Executing tool: {toolCall.tool_name}..." };
+            ActiveSession.Messages.Add(thinkingMessage);
+            OnMessageAdded?.Invoke(thinkingMessage);
+
+            var tool = toolRegistry.GetTool(toolCall.tool_name);
+            string executionResult;
+            if (tool != null)
+                executionResult = tool.Execute(toolCall.parameters);
+            else
+                executionResult = $"Error: Tool '{toolCall.tool_name}' not found.";
+
+            ActiveSession.Messages.Remove(thinkingMessage);
+            var resultMessage = new ChatMessage { Role = "User", Content = $"Observation: {executionResult}" };
+            ActiveSession.Messages.Add(resultMessage);
+            OnMessageAdded?.Invoke(resultMessage);
+
+            // Send the observation back to the LLM to continue the loop
+            await SendAgentRequest($"Observation: {executionResult}", selectedProvider, selectedModel);
+        }
+        else
+        {
+            var denialMessage = new ChatMessage { Role = "User", Content = "Observation: User denied the action." };
+            ActiveSession.Messages.Add(denialMessage);
+            OnMessageAdded?.Invoke(denialMessage);
+            // Inform the LLM that the user denied the action
+            await SendAgentRequest("Observation: User denied the action.", selectedProvider, selectedModel);
+        }
+    }
+
+    private bool TryParseToolCall(string response, out ToolCall toolCall)
+    {
+        toolCall = null;
+        var jsonMatch = Regex.Match(response, @"\{.*\}", RegexOptions.Singleline);
+        if (!jsonMatch.Success) return false;
+
+        var json = jsonMatch.Value;
+
+        try
+        {
+            // Simple manual parsing. Not robust, but avoids a full JSON library dependency.
+            var tempCall = new ToolCall();
+
+            var thoughtMatch = Regex.Match(json, @"""thought""\s*:\s*""([^""]*)""");
+            if (thoughtMatch.Success) tempCall.thought = thoughtMatch.Groups[1].Value;
+
+            var toolNameMatch = Regex.Match(json, @"""tool_name""\s*:\s*""([^""]*)""");
+            if (!toolNameMatch.Success) return false; // tool_name is mandatory
+            tempCall.tool_name = toolNameMatch.Groups[1].Value;
+
+            var paramsMatch = Regex.Match(json, @"""parameters""\s*:\s*\{([^\}]*)\}");
+            if (paramsMatch.Success)
+            {
+                tempCall.parameters = new Dictionary<string, object>();
+                var paramBody = paramsMatch.Groups[1].Value;
+                var paramPairs = Regex.Matches(paramBody, @"""([^""]+)""\s*:\s*([^,]+)");
+                foreach (Match pair in paramPairs)
+                {
+                    var key = pair.Groups[1].Value;
+                    var valueStr = pair.Groups[2].Value.Trim();
+
+                    // Try to parse value as different types
+                    if (valueStr.StartsWith("\"") && valueStr.EndsWith("\""))
+                        tempCall.parameters[key] = valueStr.Substring(1, valueStr.Length - 2);
+                    else if (int.TryParse(valueStr, out var intVal))
+                        tempCall.parameters[key] = intVal;
+                    else if (float.TryParse(valueStr, out var floatVal))
+                        tempCall.parameters[key] = floatVal;
+                    else if (bool.TryParse(valueStr, out var boolVal))
+                        tempCall.parameters[key] = boolVal;
+                    else
+                        tempCall.parameters[key] = valueStr; // as string
+                }
+            }
+            else
+            {
+                tempCall.parameters = new Dictionary<string, object>(); // empty params
+            }
+
+            toolCall = tempCall;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async Task FetchModelsForCurrentProvider(string selectedProvider)

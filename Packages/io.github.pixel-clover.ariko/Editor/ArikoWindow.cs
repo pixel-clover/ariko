@@ -8,19 +8,22 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
-public partial class ArikoWindow : EditorWindow
+public class ArikoWindow : EditorWindow
 {
-    private Label statusLabel;
-    private Label emptyStateLabel;
+    private Button approveButton;
     private Toggle autoContextToggle;
 
     private Button cancelButton;
 
     // --- UI Elements ---
     private ScrollView chatHistoryScrollView;
+    private VisualElement confirmationDialog;
+    private Label confirmationLabel;
 
     // --- State ---
     public ArikoChatController controller;
+    private Button denyButton;
+    private Label emptyStateLabel;
     private Label fetchingModelsLabel;
     private Button historyButton;
     private ScrollView historyListScrollView;
@@ -30,6 +33,7 @@ public partial class ArikoWindow : EditorWindow
     private PopupField<string> providerPopup;
     private Button sendButton;
     private ArikoSettings settings;
+    private Label statusLabel;
     private VisualElement thinkingMessage;
     private TextField userInput;
     private PopupField<string> workModePopup;
@@ -192,6 +196,11 @@ public partial class ArikoWindow : EditorWindow
         autoContextToggle = rootVisualElement.Q<Toggle>("auto-context-toggle");
         manualAttachmentsList = rootVisualElement.Q<VisualElement>("manual-attachments-list");
         fetchingModelsLabel = rootVisualElement.Q<Label>("fetching-models-label");
+
+        confirmationDialog = rootVisualElement.Q<VisualElement>("confirmation-dialog");
+        confirmationLabel = rootVisualElement.Q<Label>("confirmation-label");
+        approveButton = rootVisualElement.Q<Button>("approve-button");
+        denyButton = rootVisualElement.Q<Button>("deny-button");
     }
 
     private void CreateAndSetupPopups()
@@ -223,6 +232,7 @@ public partial class ArikoWindow : EditorWindow
         controller.OnResponseStatusChanged += SetResponsePending;
         controller.OnModelsFetched += HandleModelsFetched;
         controller.OnError += HandleError;
+        controller.OnToolCallConfirmationRequested += HandleToolCallConfirmationRequested;
 
         // View -> Controller
         sendButton.clicked += SendMessage;
@@ -235,6 +245,19 @@ public partial class ArikoWindow : EditorWindow
                 evt.StopImmediatePropagation();
             }
         });
+
+        approveButton.clicked += () =>
+        {
+            controller.RespondToToolConfirmation(true, providerPopup.value, modelPopup.value);
+            confirmationDialog.style.display = DisplayStyle.None;
+            userInput.SetEnabled(true);
+        };
+        denyButton.clicked += () =>
+        {
+            controller.RespondToToolConfirmation(false, providerPopup.value, modelPopup.value);
+            confirmationDialog.style.display = DisplayStyle.None;
+            userInput.SetEnabled(true);
+        };
 
         rootVisualElement.Q<Button>("new-chat-button").clicked += controller.ClearChat;
         rootVisualElement.Q<Button>("clear-history-button").clicked += controller.ClearAllHistory;
@@ -264,6 +287,7 @@ public partial class ArikoWindow : EditorWindow
         controller.OnResponseStatusChanged -= SetResponsePending;
         controller.OnModelsFetched -= HandleModelsFetched;
         controller.OnError -= HandleError;
+        controller.OnToolCallConfirmationRequested -= HandleToolCallConfirmationRequested;
     }
 
     private void RegisterSettingsCallbacks()
@@ -299,6 +323,13 @@ public partial class ArikoWindow : EditorWindow
     }
 
     // --- Chat and History Handling ---
+
+    private void HandleToolCallConfirmationRequested(ToolCall toolCall)
+    {
+        confirmationLabel.text = $"Thought: {toolCall.thought}\nAction: {toolCall.tool_name}";
+        confirmationDialog.style.display = DisplayStyle.Flex;
+        userInput.SetEnabled(false);
+    }
 
     private async void SendMessage()
     {
@@ -636,12 +667,6 @@ public partial class ArikoWindow : EditorWindow
         ToggleSettingsPanel();
     }
 
-    private enum WorkMode
-    {
-        Ask,
-        Agent
-    }
-
     private void SetStatus(string text)
     {
         if (statusLabel != null) statusLabel.text = text;
@@ -654,5 +679,11 @@ public partial class ArikoWindow : EditorWindow
                           controller.ActiveSession.Messages.Count > 0;
 
         emptyStateLabel.style.display = hasMessages ? DisplayStyle.None : DisplayStyle.Flex;
+    }
+
+    private enum WorkMode
+    {
+        Ask,
+        Agent
     }
 }

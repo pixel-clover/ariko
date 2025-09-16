@@ -378,3 +378,26 @@
 .history-item--selected {
     background-color: var(--user-message-background-color);
 }
+
+/* Confirmation Dialog */
+.confirmation-dialog {
+    border-top-width: 1px;
+    border-top-color: var(--separator-color);
+    padding: 10px;
+    background-color: var(--input-background-color);
+}
+
+.confirmation-label {
+    white-space: normal;
+    margin-bottom: 10px;
+}
+
+.confirmation-buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.confirmation-buttons Button {
+    margin-left: 10px;
+    width: 80px;
+}

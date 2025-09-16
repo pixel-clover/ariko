@@ -59,6 +59,8 @@ To use Ariko, you need to provide an API key for the AI service you want to use 
     *   Alternatively, you can paste your keys directly into the corresponding fields in the settings panel.
 3.  Click the "Save and Close" button to save your settings.
 
+---
+
 ### Documentation
 
 To be added.

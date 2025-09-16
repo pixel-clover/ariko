@@ -126,7 +126,6 @@ public class ArikoWindow : EditorWindow
         // Label for the input (keeps layout tidy and serves as subtle guidance)
         if (userInput != null)
         {
-            userInput.label = ArikoUIStrings.UserInputLabel;
             userInput.tooltip = ArikoUIStrings.TipInput;
         }
 
@@ -371,7 +370,7 @@ public class ArikoWindow : EditorWindow
 
     private void HandleMessageAdded(ChatMessage message)
     {
-        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "...")
+        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." && chatHistoryScrollView.Contains(thinkingMessage))
         {
             chatHistoryScrollView.Remove(thinkingMessage);
             thinkingMessage = null;

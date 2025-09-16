@@ -8,7 +8,7 @@
 
 [![Tests](https://img.shields.io/github/actions/workflow/status/pixel-clover/ariko/tests.yml?branch=main&label=tests&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/actions/workflows/tests.yml)
 [![Code Quality](https://img.shields.io/codefactor/grade/github/pixel-clover/ariko?style=flat&label=code%20quality&labelColor=333333&logo=codefactor&logoColor=white)](https://www.codefactor.io/repository/github/pixel-clover/ariko)
-[![Unity Version](https://img.shields.io/badge/unity-2022.3+-green?style=flat&labelColor=282c34&logo=unity)](https://unity.com)
+[![Unity Version](https://img.shields.io/badge/unity-2021.3+-green?style=flat&labelColor=282c34&logo=unity)](https://unity.com)
 [![License](https://img.shields.io/badge/License-MIT-007ec6?style=flat&labelColor=282c34&logo=open-source-initiative&label=license)](https://github.com/pixel-clover/ariko/blob/main/LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/pixel-clover/ariko?include_prereleases&label=release&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/releases/latest)
 
@@ -38,27 +38,26 @@ See the [ROADMAP.md](ROADMAP.md) file for the project roadmap.
 
 ### Getting Started
 
-1.  **Open the Package Manager:** In the Unity Editor, go to `Window > Package Manager`.
-2.  **Add Package from Git URL:** Click the `+` icon in the top-left corner of the Package Manager window and select "Add package from git URL...".
-3.  **Enter the URL:** Paste the following URL and click "Add":
+1.  In the Unity Editor, go to `Window > Package Manager`.
+2.  Click the `+` icon in the top-left corner of the Package Manager window and select "Add package from git URL...".
+3.  Paste the following URL and click "Add":
     ```
     https://github.com/pixel-clover/ariko.git?path=/Packages/io.github.pixel-clover.ariko
     ```
-4.  **Open the Ariko Window:** Once the package is installed, you can open the assistant window by going to `Tools > Ariko Assistant`.
-5.  **Configure API Keys:** See the Configuration section below to set up your AI provider.
+4.  When the package is installed, you can open the assistant window by going to `Tools > Ariko Assistant`.
 
 ### Configuration
 
 To use Ariko, you need to provide an API key for the AI service you want to use (like OpenAI and Google).
 
-1.  **Open Ariko Settings:** In the Ariko window, click the "Settings" button. This will open the settings panel.
-2.  **Enter API Keys:**
-    *   **Environment Variables (Recommended):** For better security, you can set your API keys as environment variables on your system. Ariko will automatically load them.
+1.  In the Ariko window, click the "Settings" button. This will open the settings panel.
+2.  Enter API Keys:
+    *   For better security, you can set your API keys as environment variables on your system and Ariko will automatically load them.
         *   `OPENAI_API_KEY`: Your API key for OpenAI.
         *   `GOOGLE_API_KEY`: Your API key for Google.
         *   `OLLAMA_URL`: The URL for your local Ollama instance (example: `http://localhost:11434`).
-    *   **Direct Input:** Alternatively, you can paste your keys directly into the corresponding fields in the settings panel.
-3.  **Save Settings:** Click the "Save and Close" button to save your settings.
+    *   Alternatively, you can paste your keys directly into the corresponding fields in the settings panel.
+3.  Click the "Save and Close" button to save your settings.
 
 ### Documentation
 

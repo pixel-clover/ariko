@@ -7,8 +7,6 @@ using UnityEngine.Networking;
 
 public class ArikoLLMService
 {
-    private UnityWebRequest activeRequest;
-
     public enum AIProvider
     {
         Google,
@@ -17,6 +15,7 @@ public class ArikoLLMService
     }
 
     private readonly Dictionary<AIProvider, IApiProviderStrategy> strategies;
+    private UnityWebRequest activeRequest;
 
     public ArikoLLMService()
     {
@@ -30,10 +29,7 @@ public class ArikoLLMService
 
     public void CancelRequest()
     {
-        if (activeRequest != null && !activeRequest.isDone)
-        {
-            activeRequest.Abort();
-        }
+        if (activeRequest != null && !activeRequest.isDone) activeRequest.Abort();
     }
 
     public async Task<WebRequestResult<string>> SendChatRequest(string prompt, AIProvider provider, string modelName,
@@ -117,10 +113,8 @@ public class ArikoLLMService
 
     private WebRequestResult<T> HandleApiResponse<T>(UnityWebRequest request, Func<string, T> parser)
     {
-        if (request.result == UnityWebRequest.Result.Aborted)
-        {
-            return new WebRequestResult<T>(default, "Request cancelled by user.");
-        }
+        // The OperationCanceledException is now caught before this method is called,
+        // so we no longer need to check for the Aborted result.
 
         if (request.result == UnityWebRequest.Result.Success)
             try

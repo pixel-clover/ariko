@@ -5,6 +5,7 @@ using Markdig.Syntax.Inlines;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+
 // Required for GUIUtility
 
 // Required for AssetDatabase
@@ -58,6 +59,10 @@ public class MarkdigRenderer
                         foreach (var subBlock in listItem)
                         {
                             var itemElement = CreateElementForBlock(subBlock);
+
+                            // When a paragraph is inside a list item, we don't want the default paragraph margin.
+                            if (itemElement.ClassListContains("markdown-paragraph")) itemElement.style.marginBottom = 0;
+
                             // We might want to wrap list item content in another container for styling
                             var listItemContainer = new VisualElement();
                             listItemContainer.AddToClassList("list-item");

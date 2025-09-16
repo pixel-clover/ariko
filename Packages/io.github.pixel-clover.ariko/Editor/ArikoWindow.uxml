@@ -51,7 +51,7 @@
                                  type="UnityEngine.Font, UnityEngine.TextRenderingModule"/>
                 <uie:IntegerField label="Chat Font Size" name="chat-font-size"/>
                 <uie:IntegerField label="Chat History Size" name="chat-history-size"
-                                 tooltip="How many past chat sessions to keep in history. Set to 0 for infinite."/>
+                                  tooltip="How many past chat sessions to keep in history. Set to 0 for infinite."/>
                 <ui:Toggle label="Bold role labels" name="role-bold-toggle"/>
                 <ui:Label text="System Prompt" class="sub-header-label"/>
                 <ui:TextField name="system-prompt" multiline="true" style="flex-grow: 1;" class="system-prompt-field"/>

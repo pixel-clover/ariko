@@ -11,32 +11,41 @@ public class ArikoChatController
     private readonly Dictionary<string, string> apiKeys = new();
     private readonly ArikoLLMService llmService;
     private readonly ArikoSettings settings;
-
-    // --- Properties for Chat History ---
-    public List<ChatSession> ChatHistory { get; private set; }
-    public ChatSession ActiveSession { get; private set; }
+    public Action OnChatCleared; // Tells the view to clear the message display
+    public Action OnChatReloaded; // Tells the view to reload with messages from ActiveSession
 
     // --- Events for the View to subscribe to ---
     public Action<string> OnError;
+    public Action OnHistoryChanged; // Tells the view to update the history panel
+    public Action<ChatMessage> OnMessageAdded; // Replaces the old OnMessageAdded
     public Action<List<string>> OnModelsFetched;
     public Action<bool> OnResponseStatusChanged; // isPending
-    public Action OnChatCleared; // Tells the view to clear the message display
-    public Action<ChatMessage> OnMessageAdded; // Replaces the old OnMessageAdded
-    public Action OnChatReloaded; // Tells the view to reload with messages from ActiveSession
-    public Action OnHistoryChanged; // Tells the view to update the history panel
 
     public ArikoChatController(ArikoSettings settings)
     {
         this.settings = settings;
         llmService = new ArikoLLMService();
-        ChatHistory = new List<ChatSession>();
 
-        // Start with a clean session
-        ActiveSession = new ChatSession();
-        ChatHistory.Add(ActiveSession);
+        ChatHistory = ChatHistoryStorage.LoadHistory();
+        if (ChatHistory == null || ChatHistory.Count == 0)
+        {
+            // If no history, create a new one
+            ChatHistory = new List<ChatSession>();
+            ActiveSession = new ChatSession();
+            ChatHistory.Add(ActiveSession);
+        }
+        else
+        {
+            // Otherwise, the first session in the list is the most recent one
+            ActiveSession = ChatHistory[0];
+        }
 
         LoadApiKeysFromEnvironment();
     }
+
+    // --- Properties for Chat History ---
+    public List<ChatSession> ChatHistory { get; }
+    public ChatSession ActiveSession { get; private set; }
 
     public List<Object> ManuallyAttachedAssets { get; } = new();
     public bool AutoContext { get; set; } = true;
@@ -127,9 +136,7 @@ public class ArikoChatController
 
         // Enforce history size limit (if set)
         if (settings.chatHistorySize > 0 && ChatHistory.Count > settings.chatHistorySize)
-        {
             ChatHistory.RemoveAt(ChatHistory.Count - 1);
-        }
 
         ManuallyAttachedAssets.Clear();
         OnChatCleared?.Invoke(); // Tells view to clear the scrollview

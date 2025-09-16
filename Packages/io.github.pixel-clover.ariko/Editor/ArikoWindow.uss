@@ -114,8 +114,7 @@
     flex-grow: 1;
     flex-basis: 0;
     font-size: 14px;
-    min-height: 110px;
-    max-height: 110px;
+    height: 110px;
     white-space: normal;
 }
 

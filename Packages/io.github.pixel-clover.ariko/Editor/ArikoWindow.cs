@@ -124,10 +124,7 @@ public class ArikoWindow : EditorWindow
         }
 
         // Label for the input (keeps layout tidy and serves as subtle guidance)
-        if (userInput != null)
-        {
-            userInput.tooltip = ArikoUIStrings.TipInput;
-        }
+        if (userInput != null) userInput.tooltip = ArikoUIStrings.TipInput;
 
         // Status label (added in UXML as 'status-label')
         statusLabel = rootVisualElement.Q<Label>("status-label");
@@ -370,7 +367,8 @@ public class ArikoWindow : EditorWindow
 
     private void HandleMessageAdded(ChatMessage message)
     {
-        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." && chatHistoryScrollView.Contains(thinkingMessage))
+        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." &&
+            chatHistoryScrollView.Contains(thinkingMessage))
         {
             chatHistoryScrollView.Remove(thinkingMessage);
             thinkingMessage = null;
@@ -511,13 +509,22 @@ public class ArikoWindow : EditorWindow
 
     private void ApplyChatStylesForElement(VisualElement message)
     {
+        var backgroundColor = Color.clear;
         if (message.ClassListContains("user-message"))
-            message.style.backgroundColor = settings.userChatBackgroundColor;
+        {
+            backgroundColor = settings.userChatBackgroundColor;
+            message.style.backgroundColor = backgroundColor;
+        }
         else if (message.ClassListContains("ariko-message"))
-            message.style.backgroundColor = settings.assistantChatBackgroundColor;
+        {
+            backgroundColor = settings.assistantChatBackgroundColor;
+            message.style.backgroundColor = backgroundColor;
+        }
 
+        var textColor = IsColorLight(backgroundColor) ? Color.black : Color.white;
         message.Query<Label>().ForEach(label =>
         {
+            label.style.color = textColor;
             if (label.name != "role")
             {
                 if (settings.chatFont != null)
@@ -678,6 +685,13 @@ public class ArikoWindow : EditorWindow
                           controller.ActiveSession.Messages.Count > 0;
 
         emptyStateLabel.style.display = hasMessages ? DisplayStyle.None : DisplayStyle.Flex;
+    }
+
+    private static bool IsColorLight(Color color)
+    {
+        // Calculate luminance
+        var luminance = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
+        return luminance > 0.5;
     }
 
     private enum WorkMode

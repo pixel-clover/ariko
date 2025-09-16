@@ -64,6 +64,7 @@
     margin-bottom: 10px;
     white-space: normal;
     max-width: 90%;
+    color: var(--text-color); /* Ensure all text within the message inherits the theme color */
 }
 
 .user-message {
@@ -72,10 +73,13 @@
     margin-right: 10%;
 }
 
-.ariko-message {
-    background-color: var(--ariko-message-background-color);
-    align-self: flex-start;
-    margin-right: 10%;
+.error-message {
+    background-color: var(--ariko-message-background-color); /* Or a specific error background */
+    color: rgb(255, 100, 100); /* A light red for dark theme */
+}
+
+.unity-editor-light-theme .error-message {
+    color: rgb(200, 0, 0); /* A darker red for light theme */
 }
 
 /* Input Area */
@@ -172,7 +176,7 @@
 .list-item-bullet {
     margin-right: 5px;
     min-width: 15px; /* Ensure numbers have enough space */
-    -unity-text-align: right;
+    -unity-text-align: middle-right;
 }
 
 .list-item-content {
@@ -285,7 +289,6 @@
     border-right-width: 1px;
     border-right-color: var(--separator-color);
     background-color: var(--toolbar-background-color); /* A slightly different shade */
-    resize: horizontal;
 }
 
 .history-header {

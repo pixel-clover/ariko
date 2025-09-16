@@ -4,20 +4,23 @@ using Newtonsoft.Json;
 
 public class OpenAiStrategy : IApiProviderStrategy
 {
-    public string GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        return "https://api.openai.com/v1/models";
+        return WebRequestResult<string>.Success("https://api.openai.com/v1/models");
     }
 
-    public string GetChatUrl(string modelName, ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public WebRequestResult<string> GetChatUrl(string modelName, ArikoSettings settings,
+        Dictionary<string, string> apiKeys)
     {
-        return "https://api.openai.com/v1/chat/completions";
+        return WebRequestResult<string>.Success("https://api.openai.com/v1/chat/completions");
     }
 
-    public string GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public WebRequestResult<string> GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        apiKeys.TryGetValue("OpenAI", out var key);
-        return $"Bearer {key}";
+        if (!apiKeys.TryGetValue("OpenAI", out var key) || string.IsNullOrEmpty(key))
+            return WebRequestResult<string>.Fail("OpenAI API key is missing.", ErrorType.Auth);
+
+        return WebRequestResult<string>.Success($"Bearer {key}");
     }
 
     public string BuildChatRequestBody(string prompt, string modelName)
@@ -33,7 +36,7 @@ public class OpenAiStrategy : IApiProviderStrategy
     public string ParseChatResponse(string json)
     {
         var response = JsonConvert.DeserializeObject<OpenAIResponse>(json);
-        return response.Choices?.FirstOrDefault()?.Message?.Content ?? "Error: No content found in response.";
+        return response.Choices?.FirstOrDefault()?.Message?.Content ?? "No content found in response.";
     }
 
     public List<string> ParseModelsResponse(string json)

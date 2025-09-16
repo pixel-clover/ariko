@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
@@ -49,7 +50,7 @@ public class ArikoWindow : EditorWindow
         }
     }
 
-    public void CreateGUI()
+    public async void CreateGUI()
     {
         settings = ArikoSettingsManager.LoadSettings();
         controller = new ArikoChatController(settings);
@@ -73,7 +74,7 @@ public class ArikoWindow : EditorWindow
 
         UpdateHistoryPanel(); // Initial population of history panel
 
-        controller.FetchModelsForCurrentProvider(providerPopup.value);
+        await FetchModelsForCurrentProviderAsync(providerPopup.value);
 
         ApplyChatStyles();
         ScrollToBottom();
@@ -147,10 +148,10 @@ public class ArikoWindow : EditorWindow
         rootVisualElement.Q<Button>("add-file-button").clicked += ArikoSearchWindow.ShowWindow;
         autoContextToggle.RegisterValueChangedCallback(evt => controller.AutoContext = evt.newValue);
 
-        providerPopup.RegisterValueChangedCallback(evt =>
+        providerPopup.RegisterValueChangedCallback(async evt =>
         {
             settings.selectedProvider = evt.newValue;
-            controller.FetchModelsForCurrentProvider(evt.newValue);
+            await FetchModelsForCurrentProviderAsync(evt.newValue);
         });
         modelPopup.RegisterValueChangedCallback(evt => SetSelectedModelForProvider(evt.newValue));
         workModePopup.RegisterValueChangedCallback(evt => settings.selectedWorkMode = evt.newValue);
@@ -206,31 +207,57 @@ public class ArikoWindow : EditorWindow
 
     // --- Chat and History Handling ---
 
-    private void SendMessage()
+    private async void SendMessage()
     {
         if (string.IsNullOrWhiteSpace(userInput.value)) return;
-        controller.SendMessageToAssistant(userInput.value, providerPopup.value, modelPopup.value);
+        // Create a temporary variable to hold the value, in case it changes before the async operation completes
+        var textToSend = userInput.value;
         userInput.value = "";
+        try
+        {
+            await controller.SendMessageToAssistant(textToSend, providerPopup.value, modelPopup.value);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Ariko: An unexpected error occurred: {e.Message}");
+            HandleError("An unexpected error occurred. See console for details.");
+        }
     }
+
+    private async Task FetchModelsForCurrentProviderAsync(string provider)
+    {
+        fetchingModelsLabel.style.display = DisplayStyle.Flex;
+        modelPopup.SetEnabled(false);
+        try
+        {
+            await controller.FetchModelsForCurrentProvider(provider);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Ariko: An unexpected error occurred while fetching models: {e.Message}");
+            HandleError("Failed to fetch models. See console for details.");
+        }
+        finally
+        {
+            fetchingModelsLabel.style.display = DisplayStyle.None;
+            modelPopup.SetEnabled(true);
+        }
+    }
+
 
     private void HandleMessageAdded(ChatMessage message)
     {
-        // If this is the start of a response, remove the "thinking..." message
         if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "...")
         {
             chatHistoryScrollView.Remove(thinkingMessage);
             thinkingMessage = null;
         }
 
-        var messageElement = AddMessageToChat(message.Role, message.Content);
+        var messageElement = AddMessageToChat(message);
 
-        // If this is a "thinking..." message, store it for later removal
         if (message.Role == "Ariko" && message.Content == "...") thinkingMessage = messageElement;
 
-        // When a message is added to the active session, its name might change (e.g., if it's based on first message)
-        // So we update the history panel to reflect the potential new name.
         UpdateHistoryPanel();
-
         ScrollToBottom();
     }
 
@@ -244,8 +271,8 @@ public class ArikoWindow : EditorWindow
     private void HandleChatReloaded()
     {
         chatHistoryScrollView.Clear();
-        foreach (var message in controller.ActiveSession.Messages) AddMessageToChat(message.Role, message.Content);
-        UpdateManualAttachmentsList(); // Assuming attachments might be session-specific
+        foreach (var message in controller.ActiveSession.Messages) AddMessageToChat(message);
+        UpdateManualAttachmentsList();
         ScrollToBottom();
     }
 
@@ -273,7 +300,7 @@ public class ArikoWindow : EditorWindow
     private void HandleError(string error)
     {
         Debug.LogError($"Ariko: {error}");
-        AddMessageToChat("System", $"Error: {error}");
+        AddMessageToChat(new ChatMessage { Role = "System", Content = error, IsError = true });
     }
 
     private void UpdateHistoryPanel()
@@ -289,11 +316,13 @@ public class ArikoWindow : EditorWindow
         }
     }
 
-    private VisualElement AddMessageToChat(string role, string content)
+    private VisualElement AddMessageToChat(ChatMessage message)
     {
         var messageContainer = new VisualElement();
         messageContainer.AddToClassList("chat-message");
-        messageContainer.AddToClassList(role.ToLower() + "-message");
+        messageContainer.AddToClassList(message.Role.ToLower() + "-message");
+        if (message.IsError) messageContainer.AddToClassList("error-message");
+
 
         var isFirstMessage = chatHistoryScrollView.contentContainer.childCount == 0;
         if (isFirstMessage) messageContainer.style.marginTop = new StyleLength(0f);
@@ -301,19 +330,19 @@ public class ArikoWindow : EditorWindow
         var headerContainer = new VisualElement();
         headerContainer.AddToClassList("message-header");
 
-        var roleLabel = new Label(role) { name = "role" };
+        var roleLabel = new Label(message.Role) { name = "role" };
         roleLabel.AddToClassList("role-label");
         headerContainer.Add(roleLabel);
 
-        if (role == "Ariko" && content != "...")
+        if (message.Role == "Ariko" && message.Content != "...")
         {
-            var copyButton = new Button(() => EditorGUIUtility.systemCopyBuffer = content) { text = "Copy" };
+            var copyButton = new Button(() => EditorGUIUtility.systemCopyBuffer = message.Content) { text = "Copy" };
             copyButton.AddToClassList("copy-button");
             headerContainer.Add(copyButton);
         }
 
         var contentContainer = new VisualElement { name = "content-container" };
-        contentContainer.Add(markdownRenderer.Render(content));
+        contentContainer.Add(markdownRenderer.Render(message.Content));
 
         messageContainer.Add(headerContainer);
         messageContainer.Add(contentContainer);
@@ -360,6 +389,8 @@ public class ArikoWindow : EditorWindow
         var roleLabel = message.Q<Label>("role");
         if (roleLabel != null)
             roleLabel.style.unityFontStyleAndWeight = settings.roleLabelsBold ? FontStyle.Bold : FontStyle.Normal;
+
+        // The color for error messages is now handled by the USS file.
     }
 
     private void ScrollToBottom()

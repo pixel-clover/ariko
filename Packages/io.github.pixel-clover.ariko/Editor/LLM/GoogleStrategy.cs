@@ -4,22 +4,29 @@ using Newtonsoft.Json;
 
 public class GoogleStrategy : IApiProviderStrategy
 {
-    public string GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        apiKeys.TryGetValue("Google", out var key);
-        return $"https://generativelanguage.googleapis.com/v1beta/models?key={key}";
+        if (!apiKeys.TryGetValue("Google", out var key) || string.IsNullOrEmpty(key))
+            return WebRequestResult<string>.Fail("Google API key is missing.", ErrorType.Auth);
+
+        return WebRequestResult<string>.Success(
+            $"https://generativelanguage.googleapis.com/v1beta/models?key={key}");
     }
 
-    public string GetChatUrl(string modelName, ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public WebRequestResult<string> GetChatUrl(string modelName, ArikoSettings settings,
+        Dictionary<string, string> apiKeys)
     {
-        apiKeys.TryGetValue("Google", out var key);
-        return
-            $"https://generativelanguage.googleapis.com/v1beta/{modelName}:generateContent?key={key}";
+        if (!apiKeys.TryGetValue("Google", out var key) || string.IsNullOrEmpty(key))
+            return WebRequestResult<string>.Fail("Google API key is missing.", ErrorType.Auth);
+
+        return WebRequestResult<string>.Success(
+            $"https://generativelanguage.googleapis.com/v1beta/{modelName}:generateContent?key={key}");
     }
 
-    public string GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public WebRequestResult<string> GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        return null;
+        // Google API uses API key in URL, not in header
+        return WebRequestResult<string>.Success(null);
     }
 
     public string BuildChatRequestBody(string prompt, string modelName)
@@ -36,7 +43,7 @@ public class GoogleStrategy : IApiProviderStrategy
         // Handle cases where the response might not have candidates.
         var response = JsonConvert.DeserializeObject<GoogleResponse>(json);
         return response.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text ??
-               "Error: No content found in response.";
+               "No content found in response.";
     }
 
     public List<string> ParseModelsResponse(string json)

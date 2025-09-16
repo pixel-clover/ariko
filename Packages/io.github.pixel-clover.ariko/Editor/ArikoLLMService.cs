@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -14,6 +15,7 @@ public class ArikoLLMService
         Ollama
     }
 
+    private const int RequestTimeout = 30; // seconds
     private readonly Dictionary<AIProvider, IApiProviderStrategy> strategies;
     private UnityWebRequest activeRequest;
 
@@ -35,34 +37,45 @@ public class ArikoLLMService
     public async Task<WebRequestResult<string>> SendChatRequest(string prompt, AIProvider provider, string modelName,
         ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        if (string.IsNullOrEmpty(modelName)) return new WebRequestResult<string>(null, "Error: No AI model selected.");
+        if (string.IsNullOrEmpty(modelName))
+            return WebRequestResult<string>.Fail("No AI model selected.", ErrorType.Unknown);
 
         if (!strategies.TryGetValue(provider, out var strategy))
-            return new WebRequestResult<string>(null, "Error: Provider not supported.");
+            return WebRequestResult<string>.Fail("Provider not supported.", ErrorType.Unknown);
 
-        var url = strategy.GetChatUrl(modelName, settings, apiKeys);
-        var authToken = strategy.GetAuthHeader(settings, apiKeys);
+        var urlResult = strategy.GetChatUrl(modelName, settings, apiKeys);
+        if (!urlResult.IsSuccess) return WebRequestResult<string>.Fail(urlResult.Error, urlResult.ErrorType);
+
+        var authResult = strategy.GetAuthHeader(settings, apiKeys);
+        if (!authResult.IsSuccess) return WebRequestResult<string>.Fail(authResult.Error, authResult.ErrorType);
+
         var jsonBody = strategy.BuildChatRequestBody(prompt, modelName);
 
-        return await SendPostRequest(url, authToken, jsonBody, strategy.ParseChatResponse);
+        return await SendPostRequest(urlResult.Data, authResult.Data, jsonBody, strategy.ParseChatResponse);
     }
 
     public async Task<WebRequestResult<List<string>>> FetchAvailableModels(AIProvider provider, ArikoSettings settings,
         Dictionary<string, string> apiKeys)
     {
         if (!strategies.TryGetValue(provider, out var strategy))
-            return new WebRequestResult<List<string>>(null, "Error: Provider not supported.");
+            return WebRequestResult<List<string>>.Fail("Provider not supported.", ErrorType.Unknown);
 
-        var url = strategy.GetModelsUrl(settings, apiKeys);
-        var authToken = strategy.GetAuthHeader(settings, apiKeys);
+        var urlResult = strategy.GetModelsUrl(settings, apiKeys);
+        if (!urlResult.IsSuccess)
+            return WebRequestResult<List<string>>.Fail(urlResult.Error, urlResult.ErrorType);
 
-        return await SendGetRequest(url, authToken, strategy.ParseModelsResponse);
+        var authResult = strategy.GetAuthHeader(settings, apiKeys);
+        if (!authResult.IsSuccess)
+            return WebRequestResult<List<string>>.Fail(authResult.Error, authResult.ErrorType);
+
+        return await SendGetRequest(urlResult.Data, authResult.Data, strategy.ParseModelsResponse);
     }
 
     private async Task<WebRequestResult<List<string>>> SendGetRequest(string url, string authToken,
         Func<string, List<string>> parser)
     {
         using var request = UnityWebRequest.Get(url);
+        request.timeout = RequestTimeout;
         activeRequest = request;
         if (!string.IsNullOrEmpty(authToken)) request.SetRequestHeader("Authorization", authToken);
 
@@ -72,8 +85,7 @@ public class ArikoLLMService
         }
         catch (Exception ex) when (ex is OperationCanceledException)
         {
-            // This catches the exception thrown when the task is cancelled by Abort().
-            return new WebRequestResult<List<string>>(default, "Request cancelled by user.");
+            return WebRequestResult<List<string>>.Fail("Request cancelled by user.", ErrorType.Cancellation);
         }
         finally
         {
@@ -87,6 +99,7 @@ public class ArikoLLMService
         Func<string, string> parser)
     {
         using var request = new UnityWebRequest(url, "POST");
+        request.timeout = RequestTimeout;
         activeRequest = request;
 
         var bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
@@ -101,7 +114,7 @@ public class ArikoLLMService
         }
         catch (Exception ex) when (ex is OperationCanceledException)
         {
-            return new WebRequestResult<string>(default, "Request cancelled by user.");
+            return WebRequestResult<string>.Fail("Request cancelled by user.", ErrorType.Cancellation);
         }
         finally
         {
@@ -113,24 +126,54 @@ public class ArikoLLMService
 
     private WebRequestResult<T> HandleApiResponse<T>(UnityWebRequest request, Func<string, T> parser)
     {
-        // The OperationCanceledException is now caught before this method is called,
-        // so we no longer need to check for the Aborted result.
+        switch (request.result)
+        {
+            case UnityWebRequest.Result.Success:
+                try
+                {
+                    var parsedData = parser(request.downloadHandler.text);
+                    return WebRequestResult<T>.Success(parsedData);
+                }
+                catch (JsonException ex)
+                {
+                    var error = $"Failed to parse JSON response: {ex.Message}";
+                    Debug.LogError($"Ariko: {error}\nResponse: {request.downloadHandler.text}");
+                    return WebRequestResult<T>.Fail(error, ErrorType.Parsing);
+                }
+                catch (Exception ex)
+                {
+                    var error = $"An unexpected error occurred during parsing: {ex.Message}";
+                    Debug.LogError($"Ariko: {error}\nResponse: {request.downloadHandler.text}");
+                    return WebRequestResult<T>.Fail(error, ErrorType.Unknown);
+                }
 
-        if (request.result == UnityWebRequest.Result.Success)
-            try
-            {
-                var parsedData = parser(request.downloadHandler.text);
-                return new WebRequestResult<T>(parsedData, null);
-            }
-            catch (Exception ex)
-            {
-                var error = $"Failed to parse response: {ex.Message}";
-                Debug.LogError($"Ariko: {error}\nResponse: {request.downloadHandler.text}");
-                return new WebRequestResult<T>(default, error);
-            }
+            case UnityWebRequest.Result.ConnectionError:
+                var networkError = $"Network error: {request.error}";
+                if (!string.IsNullOrEmpty(request.downloadHandler?.text))
+                    networkError += $"\nDetails: {request.downloadHandler.text}";
+                Debug.LogError($"Ariko: {networkError}");
+                return WebRequestResult<T>.Fail(networkError, ErrorType.Network);
 
-        var requestError = $"API request failed: {request.error}\nDetails: {request.downloadHandler.text}";
-        Debug.LogError($"Ariko: {requestError}");
-        return new WebRequestResult<T>(default, requestError);
+            case UnityWebRequest.Result.ProtocolError:
+                var httpError = $"HTTP error: {request.responseCode}";
+                if (!string.IsNullOrEmpty(request.downloadHandler?.text))
+                    httpError += $"\nDetails: {request.downloadHandler.text}";
+                Debug.LogError($"Ariko: {httpError}");
+                return WebRequestResult<T>.Fail(httpError, ErrorType.Http);
+
+            case UnityWebRequest.Result.DataProcessingError:
+                var dataProcessingError = $"Data processing error: {request.error}";
+                if (!string.IsNullOrEmpty(request.downloadHandler?.text))
+                    dataProcessingError += $"\nDetails: {request.downloadHandler.text}";
+                Debug.LogError($"Ariko: {dataProcessingError}");
+                return WebRequestResult<T>.Fail(dataProcessingError, ErrorType.Unknown);
+
+            default:
+                var defaultError = $"Unknown error: {request.error}";
+                if (!string.IsNullOrEmpty(request.downloadHandler?.text))
+                    defaultError += $"\nDetails: {request.downloadHandler.text}";
+                Debug.LogError($"Ariko: {defaultError}");
+                return WebRequestResult<T>.Fail(defaultError, ErrorType.Unknown);
+        }
     }
 }

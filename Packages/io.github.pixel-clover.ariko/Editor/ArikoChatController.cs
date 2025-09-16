@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -69,7 +70,7 @@ public class ArikoChatController
         apiKeys[provider] = key;
     }
 
-    public async void SendMessageToAssistant(string text, string selectedProvider, string selectedModel)
+    public async Task SendMessageToAssistant(string text, string selectedProvider, string selectedModel)
     {
         if (string.IsNullOrWhiteSpace(text)) return;
 
@@ -94,19 +95,22 @@ public class ArikoChatController
         var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
         var result = await llmService.SendChatRequest(prompt, provider, selectedModel, settings, apiKeys);
 
-        var newContent = result.IsSuccess ? result.Data : result.Error;
+        string newContent;
+        if (result.IsSuccess)
+            newContent = result.Data;
+        else
+            newContent = GetFormattedErrorMessage(result.Error, result.ErrorType);
 
         // 3. Replace "thinking" message in session with final message, and notify view
-        // The view will see the "thinking" message arrive, then the final one. It should handle replacing the visual.
         ActiveSession.Messages.Remove(thinkingMessage);
-        var finalMessage = new ChatMessage { Role = "Ariko", Content = newContent };
+        var finalMessage = new ChatMessage { Role = "Ariko", Content = newContent, IsError = !result.IsSuccess };
         ActiveSession.Messages.Add(finalMessage);
         OnMessageAdded?.Invoke(finalMessage);
 
         OnResponseStatusChanged?.Invoke(false);
     }
 
-    public async void FetchModelsForCurrentProvider(string selectedProvider)
+    public async Task FetchModelsForCurrentProvider(string selectedProvider)
     {
         var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
         var result = await llmService.FetchAvailableModels(provider, settings, apiKeys);
@@ -116,10 +120,31 @@ public class ArikoChatController
         }
         else
         {
-            OnError?.Invoke(result.Error);
+            var errorMessage = GetFormattedErrorMessage(result.Error, result.ErrorType);
+            OnError?.Invoke(errorMessage);
             OnModelsFetched?.Invoke(new List<string> { "Error" });
         }
     }
+
+    private string GetFormattedErrorMessage(string error, ErrorType errorType)
+    {
+        switch (errorType)
+        {
+            case ErrorType.Auth:
+                return $"Authentication Error: {error}\nPlease check your API key or settings.";
+            case ErrorType.Network:
+                return $"Network Error: {error}\nPlease check your internet connection.";
+            case ErrorType.Http:
+                return $"API Error: {error}";
+            case ErrorType.Parsing:
+                return $"Response Parsing Error: {error}\nThe data from the server was in an unexpected format.";
+            case ErrorType.Cancellation:
+                return "Request was cancelled.";
+            default:
+                return $"An unknown error occurred: {error}";
+        }
+    }
+
 
     // Called when the "New Chat" button is clicked
     public void ClearChat()

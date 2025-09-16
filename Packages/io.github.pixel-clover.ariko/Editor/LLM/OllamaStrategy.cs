@@ -4,19 +4,24 @@ using Newtonsoft.Json;
 
 public class OllamaStrategy : IApiProviderStrategy
 {
-    public string GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        return $"{settings.ollama_Url}/api/tags";
+        if (string.IsNullOrEmpty(settings.ollama_Url))
+            return WebRequestResult<string>.Fail("Ollama URL is not configured in settings.", ErrorType.Auth);
+        return WebRequestResult<string>.Success($"{settings.ollama_Url}/api/tags");
     }
 
-    public string GetChatUrl(string modelName, ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public WebRequestResult<string> GetChatUrl(string modelName, ArikoSettings settings,
+        Dictionary<string, string> apiKeys)
     {
-        return $"{settings.ollama_Url}/api/chat";
+        if (string.IsNullOrEmpty(settings.ollama_Url))
+            return WebRequestResult<string>.Fail("Ollama URL is not configured in settings.", ErrorType.Auth);
+        return WebRequestResult<string>.Success($"{settings.ollama_Url}/api/chat");
     }
 
-    public string GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
+    public WebRequestResult<string> GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        return null;
+        return WebRequestResult<string>.Success(null);
     }
 
     public string BuildChatRequestBody(string prompt, string modelName)

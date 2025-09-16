@@ -3,17 +3,17 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
     <ui:VisualElement name="main-container" style="flex-grow: 1;">
         <uie:Toolbar>
-            <ui:Button text="History" name="history-button"/>
-            <ui:Button text="New Chat" name="new-chat-button"/>
+        <ui:Button text="History" name="history-button" tooltip="Show or hide chat history." />
+        <ui:Button text="New chat" name="new-chat-button" tooltip="Start a new chat session." />
             <ui:VisualElement style="flex-grow: 1;"/>
-            <ui:Button text="Settings" name="settings-button"/>
+        <ui:Button text="Settings" name="settings-button" tooltip="Open Ariko settings." />
         </uie:Toolbar>
 
         <ui:VisualElement name="content-area" style="flex-grow: 1; flex-direction: row;">
             <ui:VisualElement name="history-panel" class="history-panel">
                 <ui:VisualElement name="history-header-container" class="history-header">
-                    <ui:Label text="Chat History" style="flex-grow: 1;"/>
-                    <ui:Button text="Clear All" name="clear-history-button"/>
+                <ui:Label text="Chat history" style="flex-grow: 1;" />
+                <ui:Button text="Clear all" name="clear-history-button" tooltip="Delete all saved chat sessions." />
                 </ui:VisualElement>
                 <ui:ScrollView name="history-list" style="flex-grow: 1;"/>
             </ui:VisualElement>
@@ -32,9 +32,9 @@
                     </ui:VisualElement>
 
                     <ui:VisualElement class="input-row">
-                        <ui:TextField name="user-input" multiline="true" class="boxed-input"/>
-                        <ui:Button text="Send" name="send-button" class="send-button"/>
-                        <ui:Button text="Cancel" name="cancel-button" class="cancel-button" style="display: none;"/>
+                <ui:TextField name="user-input" multiline="true" class="boxed-input" tooltip="Ask a question or paste an error here." />
+                <ui:Button text="Send" name="send-button" class="send-button" tooltip="Send the message (Enter). Shift+Enter inserts a newline." />
+                <ui:Button text="Cancel" name="cancel-button" class="cancel-button" style="display: none;" tooltip="Cancel the running request." />
                     </ui:VisualElement>
                 </ui:VisualElement>
 
@@ -69,6 +69,7 @@
             <ui:VisualElement name="model-popup-placeholder" style="width: 150px;"/>
             <ui:Label name="fetching-models-label" text="Fetching..." style="display: none;"/>
             <ui:VisualElement style="flex-grow: 1;"/>
+            <ui:Label name="status-label" text="Ready" class="status-label" />
         </uie:Toolbar>
     </ui:VisualElement>
 </ui:UXML>

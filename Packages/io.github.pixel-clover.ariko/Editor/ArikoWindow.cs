@@ -8,8 +8,10 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
-public class ArikoWindow : EditorWindow
+public partial class ArikoWindow : EditorWindow
 {
+    private Label statusLabel;
+    private Label emptyStateLabel;
     private Toggle autoContextToggle;
 
     private Button cancelButton;
@@ -69,6 +71,71 @@ public class ArikoWindow : EditorWindow
             : "unity-editor-light-theme");
 
         InitializeQueries();
+
+        // After cloning the UXML, set texts and tooltips
+        if (historyButton != null)
+        {
+            historyButton.text = ArikoUIStrings.HistoryButton;
+            historyButton.tooltip = ArikoUIStrings.TipHistory;
+        }
+
+        var newChatBtn = rootVisualElement.Q<Button>("new-chat-button");
+        if (newChatBtn != null)
+        {
+            newChatBtn.text = ArikoUIStrings.NewChatButton;
+            newChatBtn.tooltip = ArikoUIStrings.TipNewChat;
+        }
+
+        var settingsBtn = rootVisualElement.Q<Button>("settings-button");
+        if (settingsBtn != null)
+        {
+            settingsBtn.text = ArikoUIStrings.SettingsButton;
+            settingsBtn.tooltip = ArikoUIStrings.TipSettings;
+        }
+
+        var clearAllBtn = rootVisualElement.Q<Button>("clear-history-button");
+        if (clearAllBtn != null)
+        {
+            clearAllBtn.text = ArikoUIStrings.ClearAllButton;
+            clearAllBtn.tooltip = ArikoUIStrings.TipClearAll;
+        }
+
+        var addFileBtn = rootVisualElement.Q<Button>("add-file-button");
+        if (addFileBtn != null)
+        {
+            addFileBtn.text = ArikoUIStrings.AddFileButton;
+            addFileBtn.tooltip = ArikoUIStrings.TipAddFile;
+        }
+
+        if (sendButton != null)
+        {
+            sendButton.text = ArikoUIStrings.SendButton;
+            sendButton.tooltip = ArikoUIStrings.TipSend;
+        }
+
+        if (cancelButton != null)
+        {
+            cancelButton.text = ArikoUIStrings.CancelButton;
+            cancelButton.tooltip = ArikoUIStrings.TipCancel;
+        }
+
+        // Label for the input (keeps layout tidy and serves as subtle guidance)
+        if (userInput != null)
+        {
+            userInput.label = ArikoUIStrings.UserInputLabel;
+            userInput.tooltip = ArikoUIStrings.TipInput;
+        }
+
+        // Status label (added in UXML as 'status-label')
+        statusLabel = rootVisualElement.Q<Label>("status-label");
+        SetStatus(ArikoUIStrings.StatusReady);
+
+        // Empty state label overlay (simple, non-intrusive hint)
+        emptyStateLabel = new Label(ArikoUIStrings.EmptyState);
+        emptyStateLabel.AddToClassList("empty-state-label");
+        emptyStateLabel.pickingMode = PickingMode.Ignore;
+        emptyStateLabel.style.display = DisplayStyle.None;
+        rootVisualElement.Q<ScrollView>("chat-history").Add(emptyStateLabel);
         CreateAndSetupPopups();
         RegisterCallbacks();
 
@@ -78,13 +145,15 @@ public class ArikoWindow : EditorWindow
 
         ApplyChatStyles();
         ScrollToBottom();
+        UpdateEmptyState();
     }
 
     // --- Lifecycle Methods ---
-    [MenuItem("Tools/Ariko Assistant")]
+    // 1) Add a shortcut to open the window (Ctrl+Alt+A on Linux/Windows, Cmd+Alt+A on macOS).
+    [MenuItem("Tools/Ariko Assistant %&a")]
     public static void ShowWindow()
     {
-        GetWindow<ArikoWindow>("Ariko Assistant");
+        GetWindow<ArikoWindow>(ArikoUIStrings.WindowTitle);
     }
 
     public async void SendExternalMessage(string message)
@@ -283,6 +352,7 @@ public class ArikoWindow : EditorWindow
 
         UpdateHistoryPanel();
         ScrollToBottom();
+        UpdateEmptyState();
     }
 
     private void HandleChatCleared()
@@ -290,6 +360,7 @@ public class ArikoWindow : EditorWindow
         chatHistoryScrollView.Clear();
         controller.ManuallyAttachedAssets.Clear();
         UpdateManualAttachmentsList();
+        UpdateEmptyState();
     }
 
     private void HandleChatReloaded()
@@ -298,6 +369,7 @@ public class ArikoWindow : EditorWindow
         foreach (var message in controller.ActiveSession.Messages) AddMessageToChat(message);
         UpdateManualAttachmentsList();
         ScrollToBottom();
+        UpdateEmptyState();
     }
 
     private void HandleModelsFetched(List<string> models)
@@ -325,6 +397,7 @@ public class ArikoWindow : EditorWindow
     {
         Debug.LogError($"Ariko: {error}");
         AddMessageToChat(new ChatMessage { Role = "System", Content = error, IsError = true });
+        SetStatus(ArikoUIStrings.StatusError);
     }
 
     private void UpdateHistoryPanel()
@@ -369,7 +442,10 @@ public class ArikoWindow : EditorWindow
 
         if (message.Role == "Ariko" && message.Content != "...")
         {
-            var copyButton = new Button(() => EditorGUIUtility.systemCopyBuffer = message.Content) { text = "Copy" };
+            var copyButton = new Button(() => EditorGUIUtility.systemCopyBuffer = message.Content)
+            {
+                text = ArikoUIStrings.CopyButton
+            };
             copyButton.AddToClassList("copy-button");
             headerContainer.Add(copyButton);
         }
@@ -393,6 +469,7 @@ public class ArikoWindow : EditorWindow
         cancelButton.style.display = isPending ? DisplayStyle.Flex : DisplayStyle.None;
 
         if (!isPending) fetchingModelsLabel.style.display = DisplayStyle.None;
+        SetStatus(isPending ? ArikoUIStrings.StatusThinking : ArikoUIStrings.StatusReady);
     }
 
     private void ApplyChatStyles()
@@ -563,5 +640,19 @@ public class ArikoWindow : EditorWindow
     {
         Ask,
         Agent
+    }
+
+    private void SetStatus(string text)
+    {
+        if (statusLabel != null) statusLabel.text = text;
+    }
+
+    private void UpdateEmptyState()
+    {
+        var hasMessages = controller != null &&
+                          controller.ActiveSession != null &&
+                          controller.ActiveSession.Messages.Count > 0;
+
+        emptyStateLabel.style.display = hasMessages ? DisplayStyle.None : DisplayStyle.Flex;
     }
 }

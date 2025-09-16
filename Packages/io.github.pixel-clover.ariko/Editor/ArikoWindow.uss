@@ -38,6 +38,22 @@
     color: var(--text-color);
 }
 
+/* Subtle status text on the bottom toolbar */
+.status-label {
+    color: var(--text-color);
+    opacity: 0.7;
+    margin-right: 8px;
+    font-size: 12px;
+}
+
+/* Empty state hint inside the chat area */
+.empty-state-label {
+    opacity: 0.6;
+    text-align: center;
+    margin-top: 20px;
+    white-space: normal;
+}
+
 /* Toolbar */
 .unity-toolbar {
     background-color: var(--toolbar-background-color);

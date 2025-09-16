@@ -8,7 +8,7 @@
 
 [![Tests](https://img.shields.io/github/actions/workflow/status/pixel-clover/ariko/tests.yml?branch=main&label=tests&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/actions/workflows/tests.yml)
 [![Code Quality](https://img.shields.io/codefactor/grade/github/pixel-clover/ariko?style=flat&label=code%20quality&labelColor=333333&logo=codefactor&logoColor=white)](https://www.codefactor.io/repository/github/pixel-clover/ariko)
-[![Unity Version](https://img.shields.io/badge/Unity-6-green?style=flat&labelColor=282c34&logo=unity&label=unity)](https://unity.com)
+[![Unity Version](https://img.shields.io/badge/unity-2022.3+-green?style=flat&labelColor=282c34&logo=unity)](https://unity.com)
 [![License](https://img.shields.io/badge/License-MIT-007ec6?style=flat&labelColor=282c34&logo=open-source-initiative&label=license)](https://github.com/pixel-clover/ariko/blob/main/LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/pixel-clover/ariko?include_prereleases&label=release&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/releases/latest)
 

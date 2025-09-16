@@ -1,75 +1,89 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using Newtonsoft.Json;
 
+/// <summary>
+///     Implements the <see cref="IApiProviderStrategy" /> for a local Ollama server.
+/// </summary>
 public class OllamaStrategy : IApiProviderStrategy
 {
-    public string GetModelsUrl(ArikoSettings settings)
+    /// <inheritdoc />
+    public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        return $"{settings.ollama_Url}/api/tags";
+        if (string.IsNullOrEmpty(settings.ollama_Url))
+            return WebRequestResult<string>.Fail("Ollama URL is not configured in settings.", ErrorType.Auth);
+        return WebRequestResult<string>.Success($"{settings.ollama_Url}/api/tags");
     }
 
-    public string GetChatUrl(string modelName, ArikoSettings settings)
+    /// <inheritdoc />
+    public WebRequestResult<string> GetChatUrl(string modelName, ArikoSettings settings,
+        Dictionary<string, string> apiKeys)
     {
-        return $"{settings.ollama_Url}/api/chat";
+        if (string.IsNullOrEmpty(settings.ollama_Url))
+            return WebRequestResult<string>.Fail("Ollama URL is not configured in settings.", ErrorType.Auth);
+        return WebRequestResult<string>.Success($"{settings.ollama_Url}/api/chat");
     }
 
-    public string GetAuthHeader(ArikoSettings settings)
+    /// <inheritdoc />
+    public WebRequestResult<string> GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        return null;
+        return WebRequestResult<string>.Success(null);
     }
 
+    /// <inheritdoc />
     public string BuildChatRequestBody(string prompt, string modelName)
     {
         var payload = new OllamaPayload
         {
-            model = modelName,
-            messages = new[] { new MessagePayload { role = "user", content = prompt } }
+            Model = modelName,
+            Messages = new[] { new MessagePayload { Role = "user", Content = prompt } },
+            Stream = false
         };
-        return JsonUtility.ToJson(payload);
+        return JsonConvert.SerializeObject(payload);
     }
 
+    /// <inheritdoc />
     public string ParseChatResponse(string json)
     {
-        return JsonUtility.FromJson<OllamaResponse>(json).message.content;
+        var response = JsonConvert.DeserializeObject<OllamaResponse>(json);
+        return response.Message.Content;
     }
 
+    /// <inheritdoc />
     public List<string> ParseModelsResponse(string json)
     {
-        return JsonUtility.FromJson<OllamaModelsResponse>(json).models.Select(m => m.name).ToList();
+        var response = JsonConvert.DeserializeObject<OllamaModelsResponse>(json);
+        return response.Models.Select(m => m.Name).ToList();
     }
 
-    [Serializable]
     private class MessagePayload
     {
-        public string role;
-        public string content;
+        [JsonProperty("role")] public string Role { get; set; }
+
+        [JsonProperty("content")] public string Content { get; set; }
     }
 
-    [Serializable]
     private class OllamaPayload
     {
-        public string model;
-        public MessagePayload[] messages;
-        public bool stream;
+        [JsonProperty("model")] public string Model { get; set; }
+
+        [JsonProperty("messages")] public MessagePayload[] Messages { get; set; }
+
+        [JsonProperty("stream")] public bool Stream { get; set; }
     }
 
-    [Serializable]
     private struct OllamaResponse
     {
-        public MessagePayload message;
+        [JsonProperty("message")] public MessagePayload Message { get; set; }
     }
 
-    [Serializable]
     private struct OllamaModelsResponse
     {
-        public OllamaModel[] models;
+        [JsonProperty("models")] public List<OllamaModel> Models { get; set; }
     }
 
-    [Serializable]
     private struct OllamaModel
     {
-        public string name;
+        [JsonProperty("name")] public string Name { get; set; }
     }
 }

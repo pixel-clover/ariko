@@ -1,44 +1,64 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using Newtonsoft.Json;
 
+/// <summary>
+///     Implements the <see cref="IApiProviderStrategy" /> for the Google AI (Gemini) API.
+/// </summary>
 public class GoogleStrategy : IApiProviderStrategy
 {
-    public string GetModelsUrl(ArikoSettings settings)
+    /// <inheritdoc />
+    public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        return $"https://generativelanguage.googleapis.com/v1beta/models?key={settings.google_ApiKey}";
+        if (!apiKeys.TryGetValue("Google", out var key) || string.IsNullOrEmpty(key))
+            return WebRequestResult<string>.Fail("Google API key is missing.", ErrorType.Auth);
+
+        return WebRequestResult<string>.Success(
+            $"https://generativelanguage.googleapis.com/v1beta/models?key={key}");
     }
 
-    public string GetChatUrl(string modelName, ArikoSettings settings)
+    /// <inheritdoc />
+    public WebRequestResult<string> GetChatUrl(string modelName, ArikoSettings settings,
+        Dictionary<string, string> apiKeys)
     {
-        return
-            $"https://generativelanguage.googleapis.com/v1beta/{modelName}:generateContent?key={settings.google_ApiKey}";
+        if (!apiKeys.TryGetValue("Google", out var key) || string.IsNullOrEmpty(key))
+            return WebRequestResult<string>.Fail("Google API key is missing.", ErrorType.Auth);
+
+        return WebRequestResult<string>.Success(
+            $"https://generativelanguage.googleapis.com/v1beta/{modelName}:generateContent?key={key}");
     }
 
-    public string GetAuthHeader(ArikoSettings settings)
+    /// <inheritdoc />
+    public WebRequestResult<string> GetAuthHeader(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
-        return null;
+        // Google API uses API key in URL, not in header
+        return WebRequestResult<string>.Success(null);
     }
 
+    /// <inheritdoc />
     public string BuildChatRequestBody(string prompt, string modelName)
     {
         var payload = new GooglePayload
         {
-            contents = new[] { new Content { parts = new[] { new Part { text = prompt } } } }
+            Contents = new[] { new Content { Parts = new[] { new Part { Text = prompt } } } }
         };
-        return JsonUtility.ToJson(payload);
+        return JsonConvert.SerializeObject(payload);
     }
 
+    /// <inheritdoc />
     public string ParseChatResponse(string json)
     {
-        return JsonUtility.FromJson<GoogleResponse>(json).candidates[0].content.parts[0].text;
+        // Handle cases where the response might not have candidates.
+        var response = JsonConvert.DeserializeObject<GoogleResponse>(json);
+        return response.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text ??
+               "No content found in response.";
     }
 
+    /// <inheritdoc />
     public List<string> ParseModelsResponse(string json)
     {
-        var allAvailableModels = JsonUtility.FromJson<GoogleModelsResponse>(json).models
-            .Select(m => m.name)
+        var allAvailableModels = JsonConvert.DeserializeObject<GoogleModelsResponse>(json).Models
+            .Select(m => m.Name)
             .ToList();
 
         var filteredModels = allAvailableModels
@@ -48,45 +68,38 @@ public class GoogleStrategy : IApiProviderStrategy
         return filteredModels;
     }
 
-    [Serializable]
     private class GooglePayload
     {
-        public Content[] contents;
+        [JsonProperty("contents")] public Content[] Contents { get; set; }
     }
 
-    [Serializable]
     private class Content
     {
-        public Part[] parts;
+        [JsonProperty("parts")] public Part[] Parts { get; set; }
     }
 
-    [Serializable]
     private class Part
     {
-        public string text;
+        [JsonProperty("text")] public string Text { get; set; }
     }
 
-    [Serializable]
-    private struct GoogleResponse
+    private class GoogleResponse
     {
-        public Candidate[] candidates;
+        [JsonProperty("candidates")] public Candidate[] Candidates { get; set; }
     }
 
-    [Serializable]
-    private struct Candidate
+    private class Candidate
     {
-        public Content content;
+        [JsonProperty("content")] public Content Content { get; set; }
     }
 
-    [Serializable]
-    private struct GoogleModelsResponse
+    private class GoogleModelsResponse
     {
-        public GoogleModel[] models;
+        [JsonProperty("models")] public GoogleModel[] Models { get; set; }
     }
 
-    [Serializable]
-    private struct GoogleModel
+    private class GoogleModel
     {
-        public string name;
+        [JsonProperty("name")] public string Name { get; set; }
     }
 }

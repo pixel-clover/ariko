@@ -1,7 +1,7 @@
 {
     "name": "io.github.pixel-clover.ariko",
-    "version": "0.1.0-alpha.1",
+    "version": "0.1.0-alpha.2",
     "displayName": "Ariko",
     "description": "An AI assistant for Unity",
-    "unity": "6000.0"
+    "unity": "2021.3"
 }

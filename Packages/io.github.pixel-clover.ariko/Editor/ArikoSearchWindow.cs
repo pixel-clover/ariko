@@ -5,10 +5,20 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
+/// <summary>
+///     An editor window that allows users to search for and select project assets
+///     to be added to the chat context.
+/// </summary>
 public class ArikoSearchWindow : EditorWindow
 {
     private const int MaxResultsToDisplay = 50;
+
+    /// <summary>
+    ///     Event triggered when an asset is selected in the search window.
+    ///     The selected asset is passed as a parameter.
+    /// </summary>
     public static Action<Object> OnAssetSelected;
+
     private List<Object> allAssets;
     private List<Object> filteredAssets;
     private Vector2 scrollPosition;
@@ -59,6 +69,9 @@ public class ArikoSearchWindow : EditorWindow
         EditorGUILayout.EndScrollView();
     }
 
+    /// <summary>
+    ///     Opens the search window.
+    /// </summary>
     public static void ShowWindow()
     {
         var window = GetWindow<ArikoSearchWindow>(true, "Add File to Context");

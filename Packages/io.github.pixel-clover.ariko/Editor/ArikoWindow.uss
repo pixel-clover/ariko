@@ -1,8 +1,4 @@
-/* USS for Ariko, styled to look like GitHub Copilot */
-
-/* Light and Dark Theme Variable Definitions */
 :root {
-    /* Default to dark theme */
     --background-color: rgb(40, 40, 40);
     --text-color: rgb(220, 220, 220);
     --input-background-color: rgb(30, 30, 30);
@@ -32,25 +28,35 @@
     --separator-color: rgb(210, 210, 210);
 }
 
-/* Main Container */
 #main-container {
     background-color: var(--background-color);
     color: var(--text-color);
 }
 
-/* Toolbar */
+.status-label {
+    color: var(--text-color);
+    opacity: 0.7;
+    margin-right: 8px;
+    font-size: 12px;
+}
+
+.empty-state-label {
+    opacity: 0.6;
+    -unity-text-align: middle-center;
+    margin-top: 20px;
+    white-space: normal;
+}
+
 .unity-toolbar {
     background-color: var(--toolbar-background-color);
     border-bottom-width: 1px;
     border-bottom-color: var(--input-border-color);
 }
 
-/* Chat History */
 #chat-history {
     padding: 10px;
 }
 
-/* Separator */
 .separator {
     height: 1px;
     background-color: var(--separator-color);
@@ -64,6 +70,7 @@
     margin-bottom: 10px;
     white-space: normal;
     max-width: 90%;
+    color: var(--text-color);
 }
 
 .user-message {
@@ -72,13 +79,15 @@
     margin-right: 10%;
 }
 
-.ariko-message {
+.error-message {
     background-color: var(--ariko-message-background-color);
-    align-self: flex-start;
-    margin-right: 10%;
+    color: rgb(255, 100, 100);
 }
 
-/* Input Area */
+.unity-editor-light-theme .error-message {
+    color: rgb(200, 0, 0);
+}
+
 .input-row {
     flex-direction: row;
     align-items: center;
@@ -90,13 +99,21 @@
     color: var(--text-color);
     border-color: var(--input-border-color);
     border-radius: 6px;
-    padding: 8px;
+    padding: 0;
     flex-grow: 1;
     flex-basis: 0;
-    height: 90px;
+    font-size: 14px;
+    height: 110px;
+    white-space: normal;
 }
 
-.send-button {
+.boxed-input .unity-text-field__input {
+    -unity-text-align: upper-left;
+    margin: 0;
+    padding: 8px;
+}
+
+.send-button, .cancel-button {
     background-color: var(--button-background-color);
     color: var(--button-text-color);
     border-radius: 6px;
@@ -105,7 +122,6 @@
     width: 80px;
 }
 
-/* Code Blocks */
 .code-block-container {
     background-color: var(--code-block-background-color);
     border-radius: 6px;
@@ -142,9 +158,9 @@
     white-space: normal;
 }
 
-/* Markdown Elements */
 .markdown-paragraph, .markdown-header {
     margin-bottom: 10px;
+    white-space: normal;
 }
 
 .h1 {
@@ -157,16 +173,27 @@
     -unity-font-style: bold;
 }
 
-.list-item-container {
-    margin-left: 20px;
+.list {
+    margin-left: 15px;
+    margin-top: 5px;
     margin-bottom: 5px;
 }
 
-.list-item-bullet {
-    margin-right: 10px;
+.list-item {
+    flex-direction: row;
+    margin-bottom: 2px;
 }
 
-/* Settings Panel */
+.list-item-bullet {
+    margin-right: 5px;
+    min-width: 15px;
+    -unity-text-align: middle-right;
+}
+
+.list-item-content {
+    flex-grow: 1;
+}
+
 .settings-panel {
     background-color: var(--background-color);
     padding: 15px;
@@ -178,14 +205,13 @@
     margin-bottom: 15px;
 }
 
-.sub-header-label {
+.sub-header-.label {
     font-size: 16px;
     -unity-font-style: bold;
     margin-top: 10px;
     margin-bottom: 5px;
 }
 
-/* Role Label */
 .role-label {
     font-size: 14px;
     -unity-font-style: bold;
@@ -193,7 +219,6 @@
     margin-bottom: 5px;
 }
 
-/* Markdown Content */
 .markdown-header,
 .list-item-text,
 .markdown-paragraph,
@@ -201,7 +226,6 @@
     color: var(--text-color);
 }
 
-/* Settings Panel Elements */
 .settings-panel .unity-base-field {
     margin-bottom: 10px;
 }
@@ -238,4 +262,130 @@
 
 .system-prompt-field .unity-text-field__input {
     min-height: 80px;
+}
+
+.message-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.copy-button {
+    height: 24px;
+    width: 60px;
+    font-size: 12px;
+    background-color: var(--button-background-color);
+    color: var(--button-text-color);
+    border-width: 0;
+    border-radius: 4px;
+    margin-left: 10px;
+    padding: 0;
+}
+
+.copy-button:hover {
+    background-color: var(--input-background-color);
+}
+
+.history-panel {
+    width: 200px;
+    min-width: 150px;
+    max-width: 300px;
+    border-right-width: 1px;
+    border-right-color: var(--separator-color);
+    background-color: var(--toolbar-background-color);
+}
+
+.history-header {
+    font-size: 14px;
+    -unity-font-style: bold;
+    padding: 10px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--separator-color);
+    color: var(--text-color);
+    flex-direction: row;
+    align-items: center;
+}
+
+#clear-history-button {
+    font-size: 10px;
+    height: 20px;
+    width: 60px;
+    background-color: transparent;
+    border-width: 1px;
+    border-color: var(--separator-color);
+}
+
+#clear-history-button:hover {
+    background-color: var(--input-background-color);
+}
+
+.history-item-container {
+    flex-direction: row;
+    align-items: center;
+    padding: 0 10px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--separator-color);
+}
+
+.history-item-container:hover {
+    background-color: var(--input-background-color);
+}
+
+.history-item-container:hover > .history-item-delete-button {
+    visibility: visible;
+}
+
+.history-item-label {
+    flex-grow: 1;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 10px 0;
+}
+
+.history-item-delete-button {
+    visibility: hidden;
+    width: 20px;
+    height: 20px;
+    margin-left: 5px;
+    background-color: transparent;
+    border-width: 0;
+    color: var(--text-color);
+    font-size: 12px;
+}
+
+.history-item-delete-button:hover {
+    background-color: var(--button-background-color);
+}
+
+.history-item--selected .history-item-label {
+    -unity-font-style: bold;
+}
+
+.history-item--selected {
+    background-color: var(--user-message-background-color);
+}
+
+.confirmation-dialog {
+    border-top-width: 1px;
+    border-top-color: var(--separator-color);
+    padding: 10px;
+    background-color: var(--input-background-color);
+}
+
+.confirmation-label {
+    white-space: normal;
+    margin-bottom: 10px;
+}
+
+.confirmation-buttons {
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.confirmation-buttons Button {
+    margin-left: 10px;
+    width: 80px;
 }

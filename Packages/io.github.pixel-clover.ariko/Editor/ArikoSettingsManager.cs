@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,6 +22,25 @@ public static class ArikoSettingsManager
             settings = ScriptableObject.CreateInstance<ArikoSettings>();
             AssetDatabase.CreateAsset(settings, SettingsPath);
             AssetDatabase.SaveAssets();
+        }
+
+        if (settings.syntaxTheme == null)
+        {
+            var themeGuids = AssetDatabase.FindAssets("t:SyntaxTheme");
+            if (themeGuids.Length > 0)
+                settings.syntaxTheme =
+                    AssetDatabase.LoadAssetAtPath<SyntaxTheme>(AssetDatabase.GUIDToAssetPath(themeGuids[0]));
+        }
+
+        if (settings.languageDefinitions == null || settings.languageDefinitions.Count == 0)
+        {
+            settings.languageDefinitions = new List<LanguageDefinition>();
+            var langGuids = AssetDatabase.FindAssets("t:LanguageDefinition");
+            foreach (var guid in langGuids)
+            {
+                var langDef = AssetDatabase.LoadAssetAtPath<LanguageDefinition>(AssetDatabase.GUIDToAssetPath(guid));
+                if (langDef != null) settings.languageDefinitions.Add(langDef);
+            }
         }
 
         return settings;

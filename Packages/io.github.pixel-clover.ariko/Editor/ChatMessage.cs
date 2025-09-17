@@ -1,10 +1,10 @@
 /// <summary>
 ///     Represents a single message in a chat session.
 /// </summary>
-public class ChatMessage
+public struct ChatMessage
 {
     /// <summary>
-    ///     Gets or sets the role of the message sender (e.g., "User", "Ariko", "System").
+    ///     Gets or sets the role of the message sender ("User", "Ariko", or "System").
     /// </summary>
     public string Role { get; set; }
 

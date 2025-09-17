@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Ariko.Editor.Agent.Tools;
 
 /// <summary>
 ///     Manages the collection of available tools for the Ariko agent.
@@ -11,13 +12,24 @@ public class ToolRegistry
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ToolRegistry" /> class
-    ///     and registers all available tools.
+    ///     and registers tools based on the current work mode and settings.
     /// </summary>
-    public ToolRegistry()
+    public ToolRegistry(ArikoSettings settings, string workMode)
     {
-        // Discover and register all tools. You can use reflection or manual registration.
-        RegisterTool(new CreateGameObjectTool());
-        // Register other tools here...
+        // Agentic tools are only available in "Agent" mode.
+        if (workMode == "Agent")
+        {
+            RegisterTool(new CreateGameObjectTool());
+            RegisterTool(new CreateFileTool());
+            RegisterTool(new ModifyFileTool());
+
+            // Destructive tools are further gated by a user setting.
+            if (settings.enableDeleteTools)
+            {
+                RegisterTool(new DeleteFileTool());
+            }
+        }
+        // In "Ask" mode, no tools are registered.
     }
 
     /// <summary>

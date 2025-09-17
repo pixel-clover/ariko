@@ -24,6 +24,7 @@ MonoBehaviour:
   chatFontSize: 12
   roleLabelsBold: 1
   chatHistorySize: 5
+  enableDeleteTools: 0
   systemPrompt: 'You are Ariko, a helpful and friendly AI assistant integrated into
     the Unity Editor.
 

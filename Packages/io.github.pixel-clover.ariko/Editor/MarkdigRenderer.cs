@@ -1,8 +1,8 @@
+using System;
 using System.Text;
 using Markdig;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -123,20 +123,9 @@ public class MarkdigRenderer
         var highlightedCode = content.Trim();
         if (!string.IsNullOrEmpty(language))
         {
-            // Find the SyntaxTheme asset. For now, we'll just find the first one.
-            // A more robust solution would allow theme selection in settings.
-            var themeGuids = AssetDatabase.FindAssets("t:SyntaxTheme");
-            SyntaxTheme theme = null;
-            if (themeGuids.Length > 0)
-                theme = AssetDatabase.LoadAssetAtPath<SyntaxTheme>(AssetDatabase.GUIDToAssetPath(themeGuids[0]));
-
-            // Find the LanguageDefinition asset that matches the language name
-            var langGuids = AssetDatabase.FindAssets($"t:LanguageDefinition {language}");
-            LanguageDefinition langDef = null;
-            if (langGuids.Length > 0)
-                // To be more specific, we could check the asset name, but for now, the first match is fine.
-                langDef = AssetDatabase.LoadAssetAtPath<LanguageDefinition>(
-                    AssetDatabase.GUIDToAssetPath(langGuids[0]));
+            var theme = settings.syntaxTheme;
+            var langDef =
+                settings.languageDefinitions?.Find(l => l.name.Equals(language, StringComparison.OrdinalIgnoreCase));
 
             if (theme != null && langDef != null)
             {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -76,6 +77,13 @@ public class ArikoSettings : ScriptableObject
     [Tooltip("How many past chat sessions to keep in history. Set to 0 for infinite.")]
     public int chatHistorySize = 5;
 
+    /// <summary>
+    ///     Enables potentially destructive tools like deleting files and GameObjects.
+    ///     Disabled by default for safety.
+    /// </summary>
+    [Tooltip("Enables agent tools for deleting files and GameObjects. Disabled by default for safety.")]
+    public bool enableDeleteTools;
+
     [Header("System Prompt")]
     /// <summary>
     /// The initial instruction given to the AI at the start of each new conversation in "Ask" mode.
@@ -112,4 +120,9 @@ public class ArikoSettings : ScriptableObject
         "  \"parameters\": { \"param1\": \"value1\", \"param2\": 123 }\n" +
         "}\n" +
         "If you do not need to use a tool, or if the task is complete, respond with a conversational message.";
+
+    [Header("Syntax Highlighting")] [HideInInspector]
+    public SyntaxTheme syntaxTheme;
+
+    [HideInInspector] public List<LanguageDefinition> languageDefinitions;
 }

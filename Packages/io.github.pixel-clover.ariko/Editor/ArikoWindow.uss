@@ -1,27 +1,27 @@
 :root {
     --background-color: rgb(40, 40, 40);
     --text-color: rgb(220, 220, 220);
-    --input-background-color: rgb(30, 30, 30);
-    --input-border-color: rgb(60, 60, 60);
-    --button-background-color: rgb(80, 80, 80);
-    --button-text-color: rgb(220, 220, 220);
-    --user-message-background-color: rgb(50, 50, 90);
+    --input-background-color: rgb(50, 50, 50);
+    --input-border-color: rgb(80, 80, 80);
+    --button-background-color: rgb(80, 120, 220);
+    --button-text-color: rgb(255, 255, 255);
+    --user-message-background-color: rgb(50, 70, 130);
     --ariko-message-background-color: rgb(55, 55, 55);
-    --code-block-background-color: rgb(20, 20, 20);
-    --code-block-header-background-color: rgb(45, 45, 45);
+    --code-block-background-color: rgb(220, 220, 220);
+    --code-block-header-background-color: rgb(220, 220, 220);
     --toolbar-background-color: rgb(50, 50, 50);
     --separator-color: rgb(70, 70, 70);
 }
 
 .unity-editor-light-theme {
-    --background-color: rgb(245, 245, 245);
+    --background-color: rgb(255, 255, 255);
     --text-color: rgb(30, 30, 30);
-    --input-background-color: rgb(255, 255, 255);
-    --input-border-color: rgb(200, 200, 200);
-    --button-background-color: rgb(230, 230, 230);
-    --button-text-color: rgb(30, 30, 30);
-    --user-message-background-color: rgb(220, 220, 255);
-    --ariko-message-background-color: rgb(235, 235, 235);
+    --input-background-color: rgb(240, 240, 240);
+    --input-border-color: rgb(220, 220, 220);
+    --button-background-color: rgb(210, 225, 255);
+    --button-text-color: rgb(30, 30, 80);
+    --user-message-background-color: rgb(230, 235, 255);
+    --ariko-message-background-color: rgb(245, 245, 245);
     --code-block-background-color: rgb(220, 220, 220);
     --code-block-header-background-color: rgb(200, 200, 200);
     --toolbar-background-color: rgb(230, 230, 230);
@@ -55,6 +55,8 @@
 
 #chat-history {
     padding: 10px;
+    flex-grow: 1;
+    flex-shrink: 1;
 }
 
 .separator {
@@ -66,22 +68,33 @@
 
 .chat-message {
     padding: 12px;
-    border-radius: 8px;
+    border-radius: 18px; /* More rounded corners */
     margin-bottom: 10px;
     white-space: normal;
-    max-width: 90%;
+    max-width: 85%; /* Slightly less wide */
     color: var(--text-color);
 }
 
 .user-message {
     background-color: var(--user-message-background-color);
-    align-self: flex-start;
-    margin-right: 10%;
+    align-self: flex-end; /* Align to the right */
+    border-bottom-right-radius: 4px; /* Google Chat style */
+    margin-left: 15%; /* Ensure it doesn't overlap */
+}
+
+.ariko-message {
+    background-color: var(--ariko-message-background-color);
+    align-self: flex-start; /* Align to the left */
+    border-bottom-left-radius: 4px; /* Google Chat style */
+    margin-right: 15%;
 }
 
 .error-message {
     background-color: var(--ariko-message-background-color);
     color: rgb(255, 100, 100);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    margin-right: 15%;
 }
 
 .unity-editor-light-theme .error-message {
@@ -91,35 +104,50 @@
 .input-row {
     flex-direction: row;
     align-items: center;
-    padding: 8px;
+    padding: 10px;
+    min-height: 60px;
+    max-height: 120px;
+    border-top-width: 1px;
+    border-top-color: var(--input-border-color);
+}
+
+#footer {
+    flex-grow: 0;
+    flex-shrink: 0;
+    min-height: 60px;
 }
 
 .boxed-input {
     background-color: var(--input-background-color);
     color: var(--text-color);
     border-color: var(--input-border-color);
-    border-radius: 6px;
+    border-width: 1px;
+    border-radius: 20px; /* Rounded corners */
     padding: 0;
     flex-grow: 1;
     flex-basis: 0;
     font-size: 14px;
-    height: 110px;
     white-space: normal;
+    min-height: 40px; /* Ensure it has a minimum height */
+    align-self: stretch; /* Stretch to fill parent height */
 }
 
 .boxed-input .unity-text-field__input {
     -unity-text-align: upper-left;
     margin: 0;
-    padding: 8px;
+    padding: 10px 15px; /* More padding */
+    background-color: transparent;
+    border-width: 0;
 }
 
 .send-button, .cancel-button {
     background-color: var(--button-background-color);
     color: var(--button-text-color);
-    border-radius: 6px;
-    margin-left: 8px;
+    border-radius: 20px; /* Rounded corners */
+    margin-left: 10px;
     height: 40px;
-    width: 80px;
+    flex-shrink: 0;
+    padding: 0 15px;
 }
 
 .code-block-container {
@@ -287,10 +315,21 @@
     background-color: var(--input-background-color);
 }
 
+.splitter {
+    width: 2px;
+    background-color: var(--separator-color);
+    cursor: resize-horizontal;
+}
+
+.vertical-splitter {
+    height: 2px;
+    background-color: var(--separator-color);
+    cursor: resize-vertical;
+}
+
 .history-panel {
-    width: 200px;
     min-width: 150px;
-    max-width: 300px;
+    max-width: 500px;
     border-right-width: 1px;
     border-right-color: var(--separator-color);
     background-color: var(--toolbar-background-color);
@@ -369,6 +408,10 @@
 }
 
 .confirmation-dialog {
+    position: absolute;
+    bottom: 90px;
+    left: 0;
+    right: 0;
     border-top-width: 1px;
     border-top-color: var(--separator-color);
     padding: 10px;
@@ -387,5 +430,9 @@
 
 .confirmation-buttons Button {
     margin-left: 10px;
-    width: 80px;
+}
+
+.generate-prompt-input .unity-text-field__input {
+    max-height: 100px;
+    white-space: normal;
 }

@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -15,6 +16,14 @@ public static class AsyncOperationExtensions
     {
         var tcs = new TaskCompletionSource<object>();
         op.completed += _ => { tcs.TrySetResult(null); };
+        return tcs.Task;
+    }
+
+    public static Task AsTask(this AsyncOperation op, CancellationToken cancellationToken)
+    {
+        var tcs = new TaskCompletionSource<object>();
+        op.completed += _ => tcs.TrySetResult(null);
+        cancellationToken.Register(() => tcs.TrySetCanceled());
         return tcs.Task;
     }
 }

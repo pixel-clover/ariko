@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -17,7 +18,6 @@ public class ArikoChatController
     private readonly Dictionary<string, string> apiKeys = new();
     private readonly ArikoLLMService llmService;
     private readonly ArikoSettings settings;
-    private readonly ToolRegistry toolRegistry;
 
     /// <summary>
     ///     Event triggered when the chat is cleared, instructing the view to clear the message display.
@@ -64,6 +64,7 @@ public class ArikoChatController
     public Action<ToolCall> OnToolCallConfirmationRequested;
 
     private ToolCall pendingToolCall;
+    private ToolRegistry toolRegistry;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ArikoChatController" /> class.
@@ -73,13 +74,12 @@ public class ArikoChatController
     {
         this.settings = settings;
         llmService = new ArikoLLMService();
-        toolRegistry = new ToolRegistry();
+        ReloadToolRegistry(settings.selectedWorkMode);
 
-        ChatHistory = ChatHistoryStorage.LoadHistory();
-        if (ChatHistory == null || ChatHistory.Count == 0)
+        ChatHistory = ChatHistoryStorage.LoadHistory() ?? new List<ChatSession>();
+        if (ChatHistory.Count == 0)
         {
             // If no history, create a new one
-            ChatHistory = new List<ChatSession>();
             ActiveSession = new ChatSession();
             ChatHistory.Add(ActiveSession);
         }
@@ -143,6 +143,11 @@ public class ArikoChatController
     public void SetApiKey(string provider, string key)
     {
         apiKeys[provider] = key;
+    }
+
+    public void ReloadToolRegistry(string workMode)
+    {
+        toolRegistry = new ToolRegistry(settings, workMode);
     }
 
     /// <summary>
@@ -262,9 +267,21 @@ public class ArikoChatController
             var tool = toolRegistry.GetTool(toolCall.tool_name);
             string executionResult;
             if (tool != null)
-                executionResult = tool.Execute(toolCall.parameters);
+            {
+                var context = new ToolExecutionContext
+                {
+                    Arguments = toolCall.parameters,
+                    Provider = selectedProvider,
+                    Model = selectedModel,
+                    Settings = settings,
+                    ApiKeys = apiKeys
+                };
+                executionResult = await tool.Execute(context);
+            }
             else
+            {
                 executionResult = $"Error: Tool '{toolCall.tool_name}' not found.";
+            }
 
             ActiveSession.Messages.Remove(thinkingMessage);
             var resultMessage = new ChatMessage { Role = "User", Content = $"Observation: {executionResult}" };
@@ -287,56 +304,26 @@ public class ArikoChatController
     private bool TryParseToolCall(string response, out ToolCall toolCall)
     {
         toolCall = null;
-        var jsonMatch = Regex.Match(response, @"\{.*\}", RegexOptions.Singleline);
-        if (!jsonMatch.Success) return false;
-
-        var json = jsonMatch.Value;
-
         try
         {
-            // Simple manual parsing. Not robust, but avoids a full JSON library dependency.
-            var tempCall = new ToolCall();
+            var match = Regex.Match(response, @"```json\s*([\s\S]*?)\s*```", RegexOptions.Singleline);
+            var jsonToParse = match.Success ? match.Groups[1].Value : response;
 
-            var thoughtMatch = Regex.Match(json, @"""thought""\s*:\s*""([^""]*)""");
-            if (thoughtMatch.Success) tempCall.thought = thoughtMatch.Groups[1].Value;
+            var agentResponse = JsonConvert.DeserializeObject<AgentResponse>(jsonToParse);
 
-            var toolNameMatch = Regex.Match(json, @"""tool_name""\s*:\s*""([^""]*)""");
-            if (!toolNameMatch.Success) return false; // tool_name is mandatory
-            tempCall.tool_name = toolNameMatch.Groups[1].Value;
+            if (string.IsNullOrWhiteSpace(agentResponse?.ToolName) ||
+                toolRegistry.GetTool(agentResponse.ToolName) == null) return false;
 
-            var paramsMatch = Regex.Match(json, @"""parameters""\s*:\s*\{([^\}]*)\}");
-            if (paramsMatch.Success)
+            toolCall = new ToolCall
             {
-                tempCall.parameters = new Dictionary<string, object>();
-                var paramBody = paramsMatch.Groups[1].Value;
-                var paramPairs = Regex.Matches(paramBody, @"""([^""]+)""\s*:\s*([^,]+)");
-                foreach (Match pair in paramPairs)
-                {
-                    var key = pair.Groups[1].Value;
-                    var valueStr = pair.Groups[2].Value.Trim();
+                thought = agentResponse.Thought,
+                tool_name = agentResponse.ToolName,
+                parameters = agentResponse.Parameters ?? new Dictionary<string, object>()
+            };
 
-                    // Try to parse value as different types
-                    if (valueStr.StartsWith("\"") && valueStr.EndsWith("\""))
-                        tempCall.parameters[key] = valueStr.Substring(1, valueStr.Length - 2);
-                    else if (int.TryParse(valueStr, out var intVal))
-                        tempCall.parameters[key] = intVal;
-                    else if (float.TryParse(valueStr, out var floatVal))
-                        tempCall.parameters[key] = floatVal;
-                    else if (bool.TryParse(valueStr, out var boolVal))
-                        tempCall.parameters[key] = boolVal;
-                    else
-                        tempCall.parameters[key] = valueStr; // as string
-                }
-            }
-            else
-            {
-                tempCall.parameters = new Dictionary<string, object>(); // empty params
-            }
-
-            toolCall = tempCall;
             return true;
         }
-        catch
+        catch (JsonException)
         {
             return false;
         }

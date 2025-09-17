@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 /// <summary>
 ///     Defines the interface for a tool that can be executed by the Ariko agent.
@@ -24,7 +25,7 @@ public interface IArikoTool
     /// <summary>
     ///     Executes the tool's action with the given arguments.
     /// </summary>
-    /// <param name="arguments">A dictionary of arguments for the tool, where the key is the parameter name.</param>
+    /// <param name="context">The execution context, containing arguments and other relevant data.</param>
     /// <returns>A string result of the execution, to be sent back to the LLM as an observation.</returns>
-    string Execute(Dictionary<string, object> arguments);
+    Task<string> Execute(ToolExecutionContext context);
 }

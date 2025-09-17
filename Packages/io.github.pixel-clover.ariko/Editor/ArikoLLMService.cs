@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -34,7 +35,7 @@ public class ArikoLLMService
 
     private const int RequestTimeout = 30; // seconds
     private readonly Dictionary<AIProvider, IApiProviderStrategy> strategies;
-    private UnityWebRequest activeRequest;
+    private CancellationTokenSource cancellationTokenSource;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ArikoLLMService" /> class.
@@ -54,7 +55,7 @@ public class ArikoLLMService
     /// </summary>
     public void CancelRequest()
     {
-        if (activeRequest != null && !activeRequest.isDone) activeRequest.Abort();
+        cancellationTokenSource?.Cancel();
     }
 
     /// <summary>
@@ -113,14 +114,16 @@ public class ArikoLLMService
     private async Task<WebRequestResult<List<string>>> SendGetRequest(string url, string authToken,
         Func<string, List<string>> parser)
     {
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource = new CancellationTokenSource();
+
         using var request = UnityWebRequest.Get(url);
         request.timeout = RequestTimeout;
-        activeRequest = request;
         if (!string.IsNullOrEmpty(authToken)) request.SetRequestHeader("Authorization", authToken);
 
         try
         {
-            await request.SendWebRequest().AsTask();
+            await request.SendWebRequest().AsTask(cancellationTokenSource.Token);
         }
         catch (Exception ex) when (ex is OperationCanceledException)
         {
@@ -128,7 +131,8 @@ public class ArikoLLMService
         }
         finally
         {
-            activeRequest = null;
+            cancellationTokenSource.Dispose();
+            cancellationTokenSource = null;
         }
 
         return HandleApiResponse(request, parser);
@@ -137,9 +141,11 @@ public class ArikoLLMService
     private async Task<WebRequestResult<string>> SendPostRequest(string url, string authToken, string jsonBody,
         Func<string, string> parser)
     {
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource = new CancellationTokenSource();
+
         using var request = new UnityWebRequest(url, "POST");
         request.timeout = RequestTimeout;
-        activeRequest = request;
 
         var bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -149,7 +155,7 @@ public class ArikoLLMService
 
         try
         {
-            await request.SendWebRequest().AsTask();
+            await request.SendWebRequest().AsTask(cancellationTokenSource.Token);
         }
         catch (Exception ex) when (ex is OperationCanceledException)
         {
@@ -157,7 +163,8 @@ public class ArikoLLMService
         }
         finally
         {
-            activeRequest = null;
+            cancellationTokenSource.Dispose();
+            cancellationTokenSource = null;
         }
 
         return HandleApiResponse(request, parser);

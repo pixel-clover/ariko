@@ -7,62 +7,54 @@ using UnityEngine;
 
 namespace Ariko.Editor.Agent.Tools
 {
-    /// <summary>
-    ///     A tool for modifying an existing file.
-    /// </summary>
     public class ModifyFileTool : IArikoTool
     {
-        /// <inheritdoc />
         public string Name => "ModifyFile";
+        public string Description => "Modifies an existing file with a prompt.";
 
-        /// <inheritdoc />
-        public string Description => "Modifies an existing file by replacing a section of its content.";
-
-        /// <inheritdoc />
         public Dictionary<string, string> Parameters => new()
         {
-            { "filePath", "The path of the file to modify. Should be relative to the Assets folder." },
-            { "startLine", "The line number to start replacing from." },
-            { "endLine", "The line number to stop replacing at." },
-            { "content", "The new content to insert." }
+            { "filePath", "The path of the file to modify, relative to the Assets folder." },
+            { "prompt", "A prompt describing the modifications to make." }
         };
 
-        /// <inheritdoc />
         public async Task<string> Execute(ToolExecutionContext context)
         {
-            if (context.Arguments.TryGetValue("filePath", out var filePathObj) && filePathObj is string filePath &&
-                context.Arguments.TryGetValue("startLine", out var startLineObj) && int.TryParse(startLineObj.ToString(), out var startLine) &&
-                context.Arguments.TryGetValue("endLine", out var endLineObj) && int.TryParse(endLineObj.ToString(), out var endLine) &&
-                context.Arguments.TryGetValue("content", out var contentObj) && contentObj is string content)
+            if (!context.Arguments.TryGetValue("filePath", out var filePathObj) || !(filePathObj is string filePath) ||
+                !context.Arguments.TryGetValue("prompt", out var promptObj) || !(promptObj is string prompt))
             {
-                try
-                {
-                    var fullPath = Path.Combine("Assets", filePath);
-                    if (File.Exists(fullPath))
-                    {
-                        var lines = new List<string>(File.ReadAllLines(fullPath));
-                        var originalContent = string.Join("\n", lines.GetRange(startLine - 1, endLine - startLine + 1));
-
-                        Undo.RegisterCompleteObjectUndo(AssetDatabase.LoadAssetAtPath<TextAsset>(fullPath), "Modify File");
-
-                        lines.RemoveRange(startLine - 1, endLine - startLine + 1);
-                        lines.InsertRange(startLine - 1, content.Split('\n'));
-
-                        await File.WriteAllLinesAsync(fullPath, lines);
-
-                        AssetDatabase.Refresh();
-                        return $"Success: Modified file at '{fullPath}'.";
-                    }
-
-                    return $"Error: File not found at '{fullPath}'.";
-                }
-                catch (Exception e)
-                {
-                    return $"Error: {e.Message}";
-                }
+                return "Error: Missing required parameters 'filePath' or 'prompt'.";
             }
 
-            return "Error: Missing or invalid required parameters.";
+            var fullPath = Path.Combine(Application.dataPath, filePath.Replace("Assets/", ""));
+
+            if (!File.Exists(fullPath))
+            {
+                return $"Error: File not found at '{fullPath}'.";
+            }
+
+            var fileContent = await File.ReadAllTextAsync(fullPath);
+            var llmService = new ArikoLLMService();
+
+            var requestPrompt =
+                $"Modify the following C# script file based on the prompt.\n\n[File Content]\n{fileContent}\n\n[Prompt]\n{prompt}\n\nOnly output the modified file content, nothing else.";
+
+            var result = await llmService.SendChatRequest(
+                requestPrompt,
+                (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), context.Provider),
+                context.Model,
+                context.Settings,
+                context.ApiKeys
+            );
+
+            if (result.IsSuccess)
+            {
+                await File.WriteAllTextAsync(fullPath, result.Data);
+                AssetDatabase.Refresh();
+                return $"Success: Modified file at '{fullPath}'.";
+            }
+
+            return $"Error: {result.Error}";
         }
     }
 }

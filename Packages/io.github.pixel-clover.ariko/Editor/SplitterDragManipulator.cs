@@ -46,21 +46,19 @@ public class SplitterDragManipulator : Manipulator
         if (m_Active)
         {
             var delta = e.localMousePosition.x - m_Start;
-            var leftWidth = m_LeftPanel.resolvedStyle.width + delta;
-            var rightWidth = m_RightPanel.resolvedStyle.width - delta;
+            var newWidth = m_LeftPanel.resolvedStyle.width + delta;
 
-            if (leftWidth < m_LeftPanel.resolvedStyle.minWidth.value)
+            if (newWidth < m_LeftPanel.resolvedStyle.minWidth.value)
             {
-                leftWidth = m_LeftPanel.resolvedStyle.minWidth.value;
+                newWidth = m_LeftPanel.resolvedStyle.minWidth.value;
             }
 
-            if (leftWidth > m_Parent.resolvedStyle.width - m_RightPanel.resolvedStyle.minWidth.value)
+            if (newWidth > m_Parent.resolvedStyle.width - m_RightPanel.resolvedStyle.minWidth.value)
             {
-                leftWidth = m_Parent.resolvedStyle.width - m_RightPanel.resolvedStyle.minWidth.value;
+                newWidth = m_Parent.resolvedStyle.width - m_RightPanel.resolvedStyle.minWidth.value;
             }
 
-            m_LeftPanel.style.width = leftWidth;
-            m_LeftPanel.style.flexGrow = 0;
+            m_LeftPanel.style.flexBasis = newWidth;
 
             e.StopPropagation();
         }

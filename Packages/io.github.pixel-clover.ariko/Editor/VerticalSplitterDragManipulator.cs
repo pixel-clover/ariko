@@ -46,21 +46,19 @@ public class VerticalSplitterDragManipulator : Manipulator
         if (m_Active)
         {
             var delta = e.localMousePosition.y - m_Start;
-            var topHeight = m_TopPanel.resolvedStyle.height - delta;
-            var bottomHeight = m_BottomPanel.resolvedStyle.height + delta;
+            var newHeight = m_BottomPanel.resolvedStyle.height - delta;
 
-            if (topHeight < m_TopPanel.resolvedStyle.minHeight.value)
+            if (newHeight < m_BottomPanel.resolvedStyle.minHeight.value)
             {
-                topHeight = m_TopPanel.resolvedStyle.minHeight.value;
+                newHeight = m_BottomPanel.resolvedStyle.minHeight.value;
             }
 
-            if (topHeight > m_Parent.resolvedStyle.height - m_BottomPanel.resolvedStyle.minHeight.value)
+            if (newHeight > m_Parent.resolvedStyle.height - m_TopPanel.resolvedStyle.minHeight.value)
             {
-                topHeight = m_Parent.resolvedStyle.height - m_BottomPanel.resolvedStyle.minHeight.value;
+                newHeight = m_Parent.resolvedStyle.height - m_TopPanel.resolvedStyle.minHeight.value;
             }
 
-            m_TopPanel.style.height = topHeight;
-            m_TopPanel.style.flexGrow = 0;
+            m_BottomPanel.style.flexBasis = newHeight;
 
             e.StopPropagation();
         }

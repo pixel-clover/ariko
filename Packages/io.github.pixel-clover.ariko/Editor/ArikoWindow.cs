@@ -66,6 +66,7 @@ public class ArikoWindow : EditorWindow
                 controller.ManuallyAttachedAssets.Add(selectedObject);
                 chatPanelController.UpdateManualAttachmentsList();
             }
+            Event.current.Use();
         }
     }
 

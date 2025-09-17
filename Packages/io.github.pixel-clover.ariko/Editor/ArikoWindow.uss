@@ -55,6 +55,8 @@
 
 #chat-history {
     padding: 10px;
+    flex-grow: 1;
+    flex-shrink: 1;
 }
 
 .separator {
@@ -92,6 +94,13 @@
     flex-direction: row;
     align-items: center;
     padding: 8px;
+    height: 150px;
+    min-height: 100px;
+}
+
+#footer {
+    flex-grow: 0;
+    flex-shrink: 1;
 }
 
 #footer {

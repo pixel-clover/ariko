@@ -22,13 +22,6 @@
             <ui:VisualElement name="splitter" class="splitter"/>
             <ui:VisualElement name="chat-panel" style="flex-grow: 1;">
                 <ui:ScrollView name="chat-history" style="flex-grow: 1; min-height: 0;"/>
-                <ui:VisualElement name="confirmation-dialog" class="confirmation-dialog" style="display: none;">
-                    <ui:Label name="confirmation-label" class="confirmation-label"/>
-                    <ui:VisualElement class="confirmation-buttons">
-                        <ui:Button name="approve-button" text="Approve"/>
-                        <ui:Button name="deny-button" text="Deny"/>
-                    </ui:VisualElement>
-                </ui:VisualElement>
                 <ui:VisualElement name="vertical-splitter" class="vertical-splitter"/>
                 <ui:VisualElement name="footer" style="flex-shrink: 0;">
                     <ui:VisualElement name="context-area" class="attachment-box">
@@ -49,7 +42,13 @@
                                    tooltip="Cancel the running request."/>
                     </ui:VisualElement>
                 </ui:VisualElement>
-
+                <ui:VisualElement name="confirmation-dialog" class="confirmation-dialog" style="display: none;">
+                    <ui:Label name="confirmation-label" class="confirmation-label"/>
+                    <ui:VisualElement class="confirmation-buttons">
+                        <ui:Button name="approve-button" text="Approve"/>
+                        <ui:Button name="deny-button" text="Deny"/>
+                    </ui:VisualElement>
+                </ui:VisualElement>
             </ui:VisualElement>
 
             <ui:VisualElement name="settings-panel" class="settings-panel"

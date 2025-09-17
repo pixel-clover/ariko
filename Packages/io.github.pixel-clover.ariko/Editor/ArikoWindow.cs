@@ -75,6 +75,9 @@ public class ArikoWindow : EditorWindow
         SetupUIStrings();
         CreateAndSetupPopups();
 
+        var contentArea = rootVisualElement.Q<VisualElement>("content-area");
+        splitter.AddManipulator(new SplitterDragManipulator(contentArea, historyPanel, chatPanel));
+
         chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer, providerPopup, modelPopup);
         historyPanelController = new HistoryPanelController(rootVisualElement, controller);
         settingsPanelController = new SettingsPanelController(rootVisualElement, controller, settings, chatPanelController.ApplyChatStyles);
@@ -84,9 +87,17 @@ public class ArikoWindow : EditorWindow
         await FetchModelsForCurrentProviderAsync(providerPopup.value);
     }
 
+    private VisualElement splitter;
+    private VisualElement historyPanel;
+    private VisualElement chatPanel;
+
     private void InitializeQueries()
     {
         fetchingModelsLabel = rootVisualElement.Q<Label>("fetching-models-label");
+
+        splitter = rootVisualElement.Q<VisualElement>("splitter");
+        historyPanel = rootVisualElement.Q<VisualElement>("history-panel");
+        chatPanel = rootVisualElement.Q<VisualElement>("chat-panel");
 
         confirmationDialog = rootVisualElement.Q<VisualElement>("confirmation-dialog");
         confirmationLabel = rootVisualElement.Q<Label>("confirmation-label");

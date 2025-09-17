@@ -76,11 +76,10 @@ public class ArikoChatController
         llmService = new ArikoLLMService();
         ReloadToolRegistry(settings.selectedWorkMode);
 
-        ChatHistory = ChatHistoryStorage.LoadHistory();
-        if (ChatHistory == null || ChatHistory.Count == 0)
+        ChatHistory = ChatHistoryStorage.LoadHistory() ?? new List<ChatSession>();
+        if (ChatHistory.Count == 0)
         {
             // If no history, create a new one
-            ChatHistory = new List<ChatSession>();
             ActiveSession = new ChatSession();
             ChatHistory.Add(ActiveSession);
         }
@@ -309,7 +308,7 @@ public class ArikoChatController
         {
             var agentResponse = JsonConvert.DeserializeObject<AgentResponse>(response);
 
-            if (string.IsNullOrWhiteSpace(agentResponse?.ToolName))
+            if (string.IsNullOrWhiteSpace(agentResponse?.ToolName) || toolRegistry.GetTool(agentResponse.ToolName) == null)
             {
                 return false;
             }

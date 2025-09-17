@@ -4,13 +4,15 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEditor;
 
-/// <summary>
-///     A tool for creating a new file.
-/// </summary>
-public class CreateFileTool : IArikoTool
+namespace Ariko.Editor.Agent.Tools
 {
-    /// <inheritdoc />
-    public string Name => "CreateFile";
+    /// <summary>
+    ///     A tool for creating a new file.
+    /// </summary>
+    public class CreateFileTool : IArikoTool
+    {
+        /// <inheritdoc />
+        public string Name => "CreateFile";
 
     /// <inheritdoc />
     public string Description => "Creates a new file with the given content. Useful for creating new C# scripts.";
@@ -44,4 +46,5 @@ public class CreateFileTool : IArikoTool
 
         return Task.FromResult("Error: Missing required 'filePath' or 'content' parameter.");
     }
+}
 }

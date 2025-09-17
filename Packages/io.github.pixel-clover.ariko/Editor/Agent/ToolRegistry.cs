@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Ariko.Editor.Agent.Tools;
 
 /// <summary>
 ///     Manages the collection of available tools for the Ariko agent.

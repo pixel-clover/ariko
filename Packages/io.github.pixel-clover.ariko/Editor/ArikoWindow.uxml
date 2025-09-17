@@ -13,14 +13,14 @@
         </uie:Toolbar>
 
         <ui:VisualElement name="content-area" style="flex-grow: 1; flex-direction: row;">
-            <ui:VisualElement name="history-panel" class="history-panel">
+            <ui:VisualElement name="history-panel" class="history-panel" style="display: none;">
                 <ui:VisualElement name="history-header-container" class="history-header">
                     <ui:Label text="Chat history" style="flex-grow: 1;"/>
                     <ui:Button text="Clear all" name="clear-history-button" tooltip="Delete all saved chat sessions."/>
                 </ui:VisualElement>
                 <ui:ScrollView name="history-list" style="flex-grow: 1;"/>
             </ui:VisualElement>
-
+            <ui:VisualElement name="splitter" class="splitter"/>
             <ui:VisualElement name="chat-panel" style="flex-grow: 1;">
                 <ui:ScrollView name="chat-history" style="flex-grow: 1; min-height: 0;"/>
                 <ui:VisualElement name="confirmation-dialog" class="confirmation-dialog" style="display: none;">

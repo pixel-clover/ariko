@@ -69,7 +69,7 @@
     border-radius: 8px;
     margin-bottom: 10px;
     white-space: normal;
-    max-width: 90%;
+    max-width: 98%;
     color: var(--text-color);
 }
 
@@ -119,7 +119,8 @@
     border-radius: 6px;
     margin-left: 8px;
     height: 40px;
-    width: 80px;
+    flex-shrink: 0;
+    padding: 0 15px;
 }
 
 .code-block-container {
@@ -287,10 +288,15 @@
     background-color: var(--input-background-color);
 }
 
+.splitter {
+    width: 2px;
+    background-color: var(--separator-color);
+    cursor: resize-horizontal;
+}
+
 .history-panel {
-    width: 200px;
     min-width: 150px;
-    max-width: 300px;
+    max-width: 500px;
     border-right-width: 1px;
     border-right-color: var(--separator-color);
     background-color: var(--toolbar-background-color);
@@ -387,7 +393,6 @@
 
 .confirmation-buttons Button {
     margin-left: 10px;
-    width: 80px;
 }
 
 .generate-prompt-input .unity-text-field__input {

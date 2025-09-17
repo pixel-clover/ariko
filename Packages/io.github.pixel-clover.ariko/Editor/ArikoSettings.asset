@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ollama_Url: http://localhost:11434
   google_SelectedModel: 
-  openAI_SelectedModel: 
+  openAI_SelectedModel: gpt-5-nano
   ollama_SelectedModel: 
   selectedProvider: OpenAI
   selectedWorkMode: Ask
@@ -24,6 +24,7 @@ MonoBehaviour:
   chatFontSize: 12
   roleLabelsBold: 1
   chatHistorySize: 5
+  enableDeleteTools: 0
   systemPrompt: 'You are Ariko, a helpful and friendly AI assistant integrated into
     the Unity Editor.
 

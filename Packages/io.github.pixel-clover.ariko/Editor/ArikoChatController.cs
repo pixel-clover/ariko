@@ -306,7 +306,10 @@ public class ArikoChatController
         toolCall = null;
         try
         {
-            var agentResponse = JsonConvert.DeserializeObject<AgentResponse>(response);
+            var match = Regex.Match(response, @"```json\s*([\s\S]*?)\s*```", RegexOptions.Singleline);
+            var jsonToParse = match.Success ? match.Groups[1].Value : response;
+
+            var agentResponse = JsonConvert.DeserializeObject<AgentResponse>(jsonToParse);
 
             if (string.IsNullOrWhiteSpace(agentResponse?.ToolName) || toolRegistry.GetTool(agentResponse.ToolName) == null)
             {

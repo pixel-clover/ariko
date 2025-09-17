@@ -88,8 +88,8 @@ public class ArikoWindow : EditorWindow
         CreateAndSetupPopups();
 
         var contentArea = rootVisualElement.Q<VisualElement>("content-area");
-        splitter.AddManipulator(new SplitterDragManipulator(contentArea, historyPanel, chatPanel));
-        verticalSplitter.AddManipulator(new VerticalSplitterDragManipulator(chatPanel, chatHistory, footer));
+        splitter.AddManipulator(new SplitterDragManipulator(contentArea, historyPanel, chatPanel, SplitterDragManipulator.Orientation.Horizontal));
+        verticalSplitter.AddManipulator(new SplitterDragManipulator(chatPanel, chatHistory, footer, SplitterDragManipulator.Orientation.Vertical));
 
         chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer, providerPopup, modelPopup);
         historyPanelController = new HistoryPanelController(rootVisualElement, controller);

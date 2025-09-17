@@ -3,17 +3,27 @@ using UnityEngine.UIElements;
 
 public class SplitterDragManipulator : Manipulator
 {
+    public enum Orientation
+    {
+        Horizontal,
+        Vertical
+    }
+
     private readonly VisualElement m_Parent;
-    private readonly VisualElement m_LeftPanel;
-    private readonly VisualElement m_RightPanel;
+    private readonly VisualElement m_FirstPanel;
+    private readonly VisualElement m_SecondPanel;
+    private readonly Orientation m_Orientation;
     private bool m_Active;
     private float m_Start;
+    private float m_StartSizeFirst;
+    private float m_StartSizeSecond;
 
-    public SplitterDragManipulator(VisualElement parent, VisualElement leftPanel, VisualElement rightPanel)
+    public SplitterDragManipulator(VisualElement parent, VisualElement firstPanel, VisualElement secondPanel, Orientation orientation)
     {
         m_Parent = parent;
-        m_LeftPanel = leftPanel;
-        m_RightPanel = rightPanel;
+        m_FirstPanel = firstPanel;
+        m_SecondPanel = secondPanel;
+        m_Orientation = orientation;
     }
 
     protected override void RegisterCallbacksOnTarget()
@@ -32,45 +42,63 @@ public class SplitterDragManipulator : Manipulator
 
     private void OnMouseDown(MouseDownEvent e)
     {
-        if (e.button == 0)
+        if (e.button != 0) return;
+
+        if (m_Orientation == Orientation.Horizontal)
         {
-            m_Start = e.localMousePosition.x;
-            m_Active = true;
-            target.CaptureMouse();
-            e.StopPropagation();
+            m_Start = e.mousePosition.x;
+            m_StartSizeFirst = m_FirstPanel.resolvedStyle.width;
         }
+        else
+        {
+            m_Start = e.mousePosition.y;
+            m_StartSizeSecond = m_SecondPanel.resolvedStyle.height;
+        }
+
+        m_Active = true;
+        target.CaptureMouse();
+        e.StopPropagation();
     }
 
     private void OnMouseMove(MouseMoveEvent e)
     {
-        if (m_Active)
+        if (!m_Active) return;
+
+        if (m_Orientation == Orientation.Horizontal)
         {
-            var delta = e.localMousePosition.x - m_Start;
-            var newWidth = m_LeftPanel.resolvedStyle.width + delta;
+            var delta = e.mousePosition.x - m_Start;
+            var newSize = m_StartSizeFirst + delta;
+            var minSizeFirst = m_FirstPanel.resolvedStyle.minWidth.value;
+            var minSizeSecond = m_SecondPanel.resolvedStyle.minWidth.value;
+            var parentSize = m_Parent.resolvedStyle.width;
 
-            if (newWidth < m_LeftPanel.resolvedStyle.minWidth.value)
-            {
-                newWidth = m_LeftPanel.resolvedStyle.minWidth.value;
-            }
+            newSize = Mathf.Max(minSizeFirst, newSize);
+            newSize = Mathf.Min(parentSize - minSizeSecond, newSize);
 
-            if (newWidth > m_Parent.resolvedStyle.width - m_RightPanel.resolvedStyle.minWidth.value)
-            {
-                newWidth = m_Parent.resolvedStyle.width - m_RightPanel.resolvedStyle.minWidth.value;
-            }
-
-            m_LeftPanel.style.flexBasis = newWidth;
-
-            e.StopPropagation();
+            m_FirstPanel.style.flexBasis = newSize;
         }
+        else
+        {
+            var delta = e.mousePosition.y - m_Start;
+            var newSize = m_StartSizeSecond - delta;
+            var minSizeFirst = m_FirstPanel.resolvedStyle.minHeight.value;
+            var minSizeSecond = m_SecondPanel.resolvedStyle.minHeight.value;
+            var parentSize = m_Parent.resolvedStyle.height;
+
+            newSize = Mathf.Max(minSizeSecond, newSize);
+            newSize = Mathf.Min(parentSize - minSizeFirst, newSize);
+
+            m_SecondPanel.style.flexBasis = newSize;
+        }
+        e.StopPropagation();
     }
 
     private void OnMouseUp(MouseUpEvent e)
     {
-        if (m_Active && e.button == 0)
-        {
-            m_Active = false;
-            target.ReleaseMouse();
-            e.StopPropagation();
-        }
+        if (!m_Active || e.button != 0) return;
+
+        m_Active = false;
+        target.ReleaseMouse();
+        e.StopPropagation();
     }
 }

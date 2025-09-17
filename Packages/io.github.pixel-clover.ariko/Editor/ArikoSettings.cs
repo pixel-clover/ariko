@@ -119,4 +119,8 @@ public class ArikoSettings : ScriptableObject
         "  \"parameters\": { \"param1\": \"value1\", \"param2\": 123 }\n" +
         "}\n" +
         "If you do not need to use a tool, or if the task is complete, respond with a conversational message.";
+
+    [Header("Syntax Highlighting")]
+    [HideInInspector] public SyntaxTheme syntaxTheme;
+    [HideInInspector] public System.Collections.Generic.List<LanguageDefinition> languageDefinitions;
 }

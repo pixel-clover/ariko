@@ -51,6 +51,24 @@ public class ArikoWindow : EditorWindow
         }
     }
 
+    private void OnGUI()
+    {
+        if (Event.current.commandName == "ObjectSelectorClosed")
+        {
+            if (chatPanelController == null || EditorGUIUtility.GetObjectPickerControlID() != chatPanelController.objectPickerControlID)
+            {
+                return;
+            }
+
+            var selectedObject = EditorGUIUtility.GetObjectPickerObject();
+            if (selectedObject != null)
+            {
+                controller.ManuallyAttachedAssets.Add(selectedObject);
+                chatPanelController.UpdateManualAttachmentsList();
+            }
+        }
+    }
+
     public async void CreateGUI()
     {
         settings = ArikoSettingsManager.LoadSettings();
@@ -70,6 +88,7 @@ public class ArikoWindow : EditorWindow
 
         var contentArea = rootVisualElement.Q<VisualElement>("content-area");
         splitter.AddManipulator(new SplitterDragManipulator(contentArea, historyPanel, chatPanel));
+        verticalSplitter.AddManipulator(new VerticalSplitterDragManipulator(chatPanel, chatHistory, footer));
 
         chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer, providerPopup, modelPopup);
         historyPanelController = new HistoryPanelController(rootVisualElement, controller);
@@ -83,6 +102,9 @@ public class ArikoWindow : EditorWindow
     private VisualElement splitter;
     private VisualElement historyPanel;
     private VisualElement chatPanel;
+    private VisualElement verticalSplitter;
+    private VisualElement chatHistory;
+    private VisualElement footer;
 
     private void InitializeQueries()
     {
@@ -91,6 +113,10 @@ public class ArikoWindow : EditorWindow
         splitter = rootVisualElement.Q<VisualElement>("splitter");
         historyPanel = rootVisualElement.Q<VisualElement>("history-panel");
         chatPanel = rootVisualElement.Q<VisualElement>("chat-panel");
+
+        verticalSplitter = rootVisualElement.Q<VisualElement>("vertical-splitter");
+        chatHistory = rootVisualElement.Q<VisualElement>("chat-history");
+        footer = rootVisualElement.Q<VisualElement>("footer");
 
         confirmationDialog = rootVisualElement.Q<VisualElement>("confirmation-dialog");
         confirmationLabel = rootVisualElement.Q<Label>("confirmation-label");

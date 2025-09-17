@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ollama_Url: http://localhost:11434
   google_SelectedModel: 
-  openAI_SelectedModel: gpt-5-nano
+  openAI_SelectedModel: 
   ollama_SelectedModel: 
   selectedProvider: OpenAI
   selectedWorkMode: Ask

@@ -247,7 +247,7 @@ public class ChatPanelController
         chatHistoryScrollView.schedule.Execute(() => chatHistoryScrollView.verticalScroller.value = chatHistoryScrollView.verticalScroller.highValue);
     }
 
-    private void UpdateManualAttachmentsList()
+    public void UpdateManualAttachmentsList()
     {
         manualAttachmentsList.Clear();
         foreach (var asset in chatController.ManuallyAttachedAssets)
@@ -302,9 +302,11 @@ public class ChatPanelController
         return luminance > 0.5;
     }
 
+    public int objectPickerControlID { get; private set; }
+
     private void ShowAttachmentObjectPicker()
     {
-        int controlID = EditorGUIUtility.GetControlID(FocusType.Passive);
-        EditorGUIUtility.ShowObjectPicker<Object>(null, true, "t:MonoScript t:TextAsset t:Prefab t:Shader", controlID);
+        objectPickerControlID = EditorGUIUtility.GetControlID(FocusType.Passive);
+        EditorGUIUtility.ShowObjectPicker<Object>(null, true, "t:MonoScript t:TextAsset t:Prefab t:Shader", objectPickerControlID);
     }
 }

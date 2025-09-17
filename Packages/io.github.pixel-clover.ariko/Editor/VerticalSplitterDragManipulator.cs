@@ -1,19 +1,19 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class SplitterDragManipulator : Manipulator
+public class VerticalSplitterDragManipulator : Manipulator
 {
     private readonly VisualElement m_Parent;
-    private readonly VisualElement m_LeftPanel;
-    private readonly VisualElement m_RightPanel;
+    private readonly VisualElement m_TopPanel;
+    private readonly VisualElement m_BottomPanel;
     private bool m_Active;
     private float m_Start;
 
-    public SplitterDragManipulator(VisualElement parent, VisualElement leftPanel, VisualElement rightPanel)
+    public VerticalSplitterDragManipulator(VisualElement parent, VisualElement topPanel, VisualElement bottomPanel)
     {
         m_Parent = parent;
-        m_LeftPanel = leftPanel;
-        m_RightPanel = rightPanel;
+        m_TopPanel = topPanel;
+        m_BottomPanel = bottomPanel;
     }
 
     protected override void RegisterCallbacksOnTarget()
@@ -34,7 +34,7 @@ public class SplitterDragManipulator : Manipulator
     {
         if (e.button == 0)
         {
-            m_Start = e.localMousePosition.x;
+            m_Start = e.localMousePosition.y;
             m_Active = true;
             target.CaptureMouse();
             e.StopPropagation();
@@ -45,22 +45,22 @@ public class SplitterDragManipulator : Manipulator
     {
         if (m_Active)
         {
-            var delta = e.localMousePosition.x - m_Start;
-            var leftWidth = m_LeftPanel.resolvedStyle.width + delta;
-            var rightWidth = m_RightPanel.resolvedStyle.width - delta;
+            var delta = e.localMousePosition.y - m_Start;
+            var topHeight = m_TopPanel.resolvedStyle.height - delta;
+            var bottomHeight = m_BottomPanel.resolvedStyle.height + delta;
 
-            if (leftWidth < m_LeftPanel.resolvedStyle.minWidth.value)
+            if (topHeight < m_TopPanel.resolvedStyle.minHeight.value)
             {
-                leftWidth = m_LeftPanel.resolvedStyle.minWidth.value;
+                topHeight = m_TopPanel.resolvedStyle.minHeight.value;
             }
 
-            if (leftWidth > m_Parent.resolvedStyle.width - m_RightPanel.resolvedStyle.minWidth.value)
+            if (topHeight > m_Parent.resolvedStyle.height - m_BottomPanel.resolvedStyle.minHeight.value)
             {
-                leftWidth = m_Parent.resolvedStyle.width - m_RightPanel.resolvedStyle.minWidth.value;
+                topHeight = m_Parent.resolvedStyle.height - m_BottomPanel.resolvedStyle.minHeight.value;
             }
 
-            m_LeftPanel.style.width = leftWidth;
-            m_LeftPanel.style.flexGrow = 0;
+            m_TopPanel.style.height = topHeight;
+            m_TopPanel.style.flexGrow = 0;
 
             e.StopPropagation();
         }

@@ -94,6 +94,11 @@
     padding: 8px;
 }
 
+#footer {
+    height: 150px;
+    min-height: 100px;
+}
+
 .boxed-input {
     background-color: var(--input-background-color);
     color: var(--text-color);
@@ -103,7 +108,6 @@
     flex-grow: 1;
     flex-basis: 0;
     font-size: 14px;
-    height: 110px;
     white-space: normal;
 }
 
@@ -292,6 +296,12 @@
     width: 2px;
     background-color: var(--separator-color);
     cursor: resize-horizontal;
+}
+
+.vertical-splitter {
+    height: 2px;
+    background-color: var(--separator-color);
+    cursor: resize-vertical;
 }
 
 .history-panel {

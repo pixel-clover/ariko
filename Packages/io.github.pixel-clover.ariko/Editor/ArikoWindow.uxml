@@ -29,8 +29,8 @@
                         <ui:Button name="deny-button" text="Deny"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
+                <ui:VisualElement name="vertical-splitter" class="vertical-splitter"/>
                 <ui:VisualElement name="footer" style="flex-shrink: 0;">
-                    <ui:VisualElement class="separator"/>
                     <ui:VisualElement name="context-area" class="attachment-box">
                         <ui:VisualElement style="flex-direction: row; align-items: center;">
                             <ui:Toggle name="auto-context-toggle" label="Auto-Context from Selection"/>

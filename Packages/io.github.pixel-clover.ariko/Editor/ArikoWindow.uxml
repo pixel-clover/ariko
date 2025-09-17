@@ -8,7 +8,6 @@
             <ui:VisualElement name="provider-popup-placeholder" style="width: 80px;"/>
             <ui:VisualElement name="model-popup-placeholder" style="width: 150px;"/>
             <ui:Label name="fetching-models-label" text="Fetching..." style="display: none;"/>
-            <ui:Button text="Generate Code" name="generate-code-button" tooltip="Generate a new C# script."/>
             <ui:Button text="Settings" name="settings-button" tooltip="Open Ariko settings."/>
         </uie:Toolbar>
 
@@ -28,16 +27,6 @@
                     <ui:VisualElement class="confirmation-buttons">
                         <ui:Button name="approve-button" text="Approve"/>
                         <ui:Button name="deny-button" text="Deny"/>
-                    </ui:VisualElement>
-                </ui:VisualElement>
-                <ui:VisualElement name="generate-code-dialog" class="confirmation-dialog" style="display: none;">
-                    <ui:Label text="Generate New Script" class="header-label"/>
-                    <ui:TextField label="File Path (e.g., Scripts/MyNewScript.cs)" name="generate-code-path"/>
-                    <ui:TextField label="Prompt" name="generate-code-prompt" multiline="true"
-                                  class="generate-prompt-input" style="min-height: 80px;"/>
-                    <ui:VisualElement class="confirmation-buttons">
-                        <ui:Button name="generate-code-confirm-button" text="Generate"/>
-                        <ui:Button name="generate-code-cancel-button" text="Cancel"/>
                     </ui:VisualElement>
                 </ui:VisualElement>
                 <ui:VisualElement name="footer" style="flex-shrink: 0;">

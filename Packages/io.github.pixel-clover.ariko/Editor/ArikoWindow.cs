@@ -29,13 +29,6 @@ public class ArikoWindow : EditorWindow
     private Button approveButton;
     private Button denyButton;
 
-    private VisualElement generateCodeDialog;
-    private Button generateCodeButton;
-    private TextField generateCodePath;
-    private TextField generateCodePrompt;
-    private Button generateCodeConfirmButton;
-    private Button generateCodeCancelButton;
-
     [MenuItem("Tools/Ariko Assistant %&a")]
     public static void ShowWindow()
     {
@@ -103,13 +96,6 @@ public class ArikoWindow : EditorWindow
         confirmationLabel = rootVisualElement.Q<Label>("confirmation-label");
         approveButton = rootVisualElement.Q<Button>("approve-button");
         denyButton = rootVisualElement.Q<Button>("deny-button");
-
-        generateCodeDialog = rootVisualElement.Q<VisualElement>("generate-code-dialog");
-        generateCodeButton = rootVisualElement.Q<Button>("generate-code-button");
-        generateCodePath = rootVisualElement.Q<TextField>("generate-code-path");
-        generateCodePrompt = rootVisualElement.Q<TextField>("generate-code-prompt");
-        generateCodeConfirmButton = rootVisualElement.Q<Button>("generate-code-confirm-button");
-        generateCodeCancelButton = rootVisualElement.Q<Button>("generate-code-cancel-button");
     }
 
     private void SetupUIStrings()
@@ -173,16 +159,6 @@ public class ArikoWindow : EditorWindow
             settings.selectedWorkMode = evt.newValue;
             controller.ReloadToolRegistry(evt.newValue);
         });
-
-        generateCodeButton.clicked += ToggleGenerateCodeDialog;
-        generateCodeCancelButton.clicked += () => generateCodeDialog.style.display = DisplayStyle.None;
-        generateCodeConfirmButton.clicked += GenerateCode;
-    }
-
-    private void ToggleGenerateCodeDialog()
-    {
-        var isVisible = generateCodeDialog.resolvedStyle.display == DisplayStyle.Flex;
-        generateCodeDialog.style.display = isVisible ? DisplayStyle.None : DisplayStyle.Flex;
     }
 
     private void UnregisterControllerCallbacks()
@@ -228,36 +204,6 @@ public class ArikoWindow : EditorWindow
         confirmationLabel.text = $"Thought: {toolCall.thought}\nAction: {toolCall.tool_name}";
         confirmationDialog.style.display = DisplayStyle.Flex;
         rootVisualElement.Q<TextField>("user-input").SetEnabled(false);
-    }
-
-    private async void GenerateCode()
-    {
-        var filePath = generateCodePath.value;
-        var prompt = generateCodePrompt.value;
-
-        if (string.IsNullOrWhiteSpace(filePath) || string.IsNullOrWhiteSpace(prompt))
-        {
-            EditorUtility.DisplayDialog("Error", "File path and prompt cannot be empty.", "OK");
-            return;
-        }
-
-        var fullPrompt = $"Please create a new C# script at '{filePath}' with the following prompt: '{prompt}'";
-
-        try
-        {
-            await controller.SendMessageToAssistant(fullPrompt, providerPopup.value, modelPopup.value);
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Ariko: An unexpected error occurred: {e.Message}");
-            HandleError("An unexpected error occurred. See console for details.");
-        }
-        finally
-        {
-            generateCodeDialog.style.display = DisplayStyle.None;
-            generateCodePath.value = "";
-            generateCodePrompt.value = "";
-        }
     }
 
     private async Task FetchModelsForCurrentProviderAsync(string provider)

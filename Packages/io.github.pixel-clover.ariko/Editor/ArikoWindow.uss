@@ -389,3 +389,8 @@
     margin-left: 10px;
     width: 80px;
 }
+
+.generate-prompt-input .unity-text-field__input {
+    max-height: 100px;
+    white-space: normal;
+}

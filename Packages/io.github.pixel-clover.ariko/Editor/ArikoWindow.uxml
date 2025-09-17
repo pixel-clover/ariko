@@ -34,7 +34,7 @@
                     <ui:Label text="Generate New Script" class="header-label"/>
                     <ui:TextField label="File Path (e.g., Scripts/MyNewScript.cs)" name="generate-code-path"/>
                     <ui:TextField label="Prompt" name="generate-code-prompt" multiline="true"
-                                  style="min-height: 80px;"/>
+                                  class="generate-prompt-input" style="min-height: 80px;"/>
                     <ui:VisualElement class="confirmation-buttons">
                         <ui:Button name="generate-code-confirm-button" text="Generate"/>
                         <ui:Button name="generate-code-cancel-button" text="Cancel"/>

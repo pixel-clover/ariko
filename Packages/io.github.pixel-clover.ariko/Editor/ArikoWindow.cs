@@ -159,9 +159,15 @@ public class ArikoWindow : EditorWindow
         modelPopup.RegisterValueChangedCallback(evt => SetSelectedModelForProvider(evt.newValue));
         workModePopup.RegisterValueChangedCallback(evt => settings.selectedWorkMode = evt.newValue);
 
-        generateCodeButton.clicked += () => generateCodeDialog.style.display = DisplayStyle.Flex;
+        generateCodeButton.clicked += ToggleGenerateCodeDialog;
         generateCodeCancelButton.clicked += () => generateCodeDialog.style.display = DisplayStyle.None;
         generateCodeConfirmButton.clicked += GenerateCode;
+    }
+
+    private void ToggleGenerateCodeDialog()
+    {
+        var isVisible = generateCodeDialog.resolvedStyle.display == DisplayStyle.Flex;
+        generateCodeDialog.style.display = isVisible ? DisplayStyle.None : DisplayStyle.Flex;
     }
 
     private void UnregisterControllerCallbacks()

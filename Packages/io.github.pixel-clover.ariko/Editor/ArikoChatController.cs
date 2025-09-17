@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -299,56 +300,25 @@ public class ArikoChatController
     private bool TryParseToolCall(string response, out ToolCall toolCall)
     {
         toolCall = null;
-        var jsonMatch = Regex.Match(response, @"\{.*\}", RegexOptions.Singleline);
-        if (!jsonMatch.Success) return false;
-
-        var json = jsonMatch.Value;
-
         try
         {
-            // Simple manual parsing. Not robust, but avoids a full JSON library dependency.
-            var tempCall = new ToolCall();
+            var agentResponse = JsonConvert.DeserializeObject<AgentResponse>(response);
 
-            var thoughtMatch = Regex.Match(json, @"""thought""\s*:\s*""([^""]*)""");
-            if (thoughtMatch.Success) tempCall.thought = thoughtMatch.Groups[1].Value;
-
-            var toolNameMatch = Regex.Match(json, @"""tool_name""\s*:\s*""([^""]*)""");
-            if (!toolNameMatch.Success) return false; // tool_name is mandatory
-            tempCall.tool_name = toolNameMatch.Groups[1].Value;
-
-            var paramsMatch = Regex.Match(json, @"""parameters""\s*:\s*\{([^\}]*)\}");
-            if (paramsMatch.Success)
+            if (string.IsNullOrWhiteSpace(agentResponse?.ToolName))
             {
-                tempCall.parameters = new Dictionary<string, object>();
-                var paramBody = paramsMatch.Groups[1].Value;
-                var paramPairs = Regex.Matches(paramBody, @"""([^""]+)""\s*:\s*([^,]+)");
-                foreach (Match pair in paramPairs)
-                {
-                    var key = pair.Groups[1].Value;
-                    var valueStr = pair.Groups[2].Value.Trim();
-
-                    // Try to parse value as different types
-                    if (valueStr.StartsWith("\"") && valueStr.EndsWith("\""))
-                        tempCall.parameters[key] = valueStr.Substring(1, valueStr.Length - 2);
-                    else if (int.TryParse(valueStr, out var intVal))
-                        tempCall.parameters[key] = intVal;
-                    else if (float.TryParse(valueStr, out var floatVal))
-                        tempCall.parameters[key] = floatVal;
-                    else if (bool.TryParse(valueStr, out var boolVal))
-                        tempCall.parameters[key] = boolVal;
-                    else
-                        tempCall.parameters[key] = valueStr; // as string
-                }
-            }
-            else
-            {
-                tempCall.parameters = new Dictionary<string, object>(); // empty params
+                return false;
             }
 
-            toolCall = tempCall;
+            toolCall = new ToolCall
+            {
+                thought = agentResponse.Thought,
+                tool_name = agentResponse.ToolName,
+                parameters = agentResponse.Parameters ?? new Dictionary<string, object>()
+            };
+
             return true;
         }
-        catch
+        catch (JsonException)
         {
             return false;
         }

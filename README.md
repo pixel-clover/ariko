@@ -56,7 +56,7 @@ To do this, follow these steps:
     *   For better security, you can set your API keys as environment variables on your system and Ariko will automatically load them.
         *   `OPENAI_API_KEY`: Your API key for OpenAI.
         *   `GOOGLE_API_KEY`: Your API key for Google.
-        *   `OLLAMA_URL`: The URL for your local Ollama instance (example: `http://localhost:11434`).
+        *   `OLLAMA_URL`: The URL for your local Ollama instance (deafaul: `http://localhost:11434`).
     *   Alternatively, you can paste your keys directly into the corresponding fields in the settings panel.
 3.  Click the "Save and Close" button to save your settings.
 

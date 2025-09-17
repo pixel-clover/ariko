@@ -51,13 +51,11 @@ public class ArikoWindow : EditorWindow
 
     private void OnEnable()
     {
-        ArikoSearchWindow.OnAssetSelected += HandleAssetSelectedFromSearch;
         Selection.selectionChanged += UpdateAutoContextLabel;
     }
 
     private void OnDisable()
     {
-        ArikoSearchWindow.OnAssetSelected -= HandleAssetSelectedFromSearch;
         Selection.selectionChanged -= UpdateAutoContextLabel;
 
         if (controller != null)
@@ -158,6 +156,22 @@ public class ArikoWindow : EditorWindow
         ApplyChatStyles();
         ScrollToBottom();
         UpdateEmptyState();
+    }
+
+    private void OnGUI()
+    {
+        if (Event.current.commandName == "ObjectSelectorUpdated")
+        {
+            var selectedObject = EditorGUIUtility.GetObjectPickerObject();
+            if (selectedObject != null)
+            {
+                if (!controller.ManuallyAttachedAssets.Contains(selectedObject))
+                {
+                    controller.ManuallyAttachedAssets.Add(selectedObject);
+                    UpdateManualAttachmentsList();
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -277,7 +291,7 @@ public class ArikoWindow : EditorWindow
 
         rootVisualElement.Q<Button>("new-chat-button").clicked += controller.ClearChat;
         rootVisualElement.Q<Button>("clear-history-button").clicked += controller.ClearAllHistory;
-        rootVisualElement.Q<Button>("add-file-button").clicked += ArikoSearchWindow.ShowWindow;
+        rootVisualElement.Q<Button>("add-file-button").clicked += ShowAttachmentObjectPicker;
         autoContextToggle.RegisterValueChangedCallback(evt => controller.AutoContext = evt.newValue);
 
         providerPopup.RegisterValueChangedCallback(async evt =>
@@ -593,15 +607,6 @@ public class ArikoWindow : EditorWindow
             chatHistoryScrollView.verticalScroller.value = chatHistoryScrollView.verticalScroller.highValue);
     }
 
-    private void HandleAssetSelectedFromSearch(Object selectedAsset)
-    {
-        if (selectedAsset != null && !controller.ManuallyAttachedAssets.Contains(selectedAsset))
-        {
-            controller.ManuallyAttachedAssets.Add(selectedAsset);
-            UpdateManualAttachmentsList();
-        }
-    }
-
     private void UpdateManualAttachmentsList()
     {
         manualAttachmentsList.Clear();
@@ -744,5 +749,11 @@ public class ArikoWindow : EditorWindow
     {
         Ask,
         Agent
+    }
+
+    private void ShowAttachmentObjectPicker()
+    {
+        int controlID = EditorGUIUtility.GetControlID(FocusType.Passive);
+        EditorGUIUtility.ShowObjectPicker<Object>(null, true, "t:MonoScript t:TextAsset t:Prefab t:Shader", controlID);
     }
 }

@@ -76,6 +76,13 @@ public class ArikoSettings : ScriptableObject
     [Tooltip("How many past chat sessions to keep in history. Set to 0 for infinite.")]
     public int chatHistorySize = 5;
 
+    /// <summary>
+    ///     Enables potentially destructive tools like deleting files and GameObjects.
+    ///     Disabled by default for safety.
+    /// </summary>
+    [Tooltip("Enables agent tools for deleting files and GameObjects. Disabled by default for safety.")]
+    public bool enableDeleteTools = false;
+
     [Header("System Prompt")]
     /// <summary>
     /// The initial instruction given to the AI at the start of each new conversation in "Ask" mode.

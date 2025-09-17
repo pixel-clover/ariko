@@ -55,6 +55,10 @@ public class SettingsPanelController
             settings.roleLabelsBold = evt.newValue;
             applyChatStyles?.Invoke();
         });
+        settingsPanel.Q<Toggle>("enable-delete-tools-toggle").RegisterValueChangedCallback(evt =>
+        {
+            settings.enableDeleteTools = evt.newValue;
+        });
     }
 
     private void ToggleSettingsPanel()
@@ -88,6 +92,7 @@ public class SettingsPanelController
         settingsPanel.Q<IntegerField>("chat-font-size").value = settings.chatFontSize;
         settingsPanel.Q<IntegerField>("chat-history-size").value = settings.chatHistorySize;
         settingsPanel.Q<Toggle>("role-bold-toggle").value = settings.roleLabelsBold;
+        settingsPanel.Q<Toggle>("enable-delete-tools-toggle").value = settings.enableDeleteTools;
     }
 
     private void SaveAndCloseSettings()
@@ -102,8 +107,10 @@ public class SettingsPanelController
         settings.chatFontSize = settingsPanel.Q<IntegerField>("chat-font-size").value;
         settings.chatHistorySize = settingsPanel.Q<IntegerField>("chat-history-size").value;
         settings.roleLabelsBold = settingsPanel.Q<Toggle>("role-bold-toggle").value;
+        settings.enableDeleteTools = settingsPanel.Q<Toggle>("enable-delete-tools-toggle").value;
 
         ArikoSettingsManager.SaveSettings(settings);
+        chatController.ReloadToolRegistry(settings.selectedWorkMode);
         applyChatStyles?.Invoke();
         ToggleSettingsPanel();
     }

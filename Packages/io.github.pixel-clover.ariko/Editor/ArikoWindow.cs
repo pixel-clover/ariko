@@ -157,7 +157,11 @@ public class ArikoWindow : EditorWindow
             await FetchModelsForCurrentProviderAsync(evt.newValue);
         });
         modelPopup.RegisterValueChangedCallback(evt => SetSelectedModelForProvider(evt.newValue));
-        workModePopup.RegisterValueChangedCallback(evt => settings.selectedWorkMode = evt.newValue);
+        workModePopup.RegisterValueChangedCallback(evt =>
+        {
+            settings.selectedWorkMode = evt.newValue;
+            controller.ReloadToolRegistry(evt.newValue);
+        });
 
         generateCodeButton.clicked += ToggleGenerateCodeDialog;
         generateCodeCancelButton.clicked += () => generateCodeDialog.style.display = DisplayStyle.None;

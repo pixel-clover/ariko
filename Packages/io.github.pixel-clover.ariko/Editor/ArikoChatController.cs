@@ -18,7 +18,7 @@ public class ArikoChatController
     private readonly Dictionary<string, string> apiKeys = new();
     private readonly ArikoLLMService llmService;
     private readonly ArikoSettings settings;
-    private readonly ToolRegistry toolRegistry;
+    private ToolRegistry toolRegistry;
 
     /// <summary>
     ///     Event triggered when the chat is cleared, instructing the view to clear the message display.
@@ -74,7 +74,7 @@ public class ArikoChatController
     {
         this.settings = settings;
         llmService = new ArikoLLMService();
-        toolRegistry = new ToolRegistry();
+        ReloadToolRegistry(settings.selectedWorkMode);
 
         ChatHistory = ChatHistoryStorage.LoadHistory();
         if (ChatHistory == null || ChatHistory.Count == 0)
@@ -144,6 +144,11 @@ public class ArikoChatController
     public void SetApiKey(string provider, string key)
     {
         apiKeys[provider] = key;
+    }
+
+    public void ReloadToolRegistry(string workMode)
+    {
+        toolRegistry = new ToolRegistry(settings, workMode);
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -31,12 +32,21 @@ public class OllamaStrategy : IApiProviderStrategy
     }
 
     /// <inheritdoc />
-    public string BuildChatRequestBody(string prompt, string modelName)
+    public string BuildChatRequestBody(List<ChatMessage> messages, string modelName)
     {
         var payload = new OllamaPayload
         {
             Model = modelName,
-            Messages = new[] { new MessagePayload { Role = "user", Content = prompt } },
+            Messages = messages.Select(m =>
+            {
+                var role = "user"; // Default to "user"
+                if (m.Role.Equals("Ariko", StringComparison.OrdinalIgnoreCase) ||
+                    m.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase))
+                    role = "assistant";
+                else if (m.Role.Equals("System", StringComparison.OrdinalIgnoreCase)) role = "system";
+
+                return new MessagePayload { Role = role, Content = m.Content };
+            }).ToArray(),
             Stream = false
         };
         return JsonConvert.SerializeObject(payload);

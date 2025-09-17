@@ -64,7 +64,10 @@ public class ArikoWindow : EditorWindow
                 chatPanelController.UpdateManualAttachmentsList();
             }
 
-            Event.current.Use();
+            if (Event.current.type != EventType.Layout)
+            {
+                Event.current.Use();
+            }
         }
     }
 
@@ -231,7 +234,7 @@ public class ArikoWindow : EditorWindow
 
     private void HandleToolCallConfirmationRequested(ToolCall toolCall)
     {
-        confirmationLabel.text = $"Thought: {toolCall.thought}\nAction: {toolCall.tool_name}";
+        confirmationLabel.text = $"I am planning to perform the following action:\n\nTool: {toolCall.tool_name}\n\nReasoning: {toolCall.thought}\n\nPlease approve to continue.";
         confirmationDialog.style.display = DisplayStyle.Flex;
         rootVisualElement.Q<TextField>("user-input").SetEnabled(false);
     }

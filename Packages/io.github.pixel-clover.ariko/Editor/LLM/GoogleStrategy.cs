@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
@@ -36,12 +37,17 @@ public class GoogleStrategy : IApiProviderStrategy
     }
 
     /// <inheritdoc />
-    public string BuildChatRequestBody(string prompt, string modelName)
+    public string BuildChatRequestBody(List<ChatMessage> messages, string modelName)
     {
-        var payload = new GooglePayload
+        var contents = messages.Select(m =>
         {
-            Contents = new[] { new Content { Parts = new[] { new Part { Text = prompt } } } }
-        };
+            // Google uses "model" for the assistant's role and does not have a "system" role.
+            // The first user message is treated as system instructions.
+            var role = m.Role.Equals("Ariko", StringComparison.OrdinalIgnoreCase) ? "model" : "user";
+            return new Content { Role = role, Parts = new[] { new Part { Text = m.Content } } };
+        }).ToArray();
+
+        var payload = new GooglePayload { Contents = contents };
         return JsonConvert.SerializeObject(payload);
     }
 
@@ -75,6 +81,7 @@ public class GoogleStrategy : IApiProviderStrategy
 
     private class Content
     {
+        [JsonProperty("role")] public string Role { get; set; }
         [JsonProperty("parts")] public Part[] Parts { get; set; }
     }
 

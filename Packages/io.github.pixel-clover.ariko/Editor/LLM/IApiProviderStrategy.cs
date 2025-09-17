@@ -34,10 +34,10 @@ public interface IApiProviderStrategy
     /// <summary>
     ///     Builds the JSON body for a chat request.
     /// </summary>
-    /// <param name="prompt">The prompt to send to the model.</param>
+    /// <param name="messages">The history of messages to send to the model.</param>
     /// <param name="modelName">The name of the model being used.</param>
     /// <returns>A JSON string representing the request body.</returns>
-    string BuildChatRequestBody(string prompt, string modelName);
+    string BuildChatRequestBody(List<ChatMessage> messages, string modelName);
 
     /// <summary>
     ///     Parses the JSON response from a chat request to extract the content.

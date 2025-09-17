@@ -39,8 +39,10 @@ namespace Ariko.Editor.Agent.Tools
             var requestPrompt =
                 $"Modify the following C# script file based on the prompt.\n\n[File Content]\n{fileContent}\n\n[Prompt]\n{prompt}\n\nOnly output the modified file content, nothing else.";
 
+            var messages = new List<ChatMessage> { new ChatMessage { Role = "user", Content = requestPrompt } };
+
             var result = await llmService.SendChatRequest(
-                requestPrompt,
+                messages,
                 (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), context.Provider),
                 context.Model,
                 context.Settings,

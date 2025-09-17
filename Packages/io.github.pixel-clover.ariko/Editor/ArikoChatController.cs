@@ -168,32 +168,43 @@ public class ArikoChatController
 
         if (settings.selectedWorkMode == "Agent")
         {
-            await SendAgentRequest(text, selectedProvider, selectedModel);
+            await SendAgentRequest(selectedProvider, selectedModel);
         }
         else
         {
-            var context = BuildContextString();
-            var systemPrompt = ActiveSession.Messages.Count <= 1 && !string.IsNullOrEmpty(settings.systemPrompt)
-                ? settings.systemPrompt + "\n\n"
-                : "";
-            var prompt = $"{systemPrompt}{context}\n\nUser Question:\n{text}";
-
             OnResponseStatusChanged?.Invoke(true);
 
-            var thinkingMessage = new ChatMessage { Role = "Ariko", Content = "..." };
-            ActiveSession.Messages.Add(thinkingMessage);
-            OnMessageAdded?.Invoke(thinkingMessage);
+            var messagesToSend = new List<ChatMessage>();
+            var context = BuildContextString();
+
+            // Add system prompt and context as the first message
+            if (!string.IsNullOrEmpty(settings.systemPrompt) || !string.IsNullOrEmpty(context))
+            {
+                var systemContent = new StringBuilder();
+                if(!string.IsNullOrEmpty(settings.systemPrompt))
+                {
+                    systemContent.AppendLine(settings.systemPrompt);
+                }
+                if(!string.IsNullOrEmpty(context))
+                {
+                    systemContent.AppendLine("\n--- Context ---");
+                    systemContent.AppendLine(context);
+                }
+                messagesToSend.Add(new ChatMessage { Role = "System", Content = systemContent.ToString() });
+            }
+
+            // Add all messages from the current session.
+            // The user's latest message is already in this list.
+            messagesToSend.AddRange(ActiveSession.Messages);
 
             var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
-            var result = await llmService.SendChatRequest(prompt, provider, selectedModel, settings, apiKeys);
+            var result = await llmService.SendChatRequest(messagesToSend, provider, selectedModel, settings, apiKeys);
 
             string newContent;
             if (result.IsSuccess)
                 newContent = result.Data;
             else
                 newContent = GetFormattedErrorMessage(result.Error, result.ErrorType);
-
-            ActiveSession.Messages.Remove(thinkingMessage);
             var finalMessage = new ChatMessage { Role = "Ariko", Content = newContent, IsError = !result.IsSuccess };
             ActiveSession.Messages.Add(finalMessage);
             OnMessageAdded?.Invoke(finalMessage);
@@ -202,22 +213,20 @@ public class ArikoChatController
         }
     }
 
-    private async Task SendAgentRequest(string text, string selectedProvider, string selectedModel)
+    private async Task SendAgentRequest(string selectedProvider, string selectedModel)
     {
         OnResponseStatusChanged?.Invoke(true);
 
-        var thinkingMessage = new ChatMessage { Role = "Ariko", Content = "..." };
-        ActiveSession.Messages.Add(thinkingMessage);
-        OnMessageAdded?.Invoke(thinkingMessage);
-
+        var messagesToSend = new List<ChatMessage>();
         var toolDefinitions = toolRegistry.GetToolDefinitionsForPrompt();
-        var systemPrompt = settings.agentSystemPrompt;
-        var prompt = $"{systemPrompt}\n\n{toolDefinitions}\n\nUser Request:\n{text}";
+        var systemPrompt = $"{settings.agentSystemPrompt}\n\n{toolDefinitions}";
+        messagesToSend.Add(new ChatMessage { Role = "System", Content = systemPrompt });
+
+        // Add all messages from the current session.
+        messagesToSend.AddRange(ActiveSession.Messages);
 
         var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
-        var result = await llmService.SendChatRequest(prompt, provider, selectedModel, settings, apiKeys);
-
-        ActiveSession.Messages.Remove(thinkingMessage);
+        var result = await llmService.SendChatRequest(messagesToSend, provider, selectedModel, settings, apiKeys);
         OnResponseStatusChanged?.Invoke(false);
 
         if (result.IsSuccess)
@@ -259,11 +268,6 @@ public class ArikoChatController
 
         if (userApproved)
         {
-            var thinkingMessage = new ChatMessage
-                { Role = "Ariko", Content = $"Executing tool: {toolCall.tool_name}..." };
-            ActiveSession.Messages.Add(thinkingMessage);
-            OnMessageAdded?.Invoke(thinkingMessage);
-
             var tool = toolRegistry.GetTool(toolCall.tool_name);
             string executionResult;
             if (tool != null)
@@ -282,14 +286,12 @@ public class ArikoChatController
             {
                 executionResult = $"Error: Tool '{toolCall.tool_name}' not found.";
             }
-
-            ActiveSession.Messages.Remove(thinkingMessage);
             var resultMessage = new ChatMessage { Role = "User", Content = $"Observation: {executionResult}" };
             ActiveSession.Messages.Add(resultMessage);
             OnMessageAdded?.Invoke(resultMessage);
 
             // Send the observation back to the LLM to continue the loop
-            await SendAgentRequest($"Observation: {executionResult}", selectedProvider, selectedModel);
+            await SendAgentRequest(selectedProvider, selectedModel);
         }
         else
         {
@@ -297,7 +299,7 @@ public class ArikoChatController
             ActiveSession.Messages.Add(denialMessage);
             OnMessageAdded?.Invoke(denialMessage);
             // Inform the LLM that the user denied the action
-            await SendAgentRequest("Observation: User denied the action.", selectedProvider, selectedModel);
+            await SendAgentRequest(selectedProvider, selectedModel);
         }
     }
 

@@ -61,17 +61,20 @@ public class ArikoLLMService
     /// <summary>
     ///     Sends a chat request to the specified AI provider.
     /// </summary>
-    /// <param name="prompt">The complete prompt to send to the model.</param>
+    /// <param name="messages">The history of messages to send to the model.</param>
     /// <param name="provider">The AI provider to use.</param>
     /// <param name="modelName">The specific model to query.</param>
     /// <param name="settings">The Ariko settings.</param>
     /// <param name="apiKeys">A dictionary of API keys for the providers.</param>
     /// <returns>A web request result containing the AI's response text or an error.</returns>
-    public async Task<WebRequestResult<string>> SendChatRequest(string prompt, AIProvider provider, string modelName,
+    public async Task<WebRequestResult<string>> SendChatRequest(List<ChatMessage> messages, AIProvider provider, string modelName,
         ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         if (string.IsNullOrEmpty(modelName))
             return WebRequestResult<string>.Fail("No AI model selected.", ErrorType.Unknown);
+
+        if (messages == null || messages.Count == 0)
+            return WebRequestResult<string>.Fail("Cannot send an empty message history.", ErrorType.Unknown);
 
         if (!strategies.TryGetValue(provider, out var strategy))
             return WebRequestResult<string>.Fail("Provider not supported.", ErrorType.Unknown);
@@ -82,7 +85,7 @@ public class ArikoLLMService
         var authResult = strategy.GetAuthHeader(settings, apiKeys);
         if (!authResult.IsSuccess) return WebRequestResult<string>.Fail(authResult.Error, authResult.ErrorType);
 
-        var jsonBody = strategy.BuildChatRequestBody(prompt, modelName);
+        var jsonBody = strategy.BuildChatRequestBody(messages, modelName);
 
         return await SendPostRequest(urlResult.Data, authResult.Data, jsonBody, strategy.ParseChatResponse);
     }

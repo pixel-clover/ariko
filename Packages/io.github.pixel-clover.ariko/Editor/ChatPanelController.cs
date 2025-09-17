@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -9,25 +8,26 @@ using Object = UnityEngine.Object;
 
 public class ChatPanelController
 {
-    private readonly VisualElement root;
+    private readonly Toggle autoContextToggle;
+    private readonly Button cancelButton;
     private readonly ArikoChatController chatController;
-    private readonly ArikoSettings settings;
-    private readonly MarkdigRenderer markdownRenderer;
 
     private readonly ScrollView chatHistoryScrollView;
-    private readonly TextField userInput;
-    private readonly Button sendButton;
-    private readonly Button cancelButton;
-    private readonly Toggle autoContextToggle;
-    private readonly VisualElement manualAttachmentsList;
-    private VisualElement thinkingMessage;
     private readonly Label emptyStateLabel;
-    private readonly Label statusLabel;
-
-    private readonly PopupField<string> providerPopup;
+    private readonly VisualElement manualAttachmentsList;
+    private readonly MarkdigRenderer markdownRenderer;
     private readonly PopupField<string> modelPopup;
 
-    public ChatPanelController(VisualElement root, ArikoChatController controller, ArikoSettings arikosettings, MarkdigRenderer renderer, PopupField<string> provider, PopupField<string> model)
+    private readonly PopupField<string> providerPopup;
+    private readonly VisualElement root;
+    private readonly Button sendButton;
+    private readonly ArikoSettings settings;
+    private readonly Label statusLabel;
+    private readonly TextField userInput;
+    private VisualElement thinkingMessage;
+
+    public ChatPanelController(VisualElement root, ArikoChatController controller, ArikoSettings arikosettings,
+        MarkdigRenderer renderer, PopupField<string> provider, PopupField<string> model)
     {
         this.root = root;
         chatController = controller;
@@ -54,6 +54,8 @@ public class ChatPanelController
         UpdateEmptyState();
         UpdateAutoContextLabel();
     }
+
+    public int objectPickerControlID { get; private set; }
 
     private void RegisterCallbacks()
     {
@@ -105,7 +107,8 @@ public class ChatPanelController
 
     private void HandleMessageAdded(ChatMessage message)
     {
-        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." && chatHistoryScrollView.Contains(thinkingMessage))
+        if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." &&
+            chatHistoryScrollView.Contains(thinkingMessage))
         {
             chatHistoryScrollView.Remove(thinkingMessage);
             thinkingMessage = null;
@@ -113,10 +116,7 @@ public class ChatPanelController
 
         var messageElement = AddMessageToChat(message);
 
-        if (message.Role == "Ariko" && message.Content == "...")
-        {
-            thinkingMessage = messageElement;
-        }
+        if (message.Role == "Ariko" && message.Content == "...") thinkingMessage = messageElement;
 
         ScrollToBottom();
         UpdateEmptyState();
@@ -133,10 +133,7 @@ public class ChatPanelController
     private void HandleChatReloaded()
     {
         chatHistoryScrollView.Clear();
-        foreach (var message in chatController.ActiveSession.Messages)
-        {
-            AddMessageToChat(message);
-        }
+        foreach (var message in chatController.ActiveSession.Messages) AddMessageToChat(message);
         UpdateManualAttachmentsList();
         ScrollToBottom();
         UpdateEmptyState();
@@ -154,16 +151,10 @@ public class ChatPanelController
         var messageContainer = new VisualElement();
         messageContainer.AddToClassList("chat-message");
         messageContainer.AddToClassList(message.Role.ToLower() + "-message");
-        if (message.IsError)
-        {
-            messageContainer.AddToClassList("error-message");
-        }
+        if (message.IsError) messageContainer.AddToClassList("error-message");
 
         var isFirstMessage = chatHistoryScrollView.contentContainer.childCount == 0;
-        if (isFirstMessage)
-        {
-            messageContainer.style.marginTop = new StyleLength(0f);
-        }
+        if (isFirstMessage) messageContainer.style.marginTop = new StyleLength(0f);
 
         var headerContainer = new VisualElement();
         headerContainer.AddToClassList("message-header");
@@ -237,14 +228,13 @@ public class ChatPanelController
 
         var roleLabel = message.Q<Label>("role");
         if (roleLabel != null)
-        {
             roleLabel.style.unityFontStyleAndWeight = settings.roleLabelsBold ? FontStyle.Bold : FontStyle.Normal;
-        }
     }
 
     private void ScrollToBottom()
     {
-        chatHistoryScrollView.schedule.Execute(() => chatHistoryScrollView.verticalScroller.value = chatHistoryScrollView.verticalScroller.highValue);
+        chatHistoryScrollView.schedule.Execute(() =>
+            chatHistoryScrollView.verticalScroller.value = chatHistoryScrollView.verticalScroller.highValue);
     }
 
     public void UpdateManualAttachmentsList()
@@ -281,10 +271,7 @@ public class ChatPanelController
 
     private void SetStatus(string text)
     {
-        if (statusLabel != null)
-        {
-            statusLabel.text = text;
-        }
+        if (statusLabel != null) statusLabel.text = text;
     }
 
     private void UpdateEmptyState()
@@ -302,11 +289,10 @@ public class ChatPanelController
         return luminance > 0.5;
     }
 
-    public int objectPickerControlID { get; private set; }
-
     private void ShowAttachmentObjectPicker()
     {
         objectPickerControlID = EditorGUIUtility.GetControlID(FocusType.Passive);
-        EditorGUIUtility.ShowObjectPicker<Object>(null, true, "t:MonoScript t:TextAsset t:Prefab t:Shader", objectPickerControlID);
+        EditorGUIUtility.ShowObjectPicker<Object>(null, true, "t:MonoScript t:TextAsset t:Prefab t:Shader",
+            objectPickerControlID);
     }
 }

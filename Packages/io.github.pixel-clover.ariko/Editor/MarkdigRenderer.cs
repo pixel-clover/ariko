@@ -1,8 +1,8 @@
+using System;
 using System.Text;
 using Markdig;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -124,7 +124,8 @@ public class MarkdigRenderer
         if (!string.IsNullOrEmpty(language))
         {
             var theme = settings.syntaxTheme;
-            var langDef = settings.languageDefinitions?.Find(l => l.name.Equals(language, System.StringComparison.OrdinalIgnoreCase));
+            var langDef =
+                settings.languageDefinitions?.Find(l => l.name.Equals(language, StringComparison.OrdinalIgnoreCase));
 
             if (theme != null && langDef != null)
             {

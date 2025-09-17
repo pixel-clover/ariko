@@ -3,37 +3,36 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Object = UnityEngine.Object;
 
 public class ArikoWindow : EditorWindow
 {
-    public ArikoChatController controller { get; private set; }
-    private ArikoSettings settings;
-    private MarkdigRenderer markdownRenderer;
+    private Button approveButton;
+    private VisualElement chatHistory;
+    private VisualElement chatPanel;
 
     private ChatPanelController chatPanelController;
-    private HistoryPanelController historyPanelController;
-    private SettingsPanelController settingsPanelController;
-
-    private PopupField<string> providerPopup;
-    private PopupField<string> modelPopup;
-    private PopupField<string> workModePopup;
-
-    private Label fetchingModelsLabel;
 
     private VisualElement confirmationDialog;
     private Label confirmationLabel;
-    private Button approveButton;
     private Button denyButton;
 
-    [MenuItem("Tools/Ariko Assistant %&a")]
-    public static void ShowWindow()
-    {
-        GetWindow<ArikoWindow>(ArikoUIStrings.WindowTitle);
-    }
+    private Label fetchingModelsLabel;
+    private VisualElement footer;
+    private VisualElement historyPanel;
+    private HistoryPanelController historyPanelController;
+    private MarkdigRenderer markdownRenderer;
+    private PopupField<string> modelPopup;
+
+    private PopupField<string> providerPopup;
+    private ArikoSettings settings;
+    private SettingsPanelController settingsPanelController;
+
+    private VisualElement splitter;
+    private VisualElement verticalSplitter;
+    private PopupField<string> workModePopup;
+    public ArikoChatController controller { get; private set; }
 
     private void OnEnable()
     {
@@ -55,10 +54,8 @@ public class ArikoWindow : EditorWindow
     {
         if (Event.current.commandName == "ObjectSelectorClosed")
         {
-            if (chatPanelController == null || EditorGUIUtility.GetObjectPickerControlID() != chatPanelController.objectPickerControlID)
-            {
-                return;
-            }
+            if (chatPanelController == null || EditorGUIUtility.GetObjectPickerControlID() !=
+                chatPanelController.objectPickerControlID) return;
 
             var selectedObject = EditorGUIUtility.GetObjectPickerObject();
             if (selectedObject != null)
@@ -66,6 +63,7 @@ public class ArikoWindow : EditorWindow
                 controller.ManuallyAttachedAssets.Add(selectedObject);
                 chatPanelController.UpdateManualAttachmentsList();
             }
+
             Event.current.Use();
         }
     }
@@ -76,36 +74,44 @@ public class ArikoWindow : EditorWindow
         controller = new ArikoChatController(settings);
         markdownRenderer = new MarkdigRenderer(settings);
 
-        var visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uxml");
-        var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uss");
+        var visualTree =
+            AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+                "Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uxml");
+        var styleSheet =
+            AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uss");
         rootVisualElement.styleSheets.Add(styleSheet);
         visualTree.CloneTree(rootVisualElement);
 
-        rootVisualElement.AddToClassList(EditorGUIUtility.isProSkin ? "unity-editor-dark-theme" : "unity-editor-light-theme");
+        rootVisualElement.AddToClassList(EditorGUIUtility.isProSkin
+            ? "unity-editor-dark-theme"
+            : "unity-editor-light-theme");
 
         InitializeQueries();
         SetupUIStrings();
         CreateAndSetupPopups();
 
         var contentArea = rootVisualElement.Q<VisualElement>("content-area");
-        splitter.AddManipulator(new SplitterDragManipulator(contentArea, historyPanel, chatPanel, SplitterDragManipulator.Orientation.Horizontal));
-        verticalSplitter.AddManipulator(new SplitterDragManipulator(chatPanel, chatHistory, footer, SplitterDragManipulator.Orientation.Vertical));
+        splitter.AddManipulator(new SplitterDragManipulator(contentArea, historyPanel, chatPanel,
+            SplitterDragManipulator.Orientation.Horizontal));
+        verticalSplitter.AddManipulator(new SplitterDragManipulator(chatPanel, chatHistory, footer,
+            SplitterDragManipulator.Orientation.Vertical));
 
-        chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer, providerPopup, modelPopup);
+        chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer,
+            providerPopup, modelPopup);
         historyPanelController = new HistoryPanelController(rootVisualElement, controller);
-        settingsPanelController = new SettingsPanelController(rootVisualElement, controller, settings, chatPanelController.ApplyChatStyles);
+        settingsPanelController = new SettingsPanelController(rootVisualElement, controller, settings,
+            chatPanelController.ApplyChatStyles);
 
         RegisterCallbacks();
 
         await FetchModelsForCurrentProviderAsync(providerPopup.value);
     }
 
-    private VisualElement splitter;
-    private VisualElement historyPanel;
-    private VisualElement chatPanel;
-    private VisualElement verticalSplitter;
-    private VisualElement chatHistory;
-    private VisualElement footer;
+    [MenuItem("Tools/Ariko Assistant %&a")]
+    public static void ShowWindow()
+    {
+        GetWindow<ArikoWindow>(ArikoUIStrings.WindowTitle);
+    }
 
     private void InitializeQueries()
     {
@@ -220,10 +226,7 @@ public class ArikoWindow : EditorWindow
     {
         Debug.LogError($"Ariko: {error}");
         var statusLabel = rootVisualElement.Q<Label>("status-label");
-        if (statusLabel != null)
-        {
-            statusLabel.text = ArikoUIStrings.StatusError;
-        }
+        if (statusLabel != null) statusLabel.text = ArikoUIStrings.StatusError;
     }
 
     private void HandleToolCallConfirmationRequested(ToolCall toolCall)
@@ -276,12 +279,6 @@ public class ArikoWindow : EditorWindow
         }
     }
 
-    private enum WorkMode
-    {
-        Ask,
-        Agent
-    }
-
     public async void SendExternalMessage(string message)
     {
         if (chatPanelController == null)
@@ -289,6 +286,13 @@ public class ArikoWindow : EditorWindow
             Debug.LogError("Ariko: Chat panel controller is not initialized.");
             return;
         }
+
         await chatPanelController.SendExternalMessage(message);
+    }
+
+    private enum WorkMode
+    {
+        Ask,
+        Agent
     }
 }

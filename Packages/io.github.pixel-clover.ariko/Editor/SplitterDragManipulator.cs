@@ -9,16 +9,18 @@ public class SplitterDragManipulator : Manipulator
         Vertical
     }
 
-    private readonly VisualElement m_Parent;
     private readonly VisualElement m_FirstPanel;
-    private readonly VisualElement m_SecondPanel;
     private readonly Orientation m_Orientation;
+
+    private readonly VisualElement m_Parent;
+    private readonly VisualElement m_SecondPanel;
     private bool m_Active;
     private float m_Start;
     private float m_StartSizeFirst;
     private float m_StartSizeSecond;
 
-    public SplitterDragManipulator(VisualElement parent, VisualElement firstPanel, VisualElement secondPanel, Orientation orientation)
+    public SplitterDragManipulator(VisualElement parent, VisualElement firstPanel, VisualElement secondPanel,
+        Orientation orientation)
     {
         m_Parent = parent;
         m_FirstPanel = firstPanel;
@@ -90,6 +92,7 @@ public class SplitterDragManipulator : Manipulator
 
             m_SecondPanel.style.flexBasis = newSize;
         }
+
         e.StopPropagation();
     }
 

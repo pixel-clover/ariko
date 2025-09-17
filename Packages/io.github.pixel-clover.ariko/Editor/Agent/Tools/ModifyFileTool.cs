@@ -22,16 +22,11 @@ namespace Ariko.Editor.Agent.Tools
         {
             if (!context.Arguments.TryGetValue("filePath", out var filePathObj) || !(filePathObj is string filePath) ||
                 !context.Arguments.TryGetValue("prompt", out var promptObj) || !(promptObj is string prompt))
-            {
                 return "Error: Missing required parameters 'filePath' or 'prompt'.";
-            }
 
             var fullPath = Path.Combine(Application.dataPath, filePath.Replace("Assets/", ""));
 
-            if (!File.Exists(fullPath))
-            {
-                return $"Error: File not found at '{fullPath}'.";
-            }
+            if (!File.Exists(fullPath)) return $"Error: File not found at '{fullPath}'.";
 
             var fileContent = await File.ReadAllTextAsync(fullPath);
             var llmService = new ArikoLLMService();

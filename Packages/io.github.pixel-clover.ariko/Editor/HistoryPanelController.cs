@@ -1,4 +1,3 @@
-using System;
 using UnityEditor;
 using UnityEngine.UIElements;
 
@@ -7,8 +6,8 @@ public class HistoryPanelController
     private const string HistoryPanelVisibleKey = "Ariko.HistoryPanel.Visible";
 
     private readonly ArikoChatController chatController;
-    private readonly VisualElement historyPanel;
     private readonly ScrollView historyListScrollView;
+    private readonly VisualElement historyPanel;
 
     public HistoryPanelController(VisualElement root, ArikoChatController controller)
     {
@@ -20,7 +19,8 @@ public class HistoryPanelController
         var historyButton = root.Q<Button>("history-button");
         historyButton.clicked += ToggleHistoryPanel;
 
-        historyPanel.style.display = EditorPrefs.GetBool(HistoryPanelVisibleKey, false) ? DisplayStyle.Flex : DisplayStyle.None;
+        historyPanel.style.display =
+            EditorPrefs.GetBool(HistoryPanelVisibleKey, false) ? DisplayStyle.Flex : DisplayStyle.None;
 
         root.Q<Button>("new-chat-button").clicked += chatController.ClearChat;
         root.Q<Button>("clear-history-button").clicked += chatController.ClearAllHistory;
@@ -45,10 +45,7 @@ public class HistoryPanelController
         {
             var sessionContainer = new VisualElement();
             sessionContainer.AddToClassList("history-item-container");
-            if (session == chatController.ActiveSession)
-            {
-                sessionContainer.AddToClassList("history-item--selected");
-            }
+            if (session == chatController.ActiveSession) sessionContainer.AddToClassList("history-item--selected");
 
             var sessionLabel = new Label(session.SessionName);
             sessionLabel.AddToClassList("history-item-label");

@@ -18,7 +18,6 @@ public class ArikoChatController
     private readonly Dictionary<string, string> apiKeys = new();
     private readonly ArikoLLMService llmService;
     private readonly ArikoSettings settings;
-    private ToolRegistry toolRegistry;
 
     /// <summary>
     ///     Event triggered when the chat is cleared, instructing the view to clear the message display.
@@ -65,6 +64,7 @@ public class ArikoChatController
     public Action<ToolCall> OnToolCallConfirmationRequested;
 
     private ToolCall pendingToolCall;
+    private ToolRegistry toolRegistry;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ArikoChatController" /> class.
@@ -311,10 +311,8 @@ public class ArikoChatController
 
             var agentResponse = JsonConvert.DeserializeObject<AgentResponse>(jsonToParse);
 
-            if (string.IsNullOrWhiteSpace(agentResponse?.ToolName) || toolRegistry.GetTool(agentResponse.ToolName) == null)
-            {
-                return false;
-            }
+            if (string.IsNullOrWhiteSpace(agentResponse?.ToolName) ||
+                toolRegistry.GetTool(agentResponse.ToolName) == null) return false;
 
             toolCall = new ToolCall
             {

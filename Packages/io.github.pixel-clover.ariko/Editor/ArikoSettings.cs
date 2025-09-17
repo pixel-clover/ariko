@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -81,7 +82,7 @@ public class ArikoSettings : ScriptableObject
     ///     Disabled by default for safety.
     /// </summary>
     [Tooltip("Enables agent tools for deleting files and GameObjects. Disabled by default for safety.")]
-    public bool enableDeleteTools = false;
+    public bool enableDeleteTools;
 
     [Header("System Prompt")]
     /// <summary>
@@ -120,7 +121,8 @@ public class ArikoSettings : ScriptableObject
         "}\n" +
         "If you do not need to use a tool, or if the task is complete, respond with a conversational message.";
 
-    [Header("Syntax Highlighting")]
-    [HideInInspector] public SyntaxTheme syntaxTheme;
-    [HideInInspector] public System.Collections.Generic.List<LanguageDefinition> languageDefinitions;
+    [Header("Syntax Highlighting")] [HideInInspector]
+    public SyntaxTheme syntaxTheme;
+
+    [HideInInspector] public List<LanguageDefinition> languageDefinitions;
 }

@@ -5,14 +5,15 @@ using UnityEngine.UIElements;
 
 public class SettingsPanelController
 {
+    private readonly Action applyChatStyles;
     private readonly ArikoChatController chatController;
-    private readonly ArikoSettings settings;
-    private readonly VisualElement settingsPanel;
     private readonly VisualElement chatPanel;
     private readonly VisualElement historyPanel;
-    private readonly Action applyChatStyles;
+    private readonly ArikoSettings settings;
+    private readonly VisualElement settingsPanel;
 
-    public SettingsPanelController(VisualElement root, ArikoChatController controller, ArikoSettings settings, Action applyChatStylesCallback)
+    public SettingsPanelController(VisualElement root, ArikoChatController controller, ArikoSettings settings,
+        Action applyChatStylesCallback)
     {
         chatController = controller;
         this.settings = settings;

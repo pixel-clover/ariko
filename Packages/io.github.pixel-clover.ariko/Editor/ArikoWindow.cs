@@ -58,7 +58,7 @@ public class ArikoWindow : EditorWindow
                 chatPanelController.objectPickerControlID) return;
 
             var selectedObject = EditorGUIUtility.GetObjectPickerObject();
-            if (selectedObject != null)
+            if (selectedObject != null && !controller.ManuallyAttachedAssets.Contains(selectedObject))
             {
                 controller.ManuallyAttachedAssets.Add(selectedObject);
                 chatPanelController.UpdateManualAttachmentsList();

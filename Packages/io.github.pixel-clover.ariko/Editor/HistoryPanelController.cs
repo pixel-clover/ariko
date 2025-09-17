@@ -4,6 +4,8 @@ using UnityEngine.UIElements;
 
 public class HistoryPanelController
 {
+    private const string HistoryPanelVisibleKey = "Ariko.HistoryPanel.Visible";
+
     private readonly ArikoChatController chatController;
     private readonly VisualElement historyPanel;
     private readonly ScrollView historyListScrollView;
@@ -18,6 +20,8 @@ public class HistoryPanelController
         var historyButton = root.Q<Button>("history-button");
         historyButton.clicked += ToggleHistoryPanel;
 
+        historyPanel.style.display = EditorPrefs.GetBool(HistoryPanelVisibleKey, false) ? DisplayStyle.Flex : DisplayStyle.None;
+
         root.Q<Button>("new-chat-button").clicked += chatController.ClearChat;
         root.Q<Button>("clear-history-button").clicked += chatController.ClearAllHistory;
 
@@ -31,6 +35,7 @@ public class HistoryPanelController
     {
         var isVisible = historyPanel.resolvedStyle.display == DisplayStyle.Flex;
         historyPanel.style.display = isVisible ? DisplayStyle.None : DisplayStyle.Flex;
+        EditorPrefs.SetBool(HistoryPanelVisibleKey, !isVisible);
     }
 
     private void UpdateHistoryPanel()

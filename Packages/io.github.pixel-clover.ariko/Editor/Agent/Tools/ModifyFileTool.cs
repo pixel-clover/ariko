@@ -26,6 +26,11 @@ namespace Ariko.Editor.Agent.Tools
 
             var fullPath = Path.Combine(Application.dataPath, filePath.Replace("Assets/", ""));
 
+            if (!PathUtility.IsPathSafe(fullPath, out var safePath) || !safePath.StartsWith(Application.dataPath))
+            {
+                return "Error: Path is outside the Assets folder.";
+            }
+
             if (!File.Exists(fullPath)) return $"Error: File not found at '{fullPath}'.";
 
             var fileContent = await File.ReadAllTextAsync(fullPath);
@@ -44,9 +49,23 @@ namespace Ariko.Editor.Agent.Tools
 
             if (result.IsSuccess)
             {
-                await File.WriteAllTextAsync(fullPath, result.Data);
-                AssetDatabase.Refresh();
-                return $"Success: Modified file at '{fullPath}'.";
+                var backupPath = fullPath + ".bak";
+                try
+                {
+                    File.Move(fullPath, backupPath);
+                    await File.WriteAllTextAsync(fullPath, result.Data);
+                    File.Delete(backupPath);
+                    AssetDatabase.Refresh();
+                    return $"Success: Modified file at '{fullPath}'.";
+                }
+                catch (Exception e)
+                {
+                    if (File.Exists(backupPath))
+                    {
+                        File.Move(backupPath, fullPath);
+                    }
+                    return $"Error: Failed to modify file. Original file restored. Details: {e.Message}";
+                }
             }
 
             return $"Error: {result.Error}";

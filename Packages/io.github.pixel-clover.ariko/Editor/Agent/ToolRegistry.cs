@@ -27,7 +27,6 @@ public class ToolRegistry
             if (settings.enableDeleteTools)
             {
                 RegisterTool(new DeleteFileTool());
-                RegisterTool(new DeleteGameObjectTool());
             }
         }
         // In "Ask" mode, no tools are registered.

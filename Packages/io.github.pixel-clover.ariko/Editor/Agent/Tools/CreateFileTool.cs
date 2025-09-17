@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEditor;
+using UnityEngine;
 
 namespace Ariko.Editor.Agent.Tools
 {
@@ -31,7 +32,12 @@ namespace Ariko.Editor.Agent.Tools
                 context.Arguments.TryGetValue("content", out var contentObj) && contentObj is string content)
                 try
                 {
-                    var fullPath = Path.Combine("Assets", filePath);
+                    var fullPath = Path.Combine(Application.dataPath, filePath.Replace("Assets/", ""));
+                    if (!PathUtility.IsPathSafe(fullPath, out var safePath) || !safePath.StartsWith(Application.dataPath))
+                    {
+                        return Task.FromResult("Error: Path is outside the Assets folder.");
+                    }
+
                     var directory = Path.GetDirectoryName(fullPath);
                     if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
 

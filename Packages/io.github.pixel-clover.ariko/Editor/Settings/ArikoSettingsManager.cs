@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,20 +8,29 @@ using UnityEngine;
 /// </summary>
 public static class ArikoSettingsManager
 {
-    private const string SettingsPath = "Packages/io.github.pixel-clover.ariko/Editor/ArikoSettings.asset";
+    private const string DefaultSettingsPath = "Assets/Ariko/Settings/ArikoSettings.asset";
 
     /// <summary>
-    ///     Loads the ArikoSettings asset from the default path.
-    ///     If the asset does not exist, it creates a new one.
+    ///     Loads the ArikoSettings asset from the project.
+    ///     If the asset does not exist, it creates a new one at the default path.
     /// </summary>
     /// <returns>The loaded or newly created ArikoSettings instance.</returns>
     public static ArikoSettings LoadSettings()
     {
-        var settings = AssetDatabase.LoadAssetAtPath<ArikoSettings>(SettingsPath);
+        var guids = AssetDatabase.FindAssets("t:ArikoSettings");
+        ArikoSettings settings = null;
+
+        if (guids.Length > 0)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guids[0]);
+            settings = AssetDatabase.LoadAssetAtPath<ArikoSettings>(path);
+        }
+
         if (settings == null)
         {
             settings = ScriptableObject.CreateInstance<ArikoSettings>();
-            AssetDatabase.CreateAsset(settings, SettingsPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(DefaultSettingsPath));
+            AssetDatabase.CreateAsset(settings, DefaultSettingsPath);
             AssetDatabase.SaveAssets();
         }
 

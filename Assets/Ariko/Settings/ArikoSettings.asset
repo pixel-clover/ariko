@@ -66,3 +66,5 @@ MonoBehaviour:
     \"TheNameOfTheToolToUse\",\n  \"parameters\": { \"param1\": \"value1\", \"param2\":
     123 }\n}\nIf you do not need to use a tool, or if the task is complete, respond
     with a conversational message."
+  syntaxTheme: {fileID: 0}
+  languageDefinitions: []

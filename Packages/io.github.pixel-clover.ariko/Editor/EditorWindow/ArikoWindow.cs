@@ -79,9 +79,9 @@ public class ArikoWindow : EditorWindow
 
         var visualTree =
             AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                "Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uxml");
+                "Packages/io.github.pixel-clover.ariko/Editor/EditorWindow/ArikoWindow.uxml");
         var styleSheet =
-            AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/ArikoWindow.uss");
+            AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/EditorWindow/ArikoWindow.uss");
         rootVisualElement.styleSheets.Add(styleSheet);
         visualTree.CloneTree(rootVisualElement);
 

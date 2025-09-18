@@ -62,7 +62,14 @@ public class MarkdigRenderer
             p.AddToClassList("unity-text-element__selectable");
                 return p;
             case FencedCodeBlock code:
-                return CreateCodeBlock(code.Lines.ToString(), code.Info);
+            {
+                var codeContent = new StringBuilder();
+                foreach (var line in code.Lines.Lines)
+                {
+                    codeContent.AppendLine(line.ToString());
+                }
+                return CreateCodeBlock(codeContent.ToString(), code.Info);
+            }
             case ListBlock list:
                 var listContainer = new VisualElement();
                 listContainer.AddToClassList("list");

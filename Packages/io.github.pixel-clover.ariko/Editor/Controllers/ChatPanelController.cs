@@ -53,7 +53,57 @@ public class ChatPanelController
         emptyStateLabel.AddToClassList("empty-state-label");
         emptyStateLabel.pickingMode = PickingMode.Ignore;
         emptyStateLabel.style.display = DisplayStyle.None;
-        root.Q<ScrollView>("chat-history").Add(emptyStateLabel);
+        var chatHistoryScroll = root.Q<ScrollView>("chat-history");
+        chatHistoryScroll.Add(emptyStateLabel);
+
+        // Suggestion buttons for empty state
+        var suggestionsContainer = new VisualElement { name = "empty-suggestions" };
+        suggestionsContainer.style.flexDirection = FlexDirection.Row;
+        suggestionsContainer.style.justifyContent = Justify.Center;
+        suggestionsContainer.style.display = DisplayStyle.None;
+        void AddSuggestion(string text)
+        {
+            var b = new Button(() =>
+            {
+                userInput.value = text;
+                userInput.Focus();
+            }) { text = text };
+            b.style.marginLeft = 3;
+            b.style.marginRight = 3;
+            suggestionsContainer.Add(b);
+        }
+        AddSuggestion("Explain the selected component");
+        AddSuggestion("Refactor this script");
+        AddSuggestion("Generate unit tests for this class");
+        chatHistoryScroll.Add(suggestionsContainer);
+
+        // Drag-and-drop context area setup
+        var contextArea = root.Q<VisualElement>("context-area");
+        if (contextArea != null)
+        {
+            contextArea.RegisterCallback<DragUpdatedEvent>(evt =>
+            {
+                DragAndDrop.visualMode = DragAndDrop.objectReferences != null && DragAndDrop.objectReferences.Length > 0
+                    ? DragAndDropVisualMode.Copy
+                    : DragAndDropVisualMode.Rejected;
+                evt.StopPropagation();
+            });
+            contextArea.RegisterCallback<DragPerformEvent>(evt =>
+            {
+                if (DragAndDrop.objectReferences != null)
+                {
+                    foreach (var obj in DragAndDrop.objectReferences)
+                    {
+                        if (obj == null) continue;
+                        if (!chatController.ManuallyAttachedAssets.Contains(obj))
+                            chatController.ManuallyAttachedAssets.Add(obj);
+                    }
+                    UpdateManualAttachmentsList();
+                }
+                DragAndDrop.AcceptDrag();
+                evt.StopPropagation();
+            });
+        }
 
         RegisterCallbacks();
         UpdateEmptyState();
@@ -295,17 +345,49 @@ public class ChatPanelController
         manualAttachmentsList.Clear();
         foreach (var asset in chatController.ManuallyAttachedAssets)
         {
-            var container = new VisualElement { style = { flexDirection = FlexDirection.Row } };
-            var objectField = new ObjectField { value = asset, objectType = typeof(Object) };
-            objectField.SetEnabled(false);
+            var chip = new VisualElement();
+            chip.style.flexDirection = FlexDirection.Row;
+            chip.style.alignItems = Align.Center;
+            chip.style.marginTop = 2;
+            chip.style.marginBottom = 2;
+            chip.style.marginRight = 4;
+            chip.style.paddingLeft = 6;
+            chip.style.paddingRight = 4;
+            chip.style.paddingTop = 2;
+            chip.style.paddingBottom = 2;
+            chip.style.backgroundColor = new Color(0.2f,0.2f,0.2f,0.5f);
+            chip.style.borderTopLeftRadius = 6;
+            chip.style.borderTopRightRadius = 6;
+            chip.style.borderBottomLeftRadius = 6;
+            chip.style.borderBottomRightRadius = 6;
+
+            var icon = new Image();
+            var content = EditorGUIUtility.ObjectContent(asset, asset.GetType());
+            if (content != null && content.image is Texture tex)
+            {
+                icon.image = tex;
+                icon.scaleMode = ScaleMode.ScaleToFit;
+                icon.style.width = 16;
+                icon.style.height = 16;
+                icon.style.marginRight = 4;
+            }
+            var nameLabel = new Label(asset.name);
+            nameLabel.style.unityFontStyleAndWeight = FontStyle.Normal;
+            nameLabel.style.fontSize = 12;
+            nameLabel.style.marginRight = 6;
+
             var removeButton = new Button(() =>
             {
                 chatController.ManuallyAttachedAssets.Remove(asset);
                 UpdateManualAttachmentsList();
             }) { text = "x" };
-            container.Add(objectField);
-            container.Add(removeButton);
-            manualAttachmentsList.Add(container);
+            removeButton.style.width = 18;
+            removeButton.style.height = 18;
+
+            chip.Add(icon);
+            chip.Add(nameLabel);
+            chip.Add(removeButton);
+            manualAttachmentsList.Add(chip);
         }
     }
 
@@ -334,6 +416,9 @@ public class ChatPanelController
                           chatController.ActiveSession.Messages.Count > 0;
 
         emptyStateLabel.style.display = hasMessages ? DisplayStyle.None : DisplayStyle.Flex;
+        var suggestions = root.Q<VisualElement>("empty-suggestions");
+        if (suggestions != null)
+            suggestions.style.display = hasMessages ? DisplayStyle.None : DisplayStyle.Flex;
     }
 
     private static bool IsColorLight(Color color)

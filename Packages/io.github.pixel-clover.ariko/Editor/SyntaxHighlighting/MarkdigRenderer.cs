@@ -1,14 +1,12 @@
 using System;
+using System.IO;
 using System.Text;
 using Markdig;
 using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-
-// Required for GUIUtility
-
-// Required for AssetDatabase
 
 /// <summary>
 ///     Renders a Markdown string into a Unity UI Elements VisualElement hierarchy.
@@ -119,8 +117,13 @@ public class MarkdigRenderer
         var copyButton = new Button(() => GUIUtility.systemCopyBuffer = content.Trim()) { text = "Copy" };
         copyButton.AddToClassList("code-block-copy-button");
 
+        var insertButton = new Button(() => InsertIntoSelectedScript(content.Trim())) { text = "Insert into selected script" };
+        var createButton = new Button(() => CreateNewScriptFromContent(content.Trim(), language)) { text = "Create new script" };
+
         header.Add(langLabel);
         header.Add(copyButton);
+        header.Add(insertButton);
+        header.Add(createButton);
 
         var codeLabel = new Label();
         codeLabel.AddToClassList("code-block-content");
@@ -147,6 +150,53 @@ public class MarkdigRenderer
         container.Add(header);
         container.Add(codeLabel);
         return container;
+    }
+
+    private void InsertIntoSelectedScript(string code)
+    {
+        var obj = Selection.activeObject;
+        if (obj == null)
+        {
+            EditorUtility.DisplayDialog("Insert Code", "No asset is selected. Please select a script or text asset in the Project window.", "OK");
+            return;
+        }
+        var path = AssetDatabase.GetAssetPath(obj);
+        if (string.IsNullOrEmpty(path))
+        {
+            EditorUtility.DisplayDialog("Insert Code", "Selected object is not a valid asset.", "OK");
+            return;
+        }
+        try
+        {
+            var text = File.Exists(path) ? File.ReadAllText(path) : "";
+            var toWrite = text + "\n\n// --- Inserted by Ariko Assistant ---\n" + code + "\n";
+            File.WriteAllText(path, toWrite);
+            AssetDatabase.ImportAsset(path);
+            AssetDatabase.Refresh();
+        }
+        catch (Exception e)
+        {
+            EditorUtility.DisplayDialog("Insert Code", $"Failed to insert code: {e.Message}", "OK");
+        }
+    }
+
+    private void CreateNewScriptFromContent(string code, string language)
+    {
+        var defaultName = string.IsNullOrEmpty(language) ? "NewScript.cs" : $"New{char.ToUpperInvariant(language[0]) + language.Substring(1)}.cs";
+        var path = EditorUtility.SaveFilePanelInProject("Create Script", defaultName, "cs", "Choose a location for the new script");
+        if (string.IsNullOrEmpty(path)) return;
+        try
+        {
+            File.WriteAllText(path, code);
+            AssetDatabase.ImportAsset(path);
+            AssetDatabase.Refresh();
+            var created = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+            Selection.activeObject = created;
+        }
+        catch (Exception e)
+        {
+            EditorUtility.DisplayDialog("Create Script", $"Failed to create script: {e.Message}", "OK");
+        }
     }
 
     private string GetInlineText(ContainerInline inlines)

@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: ArikoSettings
   m_EditorClassIdentifier: 
   ollama_Url: http://localhost:11434
-  google_SelectedModel: models/gemini-2.5-flash
-  openAI_SelectedModel: gpt-5-nano
-  ollama_SelectedModel: gemma3:12b
-  selectedProvider: Ollama
+  google_SelectedModel: models/gemini-2.5-pro
+  openAI_SelectedModel: 
+  ollama_SelectedModel: 
+  selectedProvider: Google
   selectedWorkMode: Ask
   assistantChatBackgroundColor: {r: 0.886, g: 0.91, b: 0.941, a: 1}
   userChatBackgroundColor: {r: 0.676, g: 0.853, b: 0.602, a: 1}

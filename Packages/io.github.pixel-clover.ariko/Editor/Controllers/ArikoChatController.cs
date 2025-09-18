@@ -177,8 +177,13 @@ public class ArikoChatController
 
         // Add user message to session and notify view
         var userMessage = new ChatMessage { Role = "User", Content = text };
+        var wasEmpty = sessionForThisMessage.Messages.Count == 0;
         sessionForThisMessage.Messages.Add(userMessage);
         OnMessageAdded?.Invoke(userMessage, sessionForThisMessage);
+        if (wasEmpty)
+        {
+            AutoNameSessionFromText(sessionForThisMessage, text);
+        }
 
         if (settings.selectedWorkMode == "Agent")
         {
@@ -218,8 +223,13 @@ public class ArikoChatController
 
         // Add user message to session and notify view
         var userMessage = new ChatMessage { Role = "User", Content = text };
+        var wasEmpty = sessionForThisMessage.Messages.Count == 0;
         sessionForThisMessage.Messages.Add(userMessage);
         OnMessageAdded?.Invoke(userMessage, sessionForThisMessage);
+        if (wasEmpty)
+        {
+            AutoNameSessionFromText(sessionForThisMessage, text);
+        }
 
         OnResponseStatusChanged?.Invoke(true);
 
@@ -384,6 +394,42 @@ public class ArikoChatController
             default:
                 return $"An unknown error occurred: {error}";
         }
+    }
+
+    private void AutoNameSessionFromText(ChatSession session, string text)
+    {
+        if (session == null || string.IsNullOrWhiteSpace(text)) return;
+        if (!string.IsNullOrEmpty(session.SessionName) && !session.SessionName.StartsWith("Chat started at")) return;
+        var name = GenerateSessionName(text);
+        session.SessionName = name;
+        OnHistoryChanged?.Invoke();
+    }
+
+    private string GenerateSessionName(string text)
+    {
+        var t = text.Trim();
+        var newlineIdx = t.IndexOf('\n');
+        if (newlineIdx >= 0) t = t.Substring(0, newlineIdx);
+        if (t.Length > 60) t = t.Substring(0, 60);
+        var words = t.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        var maxWords = Math.Min(6, words.Length);
+        for (int i = 0; i < maxWords; i++)
+        {
+            var w = words[i];
+            if (w.Length > 0)
+                words[i] = char.ToUpperInvariant(w[0]) + (w.Length > 1 ? w.Substring(1) : "");
+        }
+        var title = string.Join(" ", words, 0, maxWords);
+        return title;
+    }
+
+    public void RenameSession(ChatSession session, string newName)
+    {
+        if (session == null) return;
+        var name = (newName ?? "").Trim();
+        if (string.IsNullOrEmpty(name)) return;
+        session.SessionName = name;
+        OnHistoryChanged?.Invoke();
     }
 
 

@@ -12,6 +12,8 @@ public class SettingsPanelController
     private readonly ArikoSettings settings;
     private readonly VisualElement settingsPanel;
 
+    private bool settingsLayoutBuilt = false;
+
     public SettingsPanelController(VisualElement root, ArikoChatController controller, ArikoSettings settings,
         Action applyChatStylesCallback)
     {

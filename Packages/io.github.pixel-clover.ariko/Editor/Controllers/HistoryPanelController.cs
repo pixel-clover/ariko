@@ -49,7 +49,46 @@ public class HistoryPanelController
 
             var sessionLabel = new Label(session.SessionName);
             sessionLabel.AddToClassList("history-item-label");
-            sessionLabel.RegisterCallback<MouseDownEvent>(evt => chatController.SwitchToSession(session));
+            sessionLabel.RegisterCallback<MouseDownEvent>(evt =>
+            {
+                if (evt.clickCount == 2)
+                {
+                    // Start rename
+                    var textField = new TextField { value = session.SessionName };
+                    textField.AddToClassList("history-item-label");
+                    int index = sessionContainer.IndexOf(sessionLabel);
+                    sessionContainer.Insert(index, textField);
+                    sessionContainer.Remove(sessionLabel);
+                    textField.Focus();
+                    textField.SelectAll();
+
+                    void Commit()
+                    {
+                        chatController.RenameSession(session, textField.value);
+                        // Replace back with label
+                        var newLabel = new Label(session.SessionName);
+                        newLabel.AddToClassList("history-item-label");
+                        newLabel.RegisterCallback<MouseDownEvent>(_evt => chatController.SwitchToSession(session));
+                        int i = sessionContainer.IndexOf(textField);
+                        sessionContainer.Insert(i, newLabel);
+                        sessionContainer.Remove(textField);
+                    }
+
+                    textField.RegisterCallback<KeyDownEvent>(kEvt =>
+                    {
+                        if (kEvt.keyCode == UnityEngine.KeyCode.Return)
+                        {
+                            Commit();
+                            kEvt.StopImmediatePropagation();
+                        }
+                    });
+                    textField.RegisterCallback<FocusOutEvent>(_ => Commit());
+                }
+                else
+                {
+                    chatController.SwitchToSession(session);
+                }
+            });
 
             var deleteButton = new Button(() => chatController.DeleteSession(session)) { text = "x" };
             deleteButton.AddToClassList("history-item-delete-button");

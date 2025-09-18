@@ -53,6 +53,16 @@
     border-bottom-color: var(--input-border-color);
 }
 
+.toolbar-vertical-separator {
+    width: 1px;
+    height: 18px;
+    background-color: var(--separator-color);
+    margin-left: 6px;
+    margin-right: 6px;
+    opacity: 0.5;
+    align-self: center;
+}
+
 #chat-history {
     padding: 10px;
     flex-grow: 1;

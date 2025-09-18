@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -17,9 +18,7 @@ namespace Ariko.Editor.Agent.Tools
         public Task<string> Execute(ToolExecutionContext context)
         {
             if (!context.Arguments.TryGetValue("path", out var pathValue) || pathValue is not string path)
-            {
                 return Task.FromResult("Error: 'path' parameter is missing or not a string.");
-            }
 
             try
             {
@@ -34,7 +33,7 @@ namespace Ariko.Editor.Agent.Tools
             {
                 return Task.FromResult($"Error: The file at path '{path}' was not found.");
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 return Task.FromResult($"An unexpected error occurred: {e.Message}");
             }

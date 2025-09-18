@@ -89,6 +89,7 @@ public class SettingsPanelController
         settingsPanel.Q<ColorField>("ariko-bg-color").value = settings.assistantChatBackgroundColor;
         settingsPanel.Q<ColorField>("user-bg-color").value = settings.userChatBackgroundColor;
         settingsPanel.Q<TextField>("system-prompt").value = settings.systemPrompt;
+        settingsPanel.Q<TextField>("agent-system-prompt").value = settings.agentSystemPrompt;
         settingsPanel.Q<ObjectField>("chat-font").value = settings.chatFont;
         settingsPanel.Q<IntegerField>("chat-font-size").value = settings.chatFontSize;
         settingsPanel.Q<IntegerField>("chat-history-size").value = settings.chatHistorySize;
@@ -102,6 +103,7 @@ public class SettingsPanelController
         chatController.SetApiKey("OpenAI", settingsPanel.Q<TextField>("openai-api-key").value);
         settings.ollama_Url = settingsPanel.Q<TextField>("ollama-url").value;
         settings.systemPrompt = settingsPanel.Q<TextField>("system-prompt").value;
+        settings.agentSystemPrompt = settingsPanel.Q<TextField>("agent-system-prompt").value;
         settings.assistantChatBackgroundColor = settingsPanel.Q<ColorField>("ariko-bg-color").value;
         settings.userChatBackgroundColor = settingsPanel.Q<ColorField>("user-bg-color").value;
         settings.chatFont = settingsPanel.Q<ObjectField>("chat-font").value as Font;

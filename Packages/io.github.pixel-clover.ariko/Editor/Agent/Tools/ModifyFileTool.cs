@@ -27,9 +27,7 @@ namespace Ariko.Editor.Agent.Tools
             var fullPath = Path.Combine(Application.dataPath, filePath.Replace("Assets/", ""));
 
             if (!PathUtility.IsPathSafe(fullPath, out var safePath) || !safePath.StartsWith(Application.dataPath))
-            {
                 return "Error: Path is outside the Assets folder.";
-            }
 
             if (!File.Exists(fullPath)) return $"Error: File not found at '{fullPath}'.";
 
@@ -62,10 +60,7 @@ namespace Ariko.Editor.Agent.Tools
                 }
                 catch (Exception e)
                 {
-                    if (File.Exists(backupPath))
-                    {
-                        File.Move(backupPath, fullPath);
-                    }
+                    if (File.Exists(backupPath)) File.Move(backupPath, fullPath);
                     return $"Error: Failed to modify file. Original file restored. Details: {e.Message}";
                 }
             }

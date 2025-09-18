@@ -17,7 +17,7 @@ public class ArikoSettings : ScriptableObject
     /// <summary>
     /// The last selected model for the Google provider.
     /// </summary>
-    public string google_SelectedModel;
+    public string google_SelectedModel = "models/gemini-2.5-pro";
 
     /// <summary>
     ///     The last selected model for the OpenAI provider.
@@ -33,7 +33,7 @@ public class ArikoSettings : ScriptableObject
     /// <summary>
     /// The last selected AI provider in the UI.
     /// </summary>
-    public string selectedProvider = "OpenAI";
+    public string selectedProvider = "Google";
 
     /// <summary>
     ///     The last selected work mode in the UI (e.g., "Ask" or "Agent").

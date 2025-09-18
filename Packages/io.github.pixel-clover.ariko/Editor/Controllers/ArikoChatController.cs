@@ -63,8 +63,10 @@ public class ArikoChatController
     /// </summary>
     public Action<ToolCall> OnToolCallConfirmationRequested;
 
-    private ToolCall pendingToolCall;
     private ToolRegistry toolRegistry;
+    private readonly SessionService sessionService;
+    private readonly ContextBuilder contextBuilder = new ContextBuilder();
+    private AgentService agentService;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ArikoChatController" /> class.
@@ -74,20 +76,34 @@ public class ArikoChatController
     {
         this.settings = settings;
         llmService = new ArikoLLMService();
+        sessionService = new SessionService(settings);
         ReloadToolRegistry(settings.selectedWorkMode);
 
-        ChatHistory = ChatHistoryStorage.LoadHistory() ?? new List<ChatSession>();
-        if (ChatHistory.Count == 0)
+        // Forward session events and manage per-session manual context
+        sessionService.OnChatCleared += () =>
         {
-            // If no history, create a new one
-            ActiveSession = new ChatSession();
-            ChatHistory.Add(ActiveSession);
-        }
-        else
+            ManuallyAttachedAssets.Clear();
+            OnChatCleared?.Invoke();
+        };
+        sessionService.OnChatReloaded += () =>
         {
-            // Otherwise, the first session in the list is the most recent one
-            ActiveSession = ChatHistory[0];
-        }
+            ManuallyAttachedAssets.Clear();
+            OnChatReloaded?.Invoke();
+        };
+        sessionService.OnHistoryChanged += () => OnHistoryChanged?.Invoke();
+
+        // Initialize AgentService with delegates
+        agentService = new AgentService(
+            llmService,
+            this.settings,
+            apiKeys,
+            () => ActiveSession,
+            () => contextBuilder.BuildContextString(AutoContext, Selection.activeObject, ManuallyAttachedAssets),
+            () => toolRegistry,
+            isPending => OnResponseStatusChanged?.Invoke(isPending),
+            (msg, sess) => OnMessageAdded?.Invoke(msg, sess),
+            toolCall => OnToolCallConfirmationRequested?.Invoke(toolCall)
+        );
 
         LoadApiKeysFromEnvironment();
     }
@@ -96,12 +112,12 @@ public class ArikoChatController
     /// <summary>
     ///     Gets the list of all chat sessions.
     /// </summary>
-    public List<ChatSession> ChatHistory { get; }
+    public List<ChatSession> ChatHistory => sessionService.ChatHistory;
 
     /// <summary>
     ///     Gets the currently active chat session.
     /// </summary>
-    public ChatSession ActiveSession { get; private set; }
+    public ChatSession ActiveSession => sessionService.ActiveSession;
 
     /// <summary>
     ///     Gets the list of assets manually attached to the current chat context.
@@ -170,14 +186,14 @@ public class ArikoChatController
 
         if (settings.selectedWorkMode == "Agent")
         {
-            await SendAgentRequest(selectedProvider, selectedModel);
+            await agentService.SendAgentRequest(selectedProvider, selectedModel);
         }
         else
         {
             OnResponseStatusChanged?.Invoke(true);
 
             var messagesToSend = new List<ChatMessage>();
-            var context = BuildContextString();
+            var context = contextBuilder.BuildContextString(AutoContext, Selection.activeObject, ManuallyAttachedAssets);
 
             // Add system prompt and context as the first message
             if (!string.IsNullOrEmpty(settings.systemPrompt) || !string.IsNullOrEmpty(context))
@@ -215,58 +231,6 @@ public class ArikoChatController
         }
     }
 
-    private async Task SendAgentRequest(string selectedProvider, string selectedModel)
-    {
-        OnResponseStatusChanged?.Invoke(true);
-
-        var sessionForThisMessage = ActiveSession;
-
-        var messagesToSend = new List<ChatMessage>();
-        var toolDefinitions = toolRegistry.GetToolDefinitionsForPrompt();
-
-        var systemPromptBuilder = new StringBuilder();
-        systemPromptBuilder.AppendLine(settings.agentSystemPrompt);
-        systemPromptBuilder.AppendLine(toolDefinitions);
-
-        var context = BuildContextString();
-        if (!string.IsNullOrEmpty(context))
-        {
-            systemPromptBuilder.AppendLine("\n--- Context ---");
-            systemPromptBuilder.AppendLine(context);
-        }
-
-        messagesToSend.Add(new ChatMessage { Role = "System", Content = systemPromptBuilder.ToString() });
-
-        // Add all messages from the current session.
-        messagesToSend.AddRange(sessionForThisMessage.Messages);
-
-        var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
-        var result = await llmService.SendChatRequest(messagesToSend, provider, selectedModel, settings, apiKeys);
-        OnResponseStatusChanged?.Invoke(false);
-
-        if (result.IsSuccess)
-        {
-            if (TryParseToolCall(result.Data, out var toolCall))
-            {
-                pendingToolCall = toolCall;
-                OnToolCallConfirmationRequested?.Invoke(toolCall);
-            }
-            else
-            {
-                // It's a conversational response
-                var finalMessage = new ChatMessage { Role = "Ariko", Content = result.Data };
-                sessionForThisMessage.Messages.Add(finalMessage);
-                OnMessageAdded?.Invoke(finalMessage, sessionForThisMessage);
-            }
-        }
-        else
-        {
-            var errorMessage = GetFormattedErrorMessage(result.Error, result.ErrorType);
-            var finalMessage = new ChatMessage { Role = "Ariko", Content = errorMessage, IsError = true };
-            sessionForThisMessage.Messages.Add(finalMessage);
-            OnMessageAdded?.Invoke(finalMessage, sessionForThisMessage);
-        }
-    }
 
     /// <summary>
     ///     Responds to a tool execution confirmation request from the user.
@@ -276,77 +240,9 @@ public class ArikoChatController
     /// <param name="selectedModel">The specific model to use for the subsequent request.</param>
     public async void RespondToToolConfirmation(bool userApproved, string selectedProvider, string selectedModel)
     {
-        if (pendingToolCall == null) return;
-
-        var toolCall = pendingToolCall;
-        pendingToolCall = null; // Clear the pending call
-
-        var sessionForThisMessage = ActiveSession;
-
-        if (userApproved)
-        {
-            var tool = toolRegistry.GetTool(toolCall.tool_name);
-            string executionResult;
-            if (tool != null)
-            {
-                var context = new ToolExecutionContext
-                {
-                    Arguments = toolCall.parameters,
-                    Provider = selectedProvider,
-                    Model = selectedModel,
-                    Settings = settings,
-                    ApiKeys = apiKeys
-                };
-                executionResult = await tool.Execute(context);
-            }
-            else
-            {
-                executionResult = $"Error: Tool '{toolCall.tool_name}' not found.";
-            }
-            var resultMessage = new ChatMessage { Role = "User", Content = $"Observation: {executionResult}" };
-            sessionForThisMessage.Messages.Add(resultMessage);
-            OnMessageAdded?.Invoke(resultMessage, sessionForThisMessage);
-
-            // Send the observation back to the LLM to continue the loop
-            await SendAgentRequest(selectedProvider, selectedModel);
-        }
-        else
-        {
-            var denialMessage = new ChatMessage { Role = "User", Content = "Observation: User denied the action." };
-            sessionForThisMessage.Messages.Add(denialMessage);
-            OnMessageAdded?.Invoke(denialMessage, sessionForThisMessage);
-            // Inform the LLM that the user denied the action
-            await SendAgentRequest(selectedProvider, selectedModel);
-        }
+        agentService.RespondToToolConfirmation(userApproved, selectedProvider, selectedModel);
     }
 
-    private bool TryParseToolCall(string response, out ToolCall toolCall)
-    {
-        toolCall = null;
-        try
-        {
-            var match = Regex.Match(response, @"```json\s*([\s\S]*?)\s*```", RegexOptions.Singleline);
-            var jsonToParse = match.Success ? match.Groups[1].Value : response;
-
-            var agentResponse = JsonConvert.DeserializeObject<AgentResponse>(jsonToParse);
-
-            if (string.IsNullOrWhiteSpace(agentResponse?.ToolName) ||
-                toolRegistry.GetTool(agentResponse.ToolName) == null) return false;
-
-            toolCall = new ToolCall
-            {
-                thought = agentResponse.Thought,
-                tool_name = agentResponse.ToolName,
-                parameters = agentResponse.Parameters ?? new Dictionary<string, object>()
-            };
-
-            return true;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
-    }
 
     /// <summary>
     ///     Fetches the available models for the currently selected AI provider.
@@ -394,23 +290,7 @@ public class ArikoChatController
     /// </summary>
     public void ClearChat()
     {
-        // Don't create a new session if the current one is empty. Just clear the display.
-        if (ActiveSession != null && ActiveSession.Messages.Count == 0)
-        {
-            OnChatCleared?.Invoke();
-            return;
-        }
-
-        ActiveSession = new ChatSession();
-        ChatHistory.Insert(0, ActiveSession);
-
-        // Enforce history size limit (if set)
-        if (settings.chatHistorySize > 0 && ChatHistory.Count > settings.chatHistorySize)
-            ChatHistory.RemoveAt(ChatHistory.Count - 1);
-
-        ManuallyAttachedAssets.Clear();
-        OnChatCleared?.Invoke(); // Tells view to clear the scrollview
-        OnHistoryChanged?.Invoke(); // Tells view to update history list
+        sessionService.ClearChat();
     }
 
     /// <summary>
@@ -419,12 +299,7 @@ public class ArikoChatController
     /// <param name="session">The chat session to make active.</param>
     public void SwitchToSession(ChatSession session)
     {
-        if (session == null || session == ActiveSession) return;
-
-        ActiveSession = session;
-        ManuallyAttachedAssets.Clear(); // Context is per-session for now
-        OnChatReloaded?.Invoke();
-        OnHistoryChanged?.Invoke(); // To update selection highlight
+        sessionService.SwitchToSession(session);
     }
 
     /// <summary>
@@ -433,24 +308,7 @@ public class ArikoChatController
     /// <param name="session">The chat session to delete.</param>
     public void DeleteSession(ChatSession session)
     {
-        if (session == null || !ChatHistory.Contains(session)) return;
-
-        var wasActiveSession = session == ActiveSession;
-        ChatHistory.Remove(session);
-
-        if (wasActiveSession)
-        {
-            // If we deleted the active session, switch to the most recent one or create a new one
-            if (ChatHistory.Any())
-                SwitchToSession(ChatHistory[0]);
-            else
-                ClearChat(); // Creates a new empty session
-        }
-        else
-        {
-            // If we deleted a non-active session, we just need to update the history panel
-            OnHistoryChanged?.Invoke();
-        }
+        sessionService.DeleteSession(session);
     }
 
     /// <summary>
@@ -458,9 +316,7 @@ public class ArikoChatController
     /// </summary>
     public void ClearAllHistory()
     {
-        ChatHistory.Clear();
-        // After clearing everything, create a new empty session to start with
-        ClearChat();
+        sessionService.ClearAllHistory();
     }
 
     /// <summary>
@@ -471,33 +327,4 @@ public class ArikoChatController
         llmService.CancelRequest();
     }
 
-    private string BuildContextString()
-    {
-        var contextBuilder = new StringBuilder();
-        if (AutoContext && Selection.activeObject != null)
-        {
-            contextBuilder.AppendLine("--- Current Selection Context ---");
-            AppendAssetInfo(Selection.activeObject, contextBuilder);
-        }
-
-        if (ManuallyAttachedAssets.Any())
-        {
-            contextBuilder.AppendLine("--- Manually Attached Context ---");
-            foreach (var asset in ManuallyAttachedAssets) AppendAssetInfo(asset, contextBuilder);
-        }
-
-        return contextBuilder.ToString();
-    }
-
-    private void AppendAssetInfo(Object asset, StringBuilder builder)
-    {
-        if (asset is MonoScript script)
-            builder.AppendLine($"[File: {script.name}.cs]\n```csharp\n{script.text}\n```");
-        else if (asset is TextAsset textAsset)
-            builder.AppendLine($"[File: {textAsset.name}]\n```\n{textAsset.text}\n```");
-        else
-            builder.AppendLine(
-                $"[Asset: {asset.name} ({asset.GetType().Name}) at path {AssetDatabase.GetAssetPath(asset)}]");
-        builder.AppendLine();
-    }
 }

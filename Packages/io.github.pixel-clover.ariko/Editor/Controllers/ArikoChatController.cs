@@ -219,8 +219,19 @@ public class ArikoChatController
 
         var messagesToSend = new List<ChatMessage>();
         var toolDefinitions = toolRegistry.GetToolDefinitionsForPrompt();
-        var systemPrompt = $"{settings.agentSystemPrompt}\n\n{toolDefinitions}";
-        messagesToSend.Add(new ChatMessage { Role = "System", Content = systemPrompt });
+
+        var systemPromptBuilder = new StringBuilder();
+        systemPromptBuilder.AppendLine(settings.agentSystemPrompt);
+        systemPromptBuilder.AppendLine(toolDefinitions);
+
+        var context = BuildContextString();
+        if (!string.IsNullOrEmpty(context))
+        {
+            systemPromptBuilder.AppendLine("\n--- Context ---");
+            systemPromptBuilder.AppendLine(context);
+        }
+
+        messagesToSend.Add(new ChatMessage { Role = "System", Content = systemPromptBuilder.ToString() });
 
         // Add all messages from the current session.
         messagesToSend.AddRange(ActiveSession.Messages);

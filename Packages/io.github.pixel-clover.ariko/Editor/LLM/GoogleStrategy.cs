@@ -61,6 +61,26 @@ public class GoogleStrategy : IApiProviderStrategy
     }
 
     /// <inheritdoc />
+    public string ParseChatResponseStream(string streamChunk)
+    {
+        // Google REST endpoint used here doesn't stream in this setup; return empty to avoid flicker.
+        // If a future streaming endpoint is used, implement parsing accordingly.
+        try
+        {
+            // As a fallback, if a full JSON arrives in one chunk, parse it like a normal response.
+            if (!string.IsNullOrEmpty(streamChunk) && streamChunk.TrimStart().StartsWith("{"))
+            {
+                return ParseChatResponse(streamChunk);
+            }
+        }
+        catch
+        {
+            // ignore partials
+        }
+        return string.Empty;
+    }
+
+    /// <inheritdoc />
     public List<string> ParseModelsResponse(string json)
     {
         var allAvailableModels = JsonConvert.DeserializeObject<GoogleModelsResponse>(json).Models

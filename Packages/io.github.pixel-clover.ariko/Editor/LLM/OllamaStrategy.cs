@@ -60,6 +60,30 @@ public class OllamaStrategy : IApiProviderStrategy
     }
 
     /// <inheritdoc />
+    public string ParseChatResponseStream(string streamChunk)
+    {
+        if (string.IsNullOrEmpty(streamChunk)) return string.Empty;
+        // Ollama streams JSON lines, each with a partial message under message.content
+        var result = string.Empty;
+        var lines = streamChunk.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var raw in lines)
+        {
+            var line = raw.Trim();
+            try
+            {
+                var node = JsonConvert.DeserializeObject<OllamaStreamChunk>(line);
+                var delta = node.Message?.Content;
+                if (!string.IsNullOrEmpty(delta)) result += delta;
+            }
+            catch
+            {
+                // ignore non-JSON lines or partial fragments
+            }
+        }
+        return result;
+    }
+
+    /// <inheritdoc />
     public List<string> ParseModelsResponse(string json)
     {
         var response = JsonConvert.DeserializeObject<OllamaModelsResponse>(json);
@@ -85,6 +109,12 @@ public class OllamaStrategy : IApiProviderStrategy
     private struct OllamaResponse
     {
         [JsonProperty("message")] public MessagePayload Message { get; set; }
+    }
+
+    private struct OllamaStreamChunk
+    {
+        [JsonProperty("message")] public MessagePayload Message { get; set; }
+        [JsonProperty("done")] public bool Done { get; set; }
     }
 
     private struct OllamaModelsResponse

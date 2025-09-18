@@ -47,6 +47,13 @@ public interface IApiProviderStrategy
     string ParseChatResponse(string json);
 
     /// <summary>
+    ///     Parses a streamed chunk from a chat response and extracts any new text content.
+    /// </summary>
+    /// <param name="streamChunk">The raw streamed chunk (SSE line, JSONL, or partial text).</param>
+    /// <returns>The extracted text delta to append to the UI.</returns>
+    string ParseChatResponseStream(string streamChunk);
+
+    /// <summary>
     ///     Parses the JSON response from a models request to extract the list of model names.
     /// </summary>
     /// <param name="json">The JSON response from the API.</param>

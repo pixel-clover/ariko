@@ -92,6 +92,141 @@ public class ArikoLLMService
     }
 
     /// <summary>
+    ///     Sends a chat request in streaming mode. Invokes onChunk as text deltas arrive and onComplete on finish.
+    /// </summary>
+    public void SendChatRequestStreamed(List<ChatMessage> messages, AIProvider provider, string modelName,
+        ArikoSettings settings, Dictionary<string, string> apiKeys, Action<string> onChunk,
+        Action<WebRequestResult<string>> onComplete)
+    {
+        if (string.IsNullOrEmpty(modelName))
+        {
+            onComplete?.Invoke(WebRequestResult<string>.Fail("No AI model selected.", ErrorType.Unknown));
+            return;
+        }
+        if (messages == null || messages.Count == 0)
+        {
+            onComplete?.Invoke(WebRequestResult<string>.Fail("Cannot send an empty message history.", ErrorType.Unknown));
+            return;
+        }
+        if (!strategies.TryGetValue(provider, out var strategy))
+        {
+            onComplete?.Invoke(WebRequestResult<string>.Fail("Provider not supported.", ErrorType.Unknown));
+            return;
+        }
+
+        var urlResult = strategy.GetChatUrl(modelName, settings, apiKeys);
+        if (!urlResult.IsSuccess)
+        {
+            onComplete?.Invoke(WebRequestResult<string>.Fail(urlResult.Error, urlResult.ErrorType));
+            return;
+        }
+        var authResult = strategy.GetAuthHeader(settings, apiKeys);
+        if (!authResult.IsSuccess)
+        {
+            onComplete?.Invoke(WebRequestResult<string>.Fail(authResult.Error, authResult.ErrorType));
+            return;
+        }
+
+        var jsonBody = strategy.BuildChatRequestBody(messages, modelName);
+        // Make a best-effort to enable streaming on providers that support it without changing strategy interface further
+        if (provider == AIProvider.OpenAI)
+        {
+            // Insert "stream":true at root if not present
+            if (jsonBody.TrimEnd().EndsWith("}")) jsonBody = jsonBody.TrimEnd().TrimEnd('}') + ",\"stream\":true}";
+        }
+        else if (provider == AIProvider.Ollama)
+        {
+            jsonBody = jsonBody.Replace("\"stream\": false", "\"stream\": true");
+        }
+
+        cancellationTokenSource?.Cancel();
+        cancellationTokenSource = new CancellationTokenSource();
+
+        var request = new UnityWebRequest(urlResult.Data, "POST");
+        request.timeout = RequestTimeout;
+
+        var bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        var downloadHandler = new DownloadHandlerBuffer();
+        request.downloadHandler = downloadHandler;
+        request.SetRequestHeader("Content-Type", "application/json");
+        if (!string.IsNullOrEmpty(authResult.Data)) request.SetRequestHeader("Authorization", authResult.Data);
+
+        var operation = request.SendWebRequest();
+        // Abort request if cancellation is requested
+        try
+        {
+            var token = cancellationTokenSource.Token;
+            token.Register(() =>
+            {
+                try { request.Abort(); } catch { /* ignore */ }
+            });
+        }
+        catch { /* ignore */ }
+
+        var lastLength = 0;
+        var aggregate = new StringBuilder();
+
+#if UNITY_EDITOR
+        void Tick()
+        {
+            if (cancellationTokenSource == null)
+            {
+                UnityEditor.EditorApplication.update -= Tick;
+                return;
+            }
+
+            // Emit any new data
+            var text = downloadHandler.text;
+            if (text != null && text.Length > lastLength)
+            {
+                var chunkRaw = text.Substring(lastLength);
+                lastLength = text.Length;
+                var parsed = strategy.ParseChatResponseStream(chunkRaw);
+                if (!string.IsNullOrEmpty(parsed))
+                {
+                    aggregate.Append(parsed);
+                    try { onChunk?.Invoke(parsed); } catch { /* ignore UI errors */ }
+                }
+            }
+
+            // Check completion
+            if (operation.isDone)
+            {
+                UnityEditor.EditorApplication.update -= Tick;
+                try
+                {
+                    var finalResult = HandleApiResponse(request, _ => aggregate.ToString());
+                    onComplete?.Invoke(finalResult);
+                }
+                finally
+                {
+                    request.Dispose();
+                    cancellationTokenSource?.Dispose();
+                    cancellationTokenSource = null;
+                }
+            }
+            else if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.DataProcessingError)
+            {
+                UnityEditor.EditorApplication.update -= Tick;
+                try
+                {
+                    var errorResult = HandleApiResponse<string>(request, _ => aggregate.ToString());
+                    onComplete?.Invoke(errorResult);
+                }
+                finally
+                {
+                    request.Dispose();
+                    cancellationTokenSource?.Dispose();
+                    cancellationTokenSource = null;
+                }
+            }
+        }
+        UnityEditor.EditorApplication.update += Tick;
+#endif
+    }
+
+    /// <summary>
     ///     Fetches the list of available models from the specified AI provider.
     /// </summary>
     /// <param name="provider">The AI provider to query.</param>

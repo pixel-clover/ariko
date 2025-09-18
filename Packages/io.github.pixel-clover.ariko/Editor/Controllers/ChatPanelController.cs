@@ -26,6 +26,11 @@ public class ChatPanelController
     private readonly TextField userInput;
     private VisualElement thinkingMessage;
 
+    // Streaming state
+    private VisualElement streamingAssistantElement;
+    private VisualElement streamingAssistantContentContainer;
+    private System.Text.StringBuilder streamingAssistantText;
+
     public ChatPanelController(VisualElement root, ArikoChatController controller, ArikoSettings arikosettings,
         MarkdigRenderer renderer, PopupField<string> provider, PopupField<string> model)
     {
@@ -96,7 +101,30 @@ public class ChatPanelController
     {
         try
         {
-            await chatController.SendMessageToAssistant(text, providerPopup.value, modelPopup.value);
+            // Create or reuse assistant visual for streaming
+            PrepareStreamingAssistantElement();
+            streamingAssistantText = new System.Text.StringBuilder();
+
+            await chatController.SendMessageToAssistantStreamed(
+                text,
+                providerPopup.value,
+                modelPopup.value,
+                delta =>
+                {
+                    streamingAssistantText.Append(delta);
+                    UpdateStreamingAssistantContent(streamingAssistantText.ToString());
+                },
+                (success, errorText) =>
+                {
+                    // Finalization handled in HandleMessageAdded to avoid duplicate elements
+                    if (!success && !string.IsNullOrEmpty(errorText))
+                    {
+                        UpdateStreamingAssistantContent(errorText);
+                        streamingAssistantElement.AddToClassList("error-message");
+                    }
+                    streamingAssistantText = null;
+                }
+            );
         }
         catch (Exception e)
         {
@@ -108,6 +136,30 @@ public class ChatPanelController
     private void HandleMessageAdded(ChatMessage message, ChatSession session)
     {
         if (session != chatController.ActiveSession) return;
+
+        // If we are currently streaming and the final assistant message arrives, update the existing element
+        if (streamingAssistantElement != null && message.Role == "Ariko" && message.Content != "...")
+        {
+            UpdateStreamingAssistantContent(message.Content);
+            // Add copy button now that final content is ready
+            var header = streamingAssistantElement.Q<VisualElement>(className: "message-header");
+            if (header != null && header.Q<Button>(className: "copy-button") == null)
+            {
+                var copyButton = new Button(() => EditorGUIUtility.systemCopyBuffer = message.Content)
+                {
+                    text = ArikoUIStrings.CopyButton
+                };
+                copyButton.AddToClassList("copy-button");
+                header.Add(copyButton);
+            }
+
+            streamingAssistantElement = null;
+            streamingAssistantContentContainer = null;
+            thinkingMessage = null;
+            ScrollToBottom();
+            UpdateEmptyState();
+            return;
+        }
 
         if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." &&
             chatHistoryScrollView.Contains(thinkingMessage))
@@ -295,5 +347,56 @@ public class ChatPanelController
         objectPickerControlID = EditorGUIUtility.GetControlID(FocusType.Passive);
         EditorGUIUtility.ShowObjectPicker<Object>(null, true, "t:MonoScript t:TextAsset t:Prefab t:Shader",
             objectPickerControlID);
+    }
+
+    // --- Streaming Helpers ---
+    private void PrepareStreamingAssistantElement()
+    {
+        // Reuse thinking bubble if present
+        if (thinkingMessage != null && chatHistoryScrollView.Contains(thinkingMessage))
+        {
+            streamingAssistantElement = thinkingMessage;
+            streamingAssistantContentContainer = streamingAssistantElement.Q<VisualElement>("content-container");
+            return;
+        }
+
+        // Otherwise, create a new assistant message container
+        var message = new ChatMessage { Role = "Ariko", Content = "..." };
+        var container = new VisualElement();
+        container.AddToClassList("chat-message");
+        container.AddToClassList("ariko-message");
+
+        var headerContainer = new VisualElement();
+        headerContainer.AddToClassList("message-header");
+        var roleLabel = new Label(message.Role) { name = "role" };
+        roleLabel.AddToClassList("role-label");
+        headerContainer.Add(roleLabel);
+
+        var contentContainer = new VisualElement { name = "content-container" };
+        contentContainer.Add(markdownRenderer.Render(message.Content));
+
+        container.Add(headerContainer);
+        container.Add(contentContainer);
+        chatHistoryScrollView.Add(container);
+        ApplyChatStylesForElement(container);
+
+        streamingAssistantElement = container;
+        streamingAssistantContentContainer = contentContainer;
+        thinkingMessage = container;
+        ScrollToBottom();
+        UpdateEmptyState();
+    }
+
+    private void UpdateStreamingAssistantContent(string fullText)
+    {
+        if (streamingAssistantElement == null) return;
+        if (streamingAssistantContentContainer == null)
+            streamingAssistantContentContainer = streamingAssistantElement.Q<VisualElement>("content-container");
+        if (streamingAssistantContentContainer == null) return;
+
+        streamingAssistantContentContainer.Clear();
+        streamingAssistantContentContainer.Add(markdownRenderer.Render(fullText));
+        ApplyChatStylesForElement(streamingAssistantElement);
+        ScrollToBottom();
     }
 }

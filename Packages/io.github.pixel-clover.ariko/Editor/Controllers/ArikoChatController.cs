@@ -188,27 +188,7 @@ public class ArikoChatController
         {
             OnResponseStatusChanged?.Invoke(true);
 
-            var messagesToSend = new List<ChatMessage>();
-            var context =
-                contextBuilder.BuildContextString(AutoContext, Selection.activeObject, ManuallyAttachedAssets);
-
-            // Add system prompt and context as the first message
-            if (!string.IsNullOrEmpty(settings.systemPrompt) || !string.IsNullOrEmpty(context))
-            {
-                var systemContent = new StringBuilder();
-                if (!string.IsNullOrEmpty(settings.systemPrompt)) systemContent.AppendLine(settings.systemPrompt);
-                if (!string.IsNullOrEmpty(context))
-                {
-                    systemContent.AppendLine("\n--- Context ---");
-                    systemContent.AppendLine(context);
-                }
-
-                messagesToSend.Add(new ChatMessage { Role = "System", Content = systemContent.ToString() });
-            }
-
-            // Add all messages from the current session.
-            // The user's latest message is already in this list.
-            messagesToSend.AddRange(sessionForThisMessage.Messages);
+            var messagesToSend = BuildMessagesWithContext(sessionForThisMessage);
 
             var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
             var result = await llmService.SendChatRequest(messagesToSend, provider, selectedModel, settings, apiKeys);
@@ -224,6 +204,88 @@ public class ArikoChatController
 
             OnResponseStatusChanged?.Invoke(false);
         }
+    }
+
+    /// <summary>
+    ///     Sends a message to the assistant and streams the response chunk-by-chunk.
+    /// </summary>
+    public async Task SendMessageToAssistantStreamed(string text, string selectedProvider, string selectedModel,
+        Action<string> onChunk, Action<bool, string> onFinished)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        var sessionForThisMessage = ActiveSession;
+
+        // Add user message to session and notify view
+        var userMessage = new ChatMessage { Role = "User", Content = text };
+        sessionForThisMessage.Messages.Add(userMessage);
+        OnMessageAdded?.Invoke(userMessage, sessionForThisMessage);
+
+        OnResponseStatusChanged?.Invoke(true);
+
+        var messagesToSend = BuildMessagesWithContext(sessionForThisMessage);
+        var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
+
+        var aggregate = new StringBuilder();
+        void HandleChunk(string delta)
+        {
+            aggregate.Append(delta);
+            onChunk?.Invoke(delta);
+        }
+
+        void HandleComplete(WebRequestResult<string> result)
+        {
+            try
+            {
+                string content;
+                var isError = !result.IsSuccess;
+                if (result.IsSuccess)
+                {
+                    content = aggregate.ToString();
+                }
+                else
+                {
+                    content = GetFormattedErrorMessage(result.Error, result.ErrorType);
+                }
+                var finalMessage = new ChatMessage { Role = "Ariko", Content = content, IsError = isError };
+                sessionForThisMessage.Messages.Add(finalMessage);
+                OnMessageAdded?.Invoke(finalMessage, sessionForThisMessage);
+
+                onFinished?.Invoke(result.IsSuccess, result.IsSuccess ? null : content);
+            }
+            finally
+            {
+                OnResponseStatusChanged?.Invoke(false);
+            }
+        }
+
+        // Fire and forget streaming request; callbacks will finalize state
+        llmService.SendChatRequestStreamed(messagesToSend, provider, selectedModel, settings, apiKeys, HandleChunk,
+            HandleComplete);
+    }
+
+    private List<ChatMessage> BuildMessagesWithContext(ChatSession sessionForThisMessage)
+    {
+        var messagesToSend = new List<ChatMessage>();
+        var context = contextBuilder.BuildContextString(AutoContext, Selection.activeObject, ManuallyAttachedAssets);
+
+        // Add system prompt and context as the first message
+        if (!string.IsNullOrEmpty(settings.systemPrompt) || !string.IsNullOrEmpty(context))
+        {
+            var systemContent = new StringBuilder();
+            if (!string.IsNullOrEmpty(settings.systemPrompt)) systemContent.AppendLine(settings.systemPrompt);
+            if (!string.IsNullOrEmpty(context))
+            {
+                systemContent.AppendLine("\n--- Context ---");
+                systemContent.AppendLine(context);
+            }
+
+            messagesToSend.Add(new ChatMessage { Role = "System", Content = systemContent.ToString() });
+        }
+
+        // Add all messages from the current session.
+        messagesToSend.AddRange(sessionForThisMessage.Messages);
+        return messagesToSend;
     }
 
 

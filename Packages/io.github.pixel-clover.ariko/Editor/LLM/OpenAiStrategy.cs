@@ -58,6 +58,33 @@ public class OpenAiStrategy : IApiProviderStrategy
     }
 
     /// <inheritdoc />
+    public string ParseChatResponseStream(string streamChunk)
+    {
+        // OpenAI streaming typically sends Server-Sent Events with lines starting with "data: {json}"
+        if (string.IsNullOrEmpty(streamChunk)) return string.Empty;
+        var result = string.Empty;
+        var lines = streamChunk.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var raw in lines)
+        {
+            var line = raw.Trim();
+            if (!line.StartsWith("data:")) continue;
+            var payload = line.Substring("data:".Length).Trim();
+            if (payload == "[DONE]") continue;
+            try
+            {
+                var node = JsonConvert.DeserializeObject<OpenAIStreamChunk>(payload);
+                var delta = node?.Choices != null && node.Choices.Length > 0 ? node.Choices[0]?.Delta?.Content : null;
+                if (!string.IsNullOrEmpty(delta)) result += delta;
+            }
+            catch
+            {
+                // Ignore partial/broken JSON fragments
+            }
+        }
+        return result;
+    }
+
+    /// <inheritdoc />
     public List<string> ParseModelsResponse(string json)
     {
         var allAvailableModels = JsonConvert.DeserializeObject<OpenAIModelsResponse>(json).Data
@@ -83,6 +110,8 @@ public class OpenAiStrategy : IApiProviderStrategy
         [JsonProperty("model")] public string Model { get; set; }
 
         [JsonProperty("messages")] public MessagePayload[] Messages { get; set; }
+
+        [JsonProperty("stream", NullValueHandling = NullValueHandling.Ignore)] public bool? Stream { get; set; }
     }
 
     private class OpenAIResponse
@@ -93,11 +122,22 @@ public class OpenAiStrategy : IApiProviderStrategy
     private class Choice
     {
         [JsonProperty("message")] public Message Message { get; set; }
+        [JsonProperty("delta")] public Delta Delta { get; set; }
     }
 
     private class Message
     {
         [JsonProperty("content")] public string Content { get; set; }
+    }
+
+    private class Delta
+    {
+        [JsonProperty("content")] public string Content { get; set; }
+    }
+
+    private class OpenAIStreamChunk
+    {
+        [JsonProperty("choices")] public Choice[] Choices { get; set; }
     }
 
     private class OpenAIModelsResponse

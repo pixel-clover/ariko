@@ -67,7 +67,8 @@ public class ArikoLLMService
     /// <param name="settings">The Ariko settings.</param>
     /// <param name="apiKeys">A dictionary of API keys for the providers.</param>
     /// <returns>A web request result containing the AI's response text or an error.</returns>
-    public async Task<WebRequestResult<string>> SendChatRequest(List<ChatMessage> messages, AIProvider provider, string modelName,
+    public async Task<WebRequestResult<string>> SendChatRequest(List<ChatMessage> messages, AIProvider provider,
+        string modelName,
         ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
         if (string.IsNullOrEmpty(modelName))

@@ -73,7 +73,8 @@
                 <ui:Label text="System Prompt" class="sub-header-label"/>
                 <ui:TextField name="system-prompt" multiline="true" style="flex-grow: 1;" class="system-prompt-field"/>
                 <ui:Label text="Agent System Prompt" class="sub-header-label"/>
-                <ui:TextField name="agent-system-prompt" multiline="true" style="flex-grow: 1;" class="system-prompt-field"/>
+                <ui:TextField name="agent-system-prompt" multiline="true" style="flex-grow: 1;"
+                              class="system-prompt-field"/>
                 <ui:Button text="Save &amp; Close" name="save-settings-button" style="height: 30px;"/>
             </ui:VisualElement>
         </ui:VisualElement>

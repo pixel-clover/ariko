@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ArikoSettings
   m_EditorClassIdentifier: 
   ollama_Url: http://localhost:11434
-  google_SelectedModel: models/gemini-2.5-pro
+  google_SelectedModel: models/gemini-2.5-flash
   openAI_SelectedModel: 
   ollama_SelectedModel: 
   selectedProvider: Google
@@ -66,5 +66,6 @@ MonoBehaviour:
     \"TheNameOfTheToolToUse\",\n  \"parameters\": { \"param1\": \"value1\", \"param2\":
     123 }\n}\nIf you do not need to use a tool, or if the task is complete, respond
     with a conversational message."
-  syntaxTheme: {fileID: 0}
-  languageDefinitions: []
+  syntaxTheme: {fileID: 11400000, guid: 77cc8f8b58867758fa27d941a1ba3b5b, type: 2}
+  languageDefinitions:
+  - {fileID: 11400000, guid: bc36534dce16db6d5b9d4b73274cca7c, type: 2}

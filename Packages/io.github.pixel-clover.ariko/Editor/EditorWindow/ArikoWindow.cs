@@ -64,10 +64,7 @@ public class ArikoWindow : EditorWindow
                 chatPanelController.UpdateManualAttachmentsList();
             }
 
-            if (Event.current.type != EventType.Layout)
-            {
-                Event.current.Use();
-            }
+            if (Event.current.type != EventType.Layout) Event.current.Use();
         }
     }
 
@@ -81,7 +78,8 @@ public class ArikoWindow : EditorWindow
             AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/io.github.pixel-clover.ariko/Editor/EditorWindow/ArikoWindow.uxml");
         var styleSheet =
-            AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/io.github.pixel-clover.ariko/Editor/EditorWindow/ArikoWindow.uss");
+            AssetDatabase.LoadAssetAtPath<StyleSheet>(
+                "Packages/io.github.pixel-clover.ariko/Editor/EditorWindow/ArikoWindow.uss");
         rootVisualElement.styleSheets.Add(styleSheet);
         visualTree.CloneTree(rootVisualElement);
 
@@ -189,7 +187,8 @@ public class ArikoWindow : EditorWindow
             settings.selectedProvider = evt.newValue;
             await FetchModelsForCurrentProviderAsync(evt.newValue);
         });
-        modelPopup.RegisterValueChangedCallback(evt => SetSelectedModelForProvider(evt.newValue));
+        modelPopup.RegisterValueChangedCallback(evt =>
+            controller.SetSelectedModelForProvider(providerPopup.value, evt.newValue));
         workModePopup.RegisterValueChangedCallback(evt =>
         {
             settings.selectedWorkMode = evt.newValue;
@@ -212,7 +211,7 @@ public class ArikoWindow : EditorWindow
         modelPopup.choices.Clear();
         modelPopup.choices.AddRange(models);
 
-        var currentModel = GetSelectedModelForProvider();
+        var currentModel = controller.GetSelectedModelForProvider(providerPopup.value);
         if (modelPopup.choices.Contains(currentModel))
         {
             modelPopup.SetValueWithoutNotify(currentModel);
@@ -221,7 +220,7 @@ public class ArikoWindow : EditorWindow
         {
             var newModel = modelPopup.choices.FirstOrDefault();
             modelPopup.SetValueWithoutNotify(newModel);
-            SetSelectedModelForProvider(newModel);
+            controller.SetSelectedModelForProvider(providerPopup.value, newModel);
         }
     }
 
@@ -234,7 +233,8 @@ public class ArikoWindow : EditorWindow
 
     private void HandleToolCallConfirmationRequested(ToolCall toolCall)
     {
-        confirmationLabel.text = $"I am planning to perform the following action:\n\nTool: {toolCall.tool_name}\n\nReasoning: {toolCall.thought}\n\nPlease approve to continue.";
+        confirmationLabel.text =
+            $"I am planning to perform the following action:\n\nTool: {toolCall.tool_name}\n\nReasoning: {toolCall.thought}\n\nPlease approve to continue.";
         confirmationDialog.style.display = DisplayStyle.Flex;
         rootVisualElement.Q<TextField>("user-input").SetEnabled(false);
     }
@@ -259,28 +259,6 @@ public class ArikoWindow : EditorWindow
         }
     }
 
-    private string GetSelectedModelForProvider()
-    {
-        var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), providerPopup.value);
-        return provider switch
-        {
-            ArikoLLMService.AIProvider.Google => settings.google_SelectedModel,
-            ArikoLLMService.AIProvider.OpenAI => settings.openAI_SelectedModel,
-            ArikoLLMService.AIProvider.Ollama => settings.ollama_SelectedModel,
-            _ => null
-        };
-    }
-
-    private void SetSelectedModelForProvider(string modelName)
-    {
-        var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), providerPopup.value);
-        switch (provider)
-        {
-            case ArikoLLMService.AIProvider.Google: settings.google_SelectedModel = modelName; break;
-            case ArikoLLMService.AIProvider.OpenAI: settings.openAI_SelectedModel = modelName; break;
-            case ArikoLLMService.AIProvider.Ollama: settings.ollama_SelectedModel = modelName; break;
-        }
-    }
 
     public async void SendExternalMessage(string message)
     {

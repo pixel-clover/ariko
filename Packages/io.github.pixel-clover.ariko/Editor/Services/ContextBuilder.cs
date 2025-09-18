@@ -1,13 +1,14 @@
-using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 public class ContextBuilder
 {
-    public string BuildContextString(bool autoContext, Object currentSelection, IEnumerable<Object> manuallyAttachedAssets)
+    public string BuildContextString(bool autoContext, Object currentSelection,
+        IEnumerable<Object> manuallyAttachedAssets)
     {
         var contextBuilder = new StringBuilder();
         if (autoContext && currentSelection != null)
@@ -19,10 +20,7 @@ public class ContextBuilder
         if (manuallyAttachedAssets != null && manuallyAttachedAssets.Any())
         {
             contextBuilder.AppendLine("--- Manually Attached Context ---");
-            foreach (var asset in manuallyAttachedAssets)
-            {
-                AppendAssetInfo(asset, contextBuilder);
-            }
+            foreach (var asset in manuallyAttachedAssets) AppendAssetInfo(asset, contextBuilder);
         }
 
         return contextBuilder.ToString();

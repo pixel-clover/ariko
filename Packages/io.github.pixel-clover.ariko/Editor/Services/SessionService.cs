@@ -10,9 +10,6 @@ public class SessionService
     public Action OnChatReloaded;
     public Action OnHistoryChanged;
 
-    public List<ChatSession> ChatHistory { get; }
-    public ChatSession ActiveSession { get; private set; }
-
     public SessionService(ArikoSettings settings)
     {
         this.settings = settings;
@@ -27,6 +24,9 @@ public class SessionService
             ActiveSession = ChatHistory[0];
         }
     }
+
+    public List<ChatSession> ChatHistory { get; }
+    public ChatSession ActiveSession { get; private set; }
 
     public void ClearChat()
     {

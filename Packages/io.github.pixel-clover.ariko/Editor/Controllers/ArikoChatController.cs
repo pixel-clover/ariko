@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using UnityEditor;
-using UnityEngine;
 using Object = UnityEngine.Object;
 
 /// <summary>
@@ -15,8 +11,11 @@ using Object = UnityEngine.Object;
 /// </summary>
 public class ArikoChatController
 {
+    private readonly AgentService agentService;
     private readonly Dictionary<string, string> apiKeys = new();
+    private readonly ContextBuilder contextBuilder = new();
     private readonly ArikoLLMService llmService;
+    private readonly SessionService sessionService;
     private readonly ArikoSettings settings;
 
     /// <summary>
@@ -64,9 +63,6 @@ public class ArikoChatController
     public Action<ToolCall> OnToolCallConfirmationRequested;
 
     private ToolRegistry toolRegistry;
-    private readonly SessionService sessionService;
-    private readonly ContextBuilder contextBuilder = new ContextBuilder();
-    private AgentService agentService;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ArikoChatController" /> class.
@@ -193,21 +189,20 @@ public class ArikoChatController
             OnResponseStatusChanged?.Invoke(true);
 
             var messagesToSend = new List<ChatMessage>();
-            var context = contextBuilder.BuildContextString(AutoContext, Selection.activeObject, ManuallyAttachedAssets);
+            var context =
+                contextBuilder.BuildContextString(AutoContext, Selection.activeObject, ManuallyAttachedAssets);
 
             // Add system prompt and context as the first message
             if (!string.IsNullOrEmpty(settings.systemPrompt) || !string.IsNullOrEmpty(context))
             {
                 var systemContent = new StringBuilder();
-                if(!string.IsNullOrEmpty(settings.systemPrompt))
-                {
-                    systemContent.AppendLine(settings.systemPrompt);
-                }
-                if(!string.IsNullOrEmpty(context))
+                if (!string.IsNullOrEmpty(settings.systemPrompt)) systemContent.AppendLine(settings.systemPrompt);
+                if (!string.IsNullOrEmpty(context))
                 {
                     systemContent.AppendLine("\n--- Context ---");
                     systemContent.AppendLine(context);
                 }
+
                 messagesToSend.Add(new ChatMessage { Role = "System", Content = systemContent.ToString() });
             }
 
@@ -263,6 +258,51 @@ public class ArikoChatController
             OnError?.Invoke(errorMessage);
             OnModelsFetched?.Invoke(new List<string> { "Error" });
         }
+    }
+
+    /// <summary>
+    ///     Gets the last selected model for the given provider from settings.
+    /// </summary>
+    /// <param name="providerName">Provider name as string matching ArikoLLMService.AIProvider enum.</param>
+    /// <returns>Model id or null.</returns>
+    public string GetSelectedModelForProvider(string providerName)
+    {
+        var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), providerName);
+        switch (provider)
+        {
+            case ArikoLLMService.AIProvider.Google:
+                return settings.google_SelectedModel;
+            case ArikoLLMService.AIProvider.OpenAI:
+                return settings.openAI_SelectedModel;
+            case ArikoLLMService.AIProvider.Ollama:
+                return settings.ollama_SelectedModel;
+            default:
+                return null;
+        }
+    }
+
+    /// <summary>
+    ///     Sets the last selected model for the given provider and persists settings.
+    /// </summary>
+    /// <param name="providerName">Provider name as string matching ArikoLLMService.AIProvider enum.</param>
+    /// <param name="modelName">Model id/name to persist.</param>
+    public void SetSelectedModelForProvider(string providerName, string modelName)
+    {
+        var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), providerName);
+        switch (provider)
+        {
+            case ArikoLLMService.AIProvider.Google:
+                settings.google_SelectedModel = modelName;
+                break;
+            case ArikoLLMService.AIProvider.OpenAI:
+                settings.openAI_SelectedModel = modelName;
+                break;
+            case ArikoLLMService.AIProvider.Ollama:
+                settings.ollama_SelectedModel = modelName;
+                break;
+        }
+
+        ArikoSettingsManager.SaveSettings(settings);
     }
 
     private string GetFormattedErrorMessage(string error, ErrorType errorType)
@@ -326,5 +366,4 @@ public class ArikoChatController
     {
         llmService.CancelRequest();
     }
-
 }

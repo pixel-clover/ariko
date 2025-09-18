@@ -7,16 +7,16 @@ using Newtonsoft.Json;
 
 public class AgentService
 {
-    private readonly ArikoLLMService llmService;
-    private readonly ArikoSettings settings;
     private readonly Dictionary<string, string> apiKeys;
-    private readonly Func<ChatSession> getActiveSession;
     private readonly Func<string> buildContext;
+    private readonly Func<ChatSession> getActiveSession;
     private readonly Func<ToolRegistry> getToolRegistry;
+    private readonly ArikoLLMService llmService;
+    private readonly Action<ChatMessage, ChatSession> onMessageAdded;
 
     private readonly Action<bool> onResponseStatusChanged;
-    private readonly Action<ChatMessage, ChatSession> onMessageAdded;
     private readonly Action<ToolCall> onToolCallConfirmationRequested;
+    private readonly ArikoSettings settings;
 
     private ToolCall pendingToolCall;
 
@@ -122,6 +122,7 @@ public class AgentService
             {
                 executionResult = $"Error: Tool '{toolCall.tool_name}' not found.";
             }
+
             var resultMessage = new ChatMessage { Role = "User", Content = $"Observation: {executionResult}" };
             sessionForThisMessage.Messages.Add(resultMessage);
             onMessageAdded?.Invoke(resultMessage, sessionForThisMessage);

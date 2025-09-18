@@ -18,12 +18,12 @@ public class ArikoLLMService
     public enum AIProvider
     {
         /// <summary>
-        ///     Google AI (e.g., Gemini).
+        ///     Google AI (for example, Gemini 2.5 Pro).
         /// </summary>
         Google,
 
         /// <summary>
-        ///     OpenAI (e.g., GPT-4).
+        ///     OpenAI (for example, GPT-5).
         /// </summary>
         OpenAI,
 

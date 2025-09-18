@@ -50,6 +50,7 @@ public class MarkdigRenderer
             case HeadingBlock heading:
                 var header = new Label(GetInlineText(heading.Inline));
                 header.AddToClassList($"h{heading.Level}");
+            header.AddToClassList("unity-text-element__selectable");
                 return header;
             case ParagraphBlock paragraph:
                 // Paragraphs can contain multiple inline elements (text, links, bold, etc.)
@@ -58,6 +59,7 @@ public class MarkdigRenderer
                 var p = new Label(GetInlineText(paragraph.Inline));
                 p.enableRichText = true; // For bold, italic, etc.
                 p.AddToClassList("markdown-paragraph");
+            p.AddToClassList("unity-text-element__selectable");
                 return p;
             case FencedCodeBlock code:
                 return CreateCodeBlock(code.Lines.ToString(), code.Info);
@@ -118,6 +120,7 @@ public class MarkdigRenderer
 
         var codeLabel = new Label();
         codeLabel.AddToClassList("code-block-content");
+        codeLabel.AddToClassList("unity-text-element__selectable");
 
         // --- Syntax Highlighting ---
         var highlightedCode = content.Trim();

@@ -59,7 +59,7 @@ public class ChatPanelController
 
     private void RegisterCallbacks()
     {
-        chatController.OnMessageAdded += HandleMessageAdded;
+        chatController.OnMessageAdded += (message, session) => HandleMessageAdded(message, session);
         chatController.OnChatCleared += HandleChatCleared;
         chatController.OnChatReloaded += HandleChatReloaded;
         chatController.OnResponseStatusChanged += SetResponsePending;
@@ -105,8 +105,10 @@ public class ChatPanelController
         }
     }
 
-    private void HandleMessageAdded(ChatMessage message)
+    private void HandleMessageAdded(ChatMessage message, ChatSession session)
     {
+        if (session != chatController.ActiveSession) return;
+
         if (thinkingMessage != null && message.Role == "Ariko" && message.Content != "..." &&
             chatHistoryScrollView.Contains(thinkingMessage))
         {
@@ -142,7 +144,6 @@ public class ChatPanelController
     private void HandleError(string error)
     {
         Debug.LogError($"Ariko: {error}");
-        AddMessageToChat(new ChatMessage { Role = "System", Content = error, IsError = true });
         SetStatus(ArikoUIStrings.StatusError);
     }
 

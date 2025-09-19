@@ -34,10 +34,10 @@ public interface IApiProviderStrategy
     /// <summary>
     ///     Builds the JSON body for a chat request.
     /// </summary>
-    /// <param name="prompt">The prompt to send to the model.</param>
+    /// <param name="messages">The history of messages to send to the model.</param>
     /// <param name="modelName">The name of the model being used.</param>
     /// <returns>A JSON string representing the request body.</returns>
-    string BuildChatRequestBody(string prompt, string modelName);
+    string BuildChatRequestBody(List<ChatMessage> messages, string modelName);
 
     /// <summary>
     ///     Parses the JSON response from a chat request to extract the content.
@@ -45,6 +45,13 @@ public interface IApiProviderStrategy
     /// <param name="json">The JSON response from the API.</param>
     /// <returns>The extracted chat message content.</returns>
     string ParseChatResponse(string json);
+
+    /// <summary>
+    ///     Parses a streamed chunk from a chat response and extracts any new text content.
+    /// </summary>
+    /// <param name="streamChunk">The raw streamed chunk (SSE line, JSONL, or partial text).</param>
+    /// <returns>The extracted text delta to append to the UI.</returns>
+    string ParseChatResponseStream(string streamChunk);
 
     /// <summary>
     ///     Parses the JSON response from a models request to extract the list of model names.

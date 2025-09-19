@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using UnityEngine;
 
 /// <summary>
 ///     Implements the <see cref="IApiProviderStrategy" /> for the OpenAI API.
@@ -30,12 +32,21 @@ public class OpenAiStrategy : IApiProviderStrategy
     }
 
     /// <inheritdoc />
-    public string BuildChatRequestBody(string prompt, string modelName)
+    public string BuildChatRequestBody(List<ChatMessage> messages, string modelName)
     {
         var payload = new OpenAIPayload
         {
             Model = modelName,
-            Messages = new[] { new MessagePayload { Role = "user", Content = prompt } }
+            Messages = messages.Select(m =>
+            {
+                var role = "user"; // Default to "user"
+                if (m.Role.Equals("Ariko", StringComparison.OrdinalIgnoreCase) ||
+                    m.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase))
+                    role = "assistant";
+                else if (m.Role.Equals("System", StringComparison.OrdinalIgnoreCase)) role = "system";
+
+                return new MessagePayload { Role = role, Content = m.Content };
+            }).ToArray()
         };
         return JsonConvert.SerializeObject(payload);
     }
@@ -45,6 +56,34 @@ public class OpenAiStrategy : IApiProviderStrategy
     {
         var response = JsonConvert.DeserializeObject<OpenAIResponse>(json);
         return response.Choices?.FirstOrDefault()?.Message?.Content ?? "No content found in response.";
+    }
+
+    /// <inheritdoc />
+    public string ParseChatResponseStream(string streamChunk)
+    {
+        // OpenAI streaming typically sends Server-Sent Events with lines starting with "data: {json}"
+        if (string.IsNullOrEmpty(streamChunk)) return string.Empty;
+        var result = string.Empty;
+        var lines = streamChunk.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var raw in lines)
+        {
+            var line = raw.Trim();
+            if (!line.StartsWith("data:")) continue;
+            var payload = line.Substring("data:".Length).Trim();
+            if (payload == "[DONE]") continue;
+            try
+            {
+                var node = JsonConvert.DeserializeObject<OpenAIStreamChunk>(payload);
+                var delta = node?.Choices != null && node.Choices.Length > 0 ? node.Choices[0]?.Delta?.Content : null;
+                if (!string.IsNullOrEmpty(delta)) result += delta;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[Ariko] Error parsing OpenAI stream chunk: {e.Message}");
+            }
+        }
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -73,6 +112,9 @@ public class OpenAiStrategy : IApiProviderStrategy
         [JsonProperty("model")] public string Model { get; set; }
 
         [JsonProperty("messages")] public MessagePayload[] Messages { get; set; }
+
+        [JsonProperty("stream", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? Stream { get; set; }
     }
 
     private class OpenAIResponse
@@ -83,11 +125,22 @@ public class OpenAiStrategy : IApiProviderStrategy
     private class Choice
     {
         [JsonProperty("message")] public Message Message { get; set; }
+        [JsonProperty("delta")] public Delta Delta { get; set; }
     }
 
     private class Message
     {
         [JsonProperty("content")] public string Content { get; set; }
+    }
+
+    private class Delta
+    {
+        [JsonProperty("content")] public string Content { get; set; }
+    }
+
+    private class OpenAIStreamChunk
+    {
+        [JsonProperty("choices")] public Choice[] Choices { get; set; }
     }
 
     private class OpenAIModelsResponse

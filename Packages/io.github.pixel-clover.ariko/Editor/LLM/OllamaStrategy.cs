@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using UnityEngine;
 
 /// <summary>
 ///     Implements the <see cref="IApiProviderStrategy" /> for a local Ollama server.
@@ -31,12 +33,21 @@ public class OllamaStrategy : IApiProviderStrategy
     }
 
     /// <inheritdoc />
-    public string BuildChatRequestBody(string prompt, string modelName)
+    public string BuildChatRequestBody(List<ChatMessage> messages, string modelName)
     {
         var payload = new OllamaPayload
         {
             Model = modelName,
-            Messages = new[] { new MessagePayload { Role = "user", Content = prompt } },
+            Messages = messages.Select(m =>
+            {
+                var role = "user"; // Default to "user"
+                if (m.Role.Equals("Ariko", StringComparison.OrdinalIgnoreCase) ||
+                    m.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase))
+                    role = "assistant";
+                else if (m.Role.Equals("System", StringComparison.OrdinalIgnoreCase)) role = "system";
+
+                return new MessagePayload { Role = role, Content = m.Content };
+            }).ToArray(),
             Stream = false
         };
         return JsonConvert.SerializeObject(payload);
@@ -47,6 +58,31 @@ public class OllamaStrategy : IApiProviderStrategy
     {
         var response = JsonConvert.DeserializeObject<OllamaResponse>(json);
         return response.Message.Content;
+    }
+
+    /// <inheritdoc />
+    public string ParseChatResponseStream(string streamChunk)
+    {
+        if (string.IsNullOrEmpty(streamChunk)) return string.Empty;
+        // Ollama streams JSON lines, each with a partial message under message.content
+        var result = string.Empty;
+        var lines = streamChunk.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var raw in lines)
+        {
+            var line = raw.Trim();
+            try
+            {
+                var node = JsonConvert.DeserializeObject<OllamaStreamChunk>(line);
+                var delta = node.Message?.Content;
+                if (!string.IsNullOrEmpty(delta)) result += delta;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[Ariko] Error parsing Ollama stream chunk: {e.Message}");
+            }
+        }
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -75,6 +111,12 @@ public class OllamaStrategy : IApiProviderStrategy
     private struct OllamaResponse
     {
         [JsonProperty("message")] public MessagePayload Message { get; set; }
+    }
+
+    private struct OllamaStreamChunk
+    {
+        [JsonProperty("message")] public MessagePayload Message { get; set; }
+        [JsonProperty("done")] public bool Done { get; set; }
     }
 
     private struct OllamaModelsResponse

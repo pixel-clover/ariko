@@ -31,10 +31,9 @@ namespace Ariko.Editor.Agent.Tools
                 try
                 {
                     var fullPath = Path.Combine(Application.dataPath, filePath.Replace("Assets/", ""));
-                    if (!PathUtility.IsPathSafe(fullPath, out var safePath) || !safePath.StartsWith(Application.dataPath))
-                    {
+                    if (!PathUtility.IsPathSafe(fullPath, out var safePath) ||
+                        !safePath.StartsWith(Application.dataPath))
                         return Task.FromResult("Error: Path is outside the Assets folder.");
-                    }
                     if (File.Exists(fullPath))
                     {
                         File.Delete(fullPath);

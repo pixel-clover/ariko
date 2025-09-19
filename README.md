@@ -10,15 +10,17 @@
 [![Code Quality](https://img.shields.io/codefactor/grade/github/pixel-clover/ariko?style=flat&label=code%20quality&labelColor=333333&logo=codefactor&logoColor=white)](https://www.codefactor.io/repository/github/pixel-clover/ariko)
 [![Unity Version](https://img.shields.io/badge/unity-2021.3+-green?style=flat&labelColor=282c34&logo=unity)](https://unity.com)
 [![License](https://img.shields.io/badge/License-MIT-007ec6?style=flat&labelColor=282c34&logo=open-source-initiative&label=license)](https://github.com/pixel-clover/ariko/blob/main/LICENSE)
+[![OpenUPM](https://img.shields.io/npm/v/io.github.pixel-clover.ariko?label=openupm&registry_uri=https://package.openupm.com&style=flat&labelColor=282c34)](https://openupm.com/packages/io.github.pixel-clover.ariko/)
 [![Latest Release](https://img.shields.io/github/v/release/pixel-clover/ariko?include_prereleases&label=release&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/releases/latest)
 
-An AI assistant for Unity
+A friendly AI assistant for Unity
 
 </div>
 
 ---
 
-Ariko is an open-source AI assistant for Unity game engine similar to GitHub Copilot.
+Ariko is a friendly AI assistant for Unity game developers (with a user interface similar to GitHub Copilot).
+It can help you with everyday tasks like generating C# code, answering questions about your Unity project, and more.
 
 ### Features
 
@@ -53,18 +55,19 @@ To do this, follow these steps:
 
 1.  In the Ariko window, click the "Settings" button. This will open the settings panel.
 2.  Enter API Keys:
-    *   For better security, you can set your API keys as environment variables on your system and Ariko will automatically load them.
+    *   For better security, you can set your API keys as environment variables on your system, and Ariko will automatically load them.
         *   `OPENAI_API_KEY`: Your API key for OpenAI.
         *   `GOOGLE_API_KEY`: Your API key for Google.
-        *   `OLLAMA_URL`: The URL for your local Ollama instance (deafaul: `http://localhost:11434`).
+        *   `OLLAMA_URL`: The URL for your local Ollama instance (default: `http://localhost:11434`).
     *   Alternatively, you can paste your keys directly into the corresponding fields in the settings panel.
 3.  Click the "Save and Close" button to save your settings.
 
----
+### Work Modes
 
-### Documentation
+Ariko can operate in two modes, which you can switch between at the top of the window:
 
-To be added.
+-   **Ask Mode**: A standard question-and-answer chat mode. Ariko will use its knowledge and the context you provide to answer your questions.
+-   **Agent Mode**: An experimental mode where Ariko can perform actions in the editor, like creating, deleting, or modifying files and GameObjects.
 
 ---
 

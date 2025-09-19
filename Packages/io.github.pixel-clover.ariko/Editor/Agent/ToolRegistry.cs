@@ -22,12 +22,10 @@ public class ToolRegistry
             RegisterTool(new CreateGameObjectTool());
             RegisterTool(new CreateFileTool());
             RegisterTool(new ModifyFileTool());
+            RegisterTool(new ReadFileTool());
 
             // Destructive tools are further gated by a user setting.
-            if (settings.enableDeleteTools)
-            {
-                RegisterTool(new DeleteFileTool());
-            }
+            if (settings.enableDeleteTools) RegisterTool(new DeleteFileTool());
         }
         // In "Ask" mode, no tools are registered.
     }

@@ -7,17 +7,25 @@ using UnityEngine;
 
 namespace Ariko.Editor.Agent.Tools
 {
+    /// <summary>
+    ///     A tool for modifying an existing file with a prompt.
+    /// </summary>
     public class ModifyFileTool : IArikoTool
     {
+        /// <inheritdoc />
         public string Name => "ModifyFile";
+
+        /// <inheritdoc />
         public string Description => "Modifies an existing file with a prompt.";
 
+        /// <inheritdoc />
         public Dictionary<string, string> Parameters => new()
         {
             { "filePath", "The path of the file to modify, relative to the Assets folder." },
             { "prompt", "A prompt describing the modifications to make." }
         };
 
+        /// <inheritdoc />
         public async Task<string> Execute(ToolExecutionContext context)
         {
             if (!context.Arguments.TryGetValue("filePath", out var filePathObj) || !(filePathObj is string filePath) ||
@@ -27,9 +35,7 @@ namespace Ariko.Editor.Agent.Tools
             var fullPath = Path.Combine(Application.dataPath, filePath.Replace("Assets/", ""));
 
             if (!PathUtility.IsPathSafe(fullPath, out var safePath) || !safePath.StartsWith(Application.dataPath))
-            {
                 return "Error: Path is outside the Assets folder.";
-            }
 
             if (!File.Exists(fullPath)) return $"Error: File not found at '{fullPath}'.";
 
@@ -39,8 +45,10 @@ namespace Ariko.Editor.Agent.Tools
             var requestPrompt =
                 $"Modify the following C# script file based on the prompt.\n\n[File Content]\n{fileContent}\n\n[Prompt]\n{prompt}\n\nOnly output the modified file content, nothing else.";
 
+            var messages = new List<ChatMessage> { new() { Role = "user", Content = requestPrompt } };
+
             var result = await llmService.SendChatRequest(
-                requestPrompt,
+                messages,
                 (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), context.Provider),
                 context.Model,
                 context.Settings,
@@ -60,10 +68,7 @@ namespace Ariko.Editor.Agent.Tools
                 }
                 catch (Exception e)
                 {
-                    if (File.Exists(backupPath))
-                    {
-                        File.Move(backupPath, fullPath);
-                    }
+                    if (File.Exists(backupPath)) File.Move(backupPath, fullPath);
                     return $"Error: Failed to modify file. Original file restored. Details: {e.Message}";
                 }
             }

@@ -1,6 +1,6 @@
 <div align="center">
   <picture>
-    <img alt="Ariko Logo" src="logo.svg" height="15%" width="15%">
+    <img alt="Ariko Logo" src="logo.svg" height="20%" width="20%">
   </picture>
 <br>
 

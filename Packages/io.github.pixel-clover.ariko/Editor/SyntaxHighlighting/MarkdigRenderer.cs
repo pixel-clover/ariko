@@ -106,25 +106,37 @@ public class MarkdigRenderer
 
     private VisualElement CreateCodeBlock(string content, string language)
     {
+        var trimmed = content.Trim();
         var container = new VisualElement();
         container.AddToClassList("code-block-container");
 
         var header = new VisualElement();
         header.AddToClassList("code-block-header");
 
-        var langLabel = new Label(language);
+        var langLabel = new Label(string.IsNullOrEmpty(language) ? "code" : language);
         langLabel.AddToClassList("code-block-language");
 
-        var copyButton = new Button(() => GUIUtility.systemCopyBuffer = content.Trim()) { text = "Copy" };
+        var copyButton = new Button(() => GUIUtility.systemCopyBuffer = trimmed) { text = "Copy" };
         copyButton.AddToClassList("code-block-copy-button");
 
-        var insertButton = new Button(() => InsertIntoSelectedScript(content.Trim()))
+        // New: Save button (save to a file in the project)
+        var saveButton = new Button(() => SaveCodeToProject(trimmed, language)) { text = "Save" };
+        saveButton.AddToClassList("code-block-save-button");
+
+        // Keep existing buttons for convenience
+        var insertButton = new Button(() => InsertIntoSelectedScript(trimmed))
             { text = "Insert into selected script" };
-        var createButton = new Button(() => CreateNewScriptFromContent(content.Trim(), language))
+        var createButton = new Button(() => CreateNewScriptFromContent(trimmed, language))
             { text = "Create new script" };
 
         header.Add(langLabel);
+        // separator between language and actions
+        var headerSep = new VisualElement { name = "code-header-separator" };
+        headerSep.pickingMode = PickingMode.Ignore;
+        headerSep.AddToClassList("toolbar-vertical-separator");
+        header.Add(headerSep);
         header.Add(copyButton);
+        header.Add(saveButton);
         header.Add(insertButton);
         header.Add(createButton);
 
@@ -133,7 +145,7 @@ public class MarkdigRenderer
         codeLabel.AddToClassList("unity-text-element__selectable");
 
         // --- Syntax Highlighting ---
-        var highlightedCode = content.Trim();
+        var highlightedCode = trimmed;
         if (!string.IsNullOrEmpty(language))
         {
             var theme = settings.syntaxTheme;
@@ -142,7 +154,7 @@ public class MarkdigRenderer
 
             if (theme != null && langDef != null)
             {
-                highlightedCode = SyntaxHighlighter.Highlight(content.Trim(), langDef, theme);
+                highlightedCode = SyntaxHighlighter.Highlight(trimmed, langDef, theme);
                 codeLabel.enableRichText = true;
             }
         }
@@ -151,6 +163,10 @@ public class MarkdigRenderer
         // -------------------------
 
         container.Add(header);
+        // visual separator between header and content for clarity
+        var sep = new VisualElement();
+        sep.AddToClassList("separator");
+        container.Add(sep);
         container.Add(codeLabel);
         return container;
     }
@@ -205,6 +221,28 @@ public class MarkdigRenderer
         catch (Exception e)
         {
             EditorUtility.DisplayDialog("Create Script", $"Failed to create script: {e.Message}", "OK");
+        }
+    }
+
+    private void SaveCodeToProject(string code, string language)
+    {
+        // Let user choose any text-based extension, default to .txt if unknown language
+        var defaultExt = string.IsNullOrEmpty(language) ? "txt" : (language.Equals("csharp", StringComparison.OrdinalIgnoreCase) || language.Equals("cs", StringComparison.OrdinalIgnoreCase) ? "cs" : language.ToLowerInvariant());
+        var defaultName = string.IsNullOrEmpty(language) ? "snippet.txt" : $"snippet.{defaultExt}";
+        var path = EditorUtility.SaveFilePanelInProject("Save Code", defaultName, defaultExt,
+            "Choose a location to save the code snippet in your project");
+        if (string.IsNullOrEmpty(path)) return;
+        try
+        {
+            File.WriteAllText(path, code);
+            AssetDatabase.ImportAsset(path);
+            AssetDatabase.Refresh();
+            var asset = AssetDatabase.LoadAssetAtPath<Object>(path);
+            Selection.activeObject = asset;
+        }
+        catch (Exception e)
+        {
+            EditorUtility.DisplayDialog("Save Code", $"Failed to save code: {e.Message}", "OK");
         }
     }
 

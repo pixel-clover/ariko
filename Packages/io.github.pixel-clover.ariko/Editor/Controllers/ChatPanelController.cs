@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using System.Reflection;
 using Object = UnityEngine.Object;
 
 /// <summary>
@@ -323,7 +324,8 @@ public class ChatPanelController
         var headerContainer = new VisualElement();
         headerContainer.AddToClassList("message-header");
 
-        var roleLabel = new Label(message.Role) { name = "role" };
+        var roleText = message.Role == "User" ? GetUnityUserFirstName() : message.Role;
+        var roleLabel = new Label(roleText) { name = "role" };
         roleLabel.AddToClassList("role-label");
         headerContainer.Add(roleLabel);
 
@@ -341,10 +343,15 @@ public class ChatPanelController
         contentContainer.Add(markdownRenderer.Render(message.Content));
 
         messageContainer.Add(headerContainer);
+        // separator between header and content to delineate unrelated UI bits
+        var sep = new VisualElement();
+        sep.AddToClassList("separator");
+        messageContainer.Add(sep);
         messageContainer.Add(contentContainer);
 
         chatHistoryScrollView.Add(messageContainer);
         ApplyChatStylesForElement(messageContainer);
+        ScrollToBottom();
         return messageContainer;
     }
 
@@ -552,6 +559,40 @@ public class ChatPanelController
             objectPickerControlID);
     }
 
+    private static string GetUnityUserFirstName()
+    {
+        try
+        {
+            // Try to access UnityEditor internal user info via reflection
+            var asm = typeof(EditorApplication).Assembly;
+            var connectType = asm.GetType("UnityEditor.Connect.UnityConnect");
+            string name = null;
+            if (connectType != null)
+            {
+                var instanceProp = connectType.GetProperty("instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                var instance = instanceProp?.GetValue(null);
+                var userInfoProp = connectType.GetProperty("userInfo", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                var userInfo = userInfoProp?.GetValue(instance);
+                if (userInfo != null)
+                {
+                    var uiType = userInfo.GetType();
+                    var displayNameProp = uiType.GetProperty("displayName", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    var userNameProp = uiType.GetProperty("userName", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    name = displayNameProp?.GetValue(userInfo) as string;
+                    if (string.IsNullOrWhiteSpace(name)) name = userNameProp?.GetValue(userInfo) as string;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(name)) name = Environment.UserName;
+            var parts = name?.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            return parts != null && parts.Length > 0 ? parts[0] : name;
+        }
+        catch
+        {
+            return Environment.UserName;
+        }
+    }
+
     // --- Streaming Helpers ---
     /// <summary>
     ///     Prepares the visual element for the assistant's streaming response.
@@ -582,6 +623,10 @@ public class ChatPanelController
         contentContainer.Add(markdownRenderer.Render(message.Content));
 
         container.Add(headerContainer);
+        // separator between header and content
+        var sep = new VisualElement();
+        sep.AddToClassList("separator");
+        container.Add(sep);
         container.Add(contentContainer);
         chatHistoryScrollView.Add(container);
         ApplyChatStylesForElement(container);

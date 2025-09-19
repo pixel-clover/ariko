@@ -4,12 +4,12 @@
             <ui:Button text="History" name="history-button" tooltip="Show or hide chat history."/>
             <ui:Button text="New chat" name="new-chat-button" tooltip="Start a new chat session."/>
             <ui:VisualElement class="toolbar-vertical-separator"/>
-            <ui:VisualElement name="work-mode-popup-placeholder" style="width: 80px;"/>
-            <ui:VisualElement name="provider-popup-placeholder" style="width: 80px;"/>
-            <ui:VisualElement name="model-popup-placeholder" style="width: 150px;"/>
-            <ui:Label name="fetching-models-label" text="Fetching..." style="display: none;"/>
-            <ui:VisualElement class="toolbar-vertical-separator"/>
             <ui:VisualElement style="flex-grow: 1;"/>
+            <ui:VisualElement name="work-mode-popup-placeholder" style="width: 100px;"/>
+            <ui:VisualElement name="provider-popup-placeholder" style="width: 120px; margin-left: 6px;"/>
+            <ui:VisualElement name="model-popup-placeholder" style="width: 180px; margin-left: 6px;"/>
+            <ui:Label name="fetching-models-label" text="Fetching..." style="display: none; margin-left: 6px;"/>
+            <ui:VisualElement class="toolbar-vertical-separator"/>
             <ui:Button text="Settings" name="settings-button" tooltip="Open Ariko settings."/>
         </uie:Toolbar>
 
@@ -38,8 +38,6 @@
                     <ui:VisualElement class="input-row">
                         <ui:TextField name="user-input" multiline="true" class="boxed-input"
                                       tooltip="Ask a question or paste an error here."/>
-                        <ui:Label name="thinking-indicator" text="Thinking" class="thinking-indicator"
-                                  style="display: none; margin-left: 6px; margin-right: 6px;"/>
                         <ui:Button text="Send" name="send-button" class="send-button"
                                    tooltip="Send the message (Enter). Shift+Enter inserts a newline."/>
                         <ui:Button text="Cancel" name="cancel-button" class="cancel-button" style="display: none;"

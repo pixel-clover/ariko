@@ -12,14 +12,14 @@
 [![License](https://img.shields.io/badge/License-MIT-007ec6?style=flat&labelColor=282c34&logo=open-source-initiative&label=license)](https://github.com/pixel-clover/ariko/blob/main/LICENSE)
 [![Latest Release](https://img.shields.io/github/v/release/pixel-clover/ariko?include_prereleases&label=release&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/releases/latest)
 
-An AI assistant for Unity
+A friendly AI assistant for Unity
 
 </div>
 
 ---
 
 Ariko is a friendly AI assistant for Unity game developers (with a user interface similar to GitHub Copilot).
-It can help you with common tasks like generating CSharp code, answering questions about your Unity project, and more.
+It can help you with everyday tasks like generating C# code, answering questions about your Unity project, and more.
 
 ### Features
 
@@ -54,10 +54,10 @@ To do this, follow these steps:
 
 1.  In the Ariko window, click the "Settings" button. This will open the settings panel.
 2.  Enter API Keys:
-    *   For better security, you can set your API keys as environment variables on your system and Ariko will automatically load them.
+    *   For better security, you can set your API keys as environment variables on your system, and Ariko will automatically load them.
         *   `OPENAI_API_KEY`: Your API key for OpenAI.
         *   `GOOGLE_API_KEY`: Your API key for Google.
-        *   `OLLAMA_URL`: The URL for your local Ollama instance (deafaul: `http://localhost:11434`).
+        *   `OLLAMA_URL`: The URL for your local Ollama instance (default: `http://localhost:11434`).
     *   Alternatively, you can paste your keys directly into the corresponding fields in the settings panel.
 3.  Click the "Save and Close" button to save your settings.
 

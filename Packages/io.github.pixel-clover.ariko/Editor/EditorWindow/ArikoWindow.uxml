@@ -38,6 +38,7 @@
                     <ui:VisualElement class="input-row">
                         <ui:TextField name="user-input" multiline="true" class="boxed-input"
                                       tooltip="Ask a question or paste an error here."/>
+                        <ui:Label name="thinking-indicator" text="Thinking" class="thinking-indicator" style="display: none; margin-left: 6px; margin-right: 6px;"/>
                         <ui:Button text="Send" name="send-button" class="send-button"
                                    tooltip="Send the message (Enter). Shift+Enter inserts a newline."/>
                         <ui:Button text="Cancel" name="cancel-button" class="cancel-button" style="display: none;"
@@ -56,27 +57,36 @@
             <ui:VisualElement name="settings-panel" class="settings-panel"
                               style="display: none; min-width: 350px; max-width: 500px; padding: 5px;">
                 <ui:Label text="Ariko Assistant Settings" class="header-label"/>
-                <ui:Label text="API Configuration" class="sub-header-label"/>
-                <ui:Label text="API Keys are read from environment variables first." class="help-box"/>
-                <ui:TextField label="Google API Key" name="google-api-key"/>
-                <ui:TextField label="OpenAI API Key" name="openai-api-key"/>
-                <ui:TextField label="Ollama URL" name="ollama-url"/>
-                <ui:Label text="Customization" class="sub-header-label"/>
-                <uie:ColorField label="Ariko BG Color" name="ariko-bg-color"/>
-                <uie:ColorField label="User BG Color" name="user-bg-color"/>
-                <uie:ObjectField label="Chat Font" name="chat-font"
-                                 type="UnityEngine.Font, UnityEngine.TextRenderingModule"/>
-                <uie:IntegerField label="Chat Font Size" name="chat-font-size"/>
-                <uie:IntegerField label="Chat History Size" name="chat-history-size"
-                                  tooltip="How many past chat sessions to keep in history. Set to 0 for infinite."/>
-                <ui:Toggle label="Bold role labels" name="role-bold-toggle"/>
-                <ui:Toggle label="Enable Delete Tools" name="enable-delete-tools-toggle"
-                           tooltip="Enables agent tools for deleting files and GameObjects. Use with caution."/>
-                <ui:Label text="System Prompt" class="sub-header-label"/>
-                <ui:TextField name="system-prompt" multiline="true" style="flex-grow: 1;" class="system-prompt-field"/>
-                <ui:Label text="Agent System Prompt" class="sub-header-label"/>
-                <ui:TextField name="agent-system-prompt" multiline="true" style="flex-grow: 1;"
-                              class="system-prompt-field"/>
+
+                <ui:Foldout text="API" value="true">
+                    <ui:Label text="API Keys are read from environment variables first." class="help-box"/>
+                    <ui:TextField label="Google API Key" name="google-api-key"/>
+                    <ui:TextField label="OpenAI API Key" name="openai-api-key"/>
+                    <ui:TextField label="Ollama URL" name="ollama-url"/>
+                </ui:Foldout>
+
+                <ui:Foldout text="Appearance" value="true">
+                    <uie:ColorField label="Ariko BG Color" name="ariko-bg-color"/>
+                    <uie:ColorField label="User BG Color" name="user-bg-color"/>
+                    <uie:ObjectField label="Chat Font" name="chat-font"
+                                     type="UnityEngine.Font, UnityEngine.TextRenderingModule"/>
+                    <uie:IntegerField label="Chat Font Size" name="chat-font-size"/>
+                    <uie:IntegerField label="Chat History Size" name="chat-history-size"
+                                      tooltip="How many past chat sessions to keep in history. Set to 0 for infinite."/>
+                    <ui:Toggle label="Bold role labels" name="role-bold-toggle"/>
+                </ui:Foldout>
+
+                <ui:Foldout text="Agent" value="true">
+                    <ui:Toggle label="Enable Delete Tools" name="enable-delete-tools-toggle"
+                               tooltip="Enables agent tools for deleting files and GameObjects. Use with caution."/>
+                    <ui:HelpBox messageType="Warning" text="Use Delete Tools with caution. This can remove files and GameObjects." />
+                    <ui:Label text="System Prompt" class="sub-header-label"/>
+                    <ui:TextField name="system-prompt" multiline="true" style="flex-grow: 1;" class="system-prompt-field"/>
+                    <ui:Label text="Agent System Prompt" class="sub-header-label"/>
+                    <ui:TextField name="agent-system-prompt" multiline="true" style="flex-grow: 1;"
+                                  class="system-prompt-field"/>
+                </ui:Foldout>
+
                 <ui:Button text="Save &amp; Close" name="save-settings-button" style="height: 30px;"/>
             </ui:VisualElement>
         </ui:VisualElement>

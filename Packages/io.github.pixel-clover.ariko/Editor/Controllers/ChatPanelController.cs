@@ -24,6 +24,8 @@ public class ChatPanelController
     private readonly ArikoSettings settings;
     private readonly Label statusLabel;
     private readonly TextField userInput;
+    private Label thinkingIndicator;
+    private IVisualElementScheduledItem thinkingSchedule;
     private VisualElement thinkingMessage;
 
     // Streaming state
@@ -48,6 +50,7 @@ public class ChatPanelController
         autoContextToggle = root.Q<Toggle>("auto-context-toggle");
         manualAttachmentsList = root.Q<VisualElement>("manual-attachments-list");
         statusLabel = root.Q<Label>("status-label");
+        thinkingIndicator = root.Q<Label>("thinking-indicator");
 
         emptyStateLabel = new Label(ArikoUIStrings.EmptyState);
         emptyStateLabel.AddToClassList("empty-state-label");
@@ -247,6 +250,10 @@ public class ChatPanelController
     {
         Debug.LogError($"Ariko: {error}");
         SetStatus(ArikoUIStrings.StatusError);
+        // Also show detailed error inline in the chat UI
+        var msg = new ChatMessage { Role = "System", Content = error, IsError = true };
+        AddMessageToChat(msg);
+        ScrollToBottom();
     }
 
     private VisualElement AddMessageToChat(ChatMessage message)
@@ -295,6 +302,27 @@ public class ChatPanelController
         cancelButton.style.display = isPending ? DisplayStyle.Flex : DisplayStyle.None;
 
         SetStatus(isPending ? ArikoUIStrings.StatusThinking : ArikoUIStrings.StatusReady);
+
+        if (thinkingIndicator != null)
+        {
+            thinkingIndicator.style.display = isPending ? DisplayStyle.Flex : DisplayStyle.None;
+            if (isPending)
+            {
+                var dots = 0;
+                thinkingIndicator.text = "Thinking";
+                thinkingSchedule?.Pause();
+                thinkingSchedule = thinkingIndicator.schedule.Execute(() =>
+                {
+                    dots = (dots + 1) % 4;
+                    thinkingIndicator.text = "Thinking" + new string('.', dots);
+                }).Every(300);
+            }
+            else
+            {
+                thinkingSchedule?.Pause();
+                thinkingIndicator.text = "Thinking";
+            }
+        }
     }
 
     public void ApplyChatStyles()

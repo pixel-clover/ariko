@@ -233,8 +233,21 @@ public class ArikoWindow : EditorWindow
 
     private void HandleToolCallConfirmationRequested(ToolCall toolCall)
     {
-        confirmationLabel.text =
-            $"I am planning to perform the following action:\n\nTool: {toolCall.tool_name}\n\nReasoning: {toolCall.thought}\n\nPlease approve to continue.";
+        if (confirmationLabel != null)
+        {
+            confirmationLabel.enableRichText = true;
+            var paramsText = string.Empty;
+            if (toolCall.parameters != null && toolCall.parameters.Count > 0)
+            {
+                foreach (var kv in toolCall.parameters)
+                {
+                    paramsText += $"\n - <b>{kv.Key}</b>: {kv.Value}";
+                }
+            }
+            var thought = string.IsNullOrEmpty(toolCall.thought) ? "(no reasoning provided)" : toolCall.thought;
+            confirmationLabel.text =
+                $"<b>Requested Tool</b>: <b>{toolCall.tool_name}</b>\n\n<b>Parameters</b>:{(string.IsNullOrEmpty(paramsText) ? "\n (none)" : paramsText)}\n\n<b>Reasoning</b>: {thought}\n\nApprove to continue?";
+        }
         confirmationDialog.style.display = DisplayStyle.Flex;
         rootVisualElement.Q<TextField>("user-input").SetEnabled(false);
     }

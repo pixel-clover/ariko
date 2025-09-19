@@ -299,7 +299,7 @@
 }
 
 .system-prompt-field .unity-text-field__input {
-    min-height: 80px;
+    min-height: 100px;
 }
 
 .message-header {

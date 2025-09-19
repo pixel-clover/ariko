@@ -73,7 +73,7 @@
                     <uie:IntegerField label="Chat Font Size" name="chat-font-size"/>
                     <uie:IntegerField label="Chat History Size" name="chat-history-size"
                                       tooltip="How many past chat sessions to keep in history. Set to 0 for infinite."/>
-                    <ui:Toggle label="Bold role labels" name="role-bold-toggle"/>
+                    <ui:Toggle label="Bold Role Labels" name="role-bold-toggle"/>
                 </ui:Foldout>
 
                 <ui:Foldout text="Agent" value="true">

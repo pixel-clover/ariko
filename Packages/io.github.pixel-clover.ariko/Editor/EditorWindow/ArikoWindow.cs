@@ -6,6 +6,10 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+/// <summary>
+/// The main editor window for the Ariko Assistant. This class is responsible for creating the UI,
+/// initializing controllers, and handling top-level UI events and state management.
+/// </summary>
 public class ArikoWindow : EditorWindow
 {
     private Button approveButton;

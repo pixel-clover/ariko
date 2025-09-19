@@ -121,8 +121,14 @@ public class ArikoSettings : ScriptableObject
         "}\n" +
         "If you do not need to use a tool, or if the task is complete, respond with a conversational message.";
 
+    /// <summary>
+    /// The theme to use for syntax highlighting in code blocks.
+    /// </summary>
     [Header("Syntax Highlighting")] [HideInInspector]
     public SyntaxTheme syntaxTheme;
 
+    /// <summary>
+    /// The list of language definitions to use for syntax highlighting.
+    /// </summary>
     [HideInInspector] public List<LanguageDefinition> languageDefinitions;
 }

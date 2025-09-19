@@ -1,6 +1,9 @@
 using UnityEditor;
 using UnityEngine.UIElements;
 
+/// <summary>
+/// Manages the UI and logic for the chat history panel, allowing users to view, switch, rename, and delete past chat sessions.
+/// </summary>
 public class HistoryPanelController
 {
     private const string HistoryPanelVisibleKey = "Ariko.HistoryPanel.Visible";
@@ -9,6 +12,11 @@ public class HistoryPanelController
     private readonly ScrollView historyListScrollView;
     private readonly VisualElement historyPanel;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HistoryPanelController"/> class.
+    /// </summary>
+    /// <param name="root">The root visual element of the history panel.</param>
+    /// <param name="controller">The main chat controller.</param>
     public HistoryPanelController(VisualElement root, ArikoChatController controller)
     {
         chatController = controller;
@@ -31,6 +39,9 @@ public class HistoryPanelController
         UpdateHistoryPanel();
     }
 
+    /// <summary>
+    /// Toggles the visibility of the history panel.
+    /// </summary>
     private void ToggleHistoryPanel()
     {
         var isVisible = historyPanel.resolvedStyle.display == DisplayStyle.Flex;
@@ -38,6 +49,9 @@ public class HistoryPanelController
         EditorPrefs.SetBool(HistoryPanelVisibleKey, !isVisible);
     }
 
+    /// <summary>
+    /// Updates the history panel with the latest chat sessions.
+    /// </summary>
     private void UpdateHistoryPanel()
     {
         historyListScrollView.Clear();

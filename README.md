@@ -62,9 +62,18 @@ To do this, follow these steps:
 
 ---
 
+### Work Modes
+
+Ariko can operate in two modes, which you can switch between at the top of the window:
+
+-   **Ask Mode**: A standard question-and-answer chat mode. Ariko will use its knowledge and the context you provide to answer your questions.
+-   **Agent Mode**: An experimental mode where Ariko can perform actions in the editor, such as creating, deleting, or modifying files and GameObjects. Ariko will ask for your approval before executing any action.
+
+---
+
 ### Documentation
 
-To be added.
+The codebase is fully documented using XML documentation comments, which can be viewed in your IDE or by browsing the source code. This provides detailed information on all public classes, methods, and properties.
 
 ---
 

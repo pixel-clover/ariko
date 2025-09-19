@@ -3,6 +3,9 @@ using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+/// <summary>
+/// Manages the UI and logic for the settings panel, allowing users to configure API keys, appearance, and other preferences.
+/// </summary>
 public class SettingsPanelController
 {
     private readonly Action applyChatStyles;
@@ -14,6 +17,13 @@ public class SettingsPanelController
 
     private bool settingsLayoutBuilt = false;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SettingsPanelController"/> class.
+    /// </summary>
+    /// <param name="root">The root visual element of the settings panel.</param>
+    /// <param name="controller">The main chat controller.</param>
+    /// <param name="settings">The settings for Ariko.</param>
+    /// <param name="applyChatStylesCallback">A callback to apply chat styles.</param>
     public SettingsPanelController(VisualElement root, ArikoChatController controller, ArikoSettings settings,
         Action applyChatStylesCallback)
     {
@@ -31,6 +41,9 @@ public class SettingsPanelController
         RegisterSettingsCallbacks();
     }
 
+    /// <summary>
+    /// Registers callbacks for the settings UI elements.
+    /// </summary>
     private void RegisterSettingsCallbacks()
     {
         settingsPanel.Q<ColorField>("ariko-bg-color").RegisterValueChangedCallback(evt =>
@@ -64,6 +77,9 @@ public class SettingsPanelController
         });
     }
 
+    /// <summary>
+    /// Toggles the visibility of the settings panel.
+    /// </summary>
     private void ToggleSettingsPanel()
     {
         var settingsVisible = settingsPanel.resolvedStyle.display == DisplayStyle.Flex;
@@ -83,6 +99,9 @@ public class SettingsPanelController
         }
     }
 
+    /// <summary>
+    /// Loads the current settings into the UI fields.
+    /// </summary>
     private void LoadSettingsToUI()
     {
         settingsPanel.Q<TextField>("google-api-key").value = chatController.GetApiKey("Google");
@@ -99,6 +118,9 @@ public class SettingsPanelController
         settingsPanel.Q<Toggle>("enable-delete-tools-toggle").value = settings.enableDeleteTools;
     }
 
+    /// <summary>
+    /// Saves the settings from the UI and closes the settings panel.
+    /// </summary>
     private void SaveAndCloseSettings()
     {
         chatController.SetApiKey("Google", settingsPanel.Q<TextField>("google-api-key").value);

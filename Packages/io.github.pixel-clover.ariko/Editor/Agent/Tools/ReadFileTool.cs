@@ -5,16 +5,24 @@ using System.Threading.Tasks;
 
 namespace Ariko.Editor.Agent.Tools
 {
+    /// <summary>
+    /// A tool for reading the entire content of a file at a specified path.
+    /// </summary>
     public class ReadFileTool : IArikoTool
     {
+        /// <inheritdoc />
         public string Name => "read_file";
+
+        /// <inheritdoc />
         public string Description => "Reads the entire content of a file at the specified path.";
 
+        /// <inheritdoc />
         public Dictionary<string, string> Parameters => new()
         {
             { "path", "The relative path to the file to be read." }
         };
 
+        /// <inheritdoc />
         public Task<string> Execute(ToolExecutionContext context)
         {
             if (!context.Arguments.TryGetValue("path", out var pathValue) || pathValue is not string path)

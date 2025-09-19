@@ -7,17 +7,25 @@ using UnityEngine;
 
 namespace Ariko.Editor.Agent.Tools
 {
+    /// <summary>
+    /// A tool for modifying an existing file with a prompt.
+    /// </summary>
     public class ModifyFileTool : IArikoTool
     {
+        /// <inheritdoc />
         public string Name => "ModifyFile";
+
+        /// <inheritdoc />
         public string Description => "Modifies an existing file with a prompt.";
 
+        /// <inheritdoc />
         public Dictionary<string, string> Parameters => new()
         {
             { "filePath", "The path of the file to modify, relative to the Assets folder." },
             { "prompt", "A prompt describing the modifications to make." }
         };
 
+        /// <inheritdoc />
         public async Task<string> Execute(ToolExecutionContext context)
         {
             if (!context.Arguments.TryGetValue("filePath", out var filePathObj) || !(filePathObj is string filePath) ||

@@ -6,6 +6,9 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
+/// <summary>
+/// Manages the UI and logic for the main chat panel, including user input, message display, and context management.
+/// </summary>
 public class ChatPanelController
 {
     private readonly Toggle autoContextToggle;
@@ -33,6 +36,15 @@ public class ChatPanelController
     private VisualElement streamingAssistantContentContainer;
     private System.Text.StringBuilder streamingAssistantText;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChatPanelController"/> class.
+    /// </summary>
+    /// <param name="root">The root visual element of the chat panel.</param>
+    /// <param name="controller">The main chat controller.</param>
+    /// <param name="arikosettings">The settings for Ariko.</param>
+    /// <param name="renderer">The markdown renderer.</param>
+    /// <param name="provider">The provider popup field.</param>
+    /// <param name="model">The model popup field.</param>
     public ChatPanelController(VisualElement root, ArikoChatController controller, ArikoSettings arikosettings,
         MarkdigRenderer renderer, PopupField<string> provider, PopupField<string> model)
     {
@@ -113,8 +125,14 @@ public class ChatPanelController
         UpdateAutoContextLabel();
     }
 
+    /// <summary>
+    /// Gets the control ID for the object picker.
+    /// </summary>
     public int objectPickerControlID { get; private set; }
 
+    /// <summary>
+    /// Registers all the necessary callbacks for the chat panel UI.
+    /// </summary>
     private void RegisterCallbacks()
     {
         chatController.OnMessageAdded += (message, session) => HandleMessageAdded(message, session);
@@ -137,6 +155,9 @@ public class ChatPanelController
         autoContextToggle.RegisterValueChangedCallback(evt => chatController.AutoContext = evt.newValue);
     }
 
+    /// <summary>
+    /// Sends the message from the user input field to the chat controller.
+    /// </summary>
     public async void SendMessage()
     {
         if (string.IsNullOrWhiteSpace(userInput.value)) return;
@@ -145,11 +166,19 @@ public class ChatPanelController
         await SendMessageInternal(textToSend);
     }
 
+    /// <summary>
+    /// Sends a message from an external source to the chat controller.
+    /// </summary>
+    /// <param name="message">The message to send.</param>
     public async Task SendExternalMessage(string message)
     {
         await SendMessageInternal(message);
     }
 
+    /// <summary>
+    /// Internal method to send a message to the assistant and handle the response.
+    /// </summary>
+    /// <param name="text">The message text to send.</param>
     private async Task SendMessageInternal(string text)
     {
         try
@@ -186,6 +215,11 @@ public class ChatPanelController
         }
     }
 
+    /// <summary>
+    /// Handles the event when a new message is added to the chat.
+    /// </summary>
+    /// <param name="message">The new chat message.</param>
+    /// <param name="session">The session the message was added to.</param>
     private void HandleMessageAdded(ChatMessage message, ChatSession session)
     {
         if (session != chatController.ActiveSession) return;
@@ -229,6 +263,9 @@ public class ChatPanelController
         UpdateEmptyState();
     }
 
+    /// <summary>
+    /// Handles the event when the chat is cleared.
+    /// </summary>
     private void HandleChatCleared()
     {
         chatHistoryScrollView.Clear();
@@ -237,6 +274,9 @@ public class ChatPanelController
         UpdateEmptyState();
     }
 
+    /// <summary>
+    /// Handles the event when a chat session is reloaded.
+    /// </summary>
     private void HandleChatReloaded()
     {
         chatHistoryScrollView.Clear();
@@ -246,6 +286,10 @@ public class ChatPanelController
         UpdateEmptyState();
     }
 
+    /// <summary>
+    /// Handles an error by logging it and displaying it in the chat.
+    /// </summary>
+    /// <param name="error">The error message.</param>
     private void HandleError(string error)
     {
         Debug.LogError($"Ariko: {error}");
@@ -256,6 +300,11 @@ public class ChatPanelController
         ScrollToBottom();
     }
 
+    /// <summary>
+    /// Adds a chat message to the chat history UI.
+    /// </summary>
+    /// <param name="message">The chat message to add.</param>
+    /// <returns>The created visual element for the message.</returns>
     private VisualElement AddMessageToChat(ChatMessage message)
     {
         var messageContainer = new VisualElement();
@@ -294,6 +343,10 @@ public class ChatPanelController
         return messageContainer;
     }
 
+    /// <summary>
+    /// Sets the UI state to pending a response from the assistant.
+    /// </summary>
+    /// <param name="isPending">True if a response is pending, false otherwise.</param>
     private void SetResponsePending(bool isPending)
     {
         userInput.SetEnabled(!isPending);
@@ -325,12 +378,19 @@ public class ChatPanelController
         }
     }
 
+    /// <summary>
+    /// Applies the current chat styles to all messages in the chat history.
+    /// </summary>
     public void ApplyChatStyles()
     {
         if (settings == null) return;
         chatHistoryScrollView.Query<VisualElement>(className: "chat-message").ForEach(ApplyChatStylesForElement);
     }
 
+    /// <summary>
+    /// Applies the chat styles to a single message element.
+    /// </summary>
+    /// <param name="message">The message visual element.</param>
     private void ApplyChatStylesForElement(VisualElement message)
     {
         var backgroundColor = Color.clear;
@@ -362,12 +422,18 @@ public class ChatPanelController
             roleLabel.style.unityFontStyleAndWeight = settings.roleLabelsBold ? FontStyle.Bold : FontStyle.Normal;
     }
 
+    /// <summary>
+    /// Scrolls the chat history to the bottom.
+    /// </summary>
     private void ScrollToBottom()
     {
         chatHistoryScrollView.schedule.Execute(() =>
             chatHistoryScrollView.verticalScroller.value = chatHistoryScrollView.verticalScroller.highValue);
     }
 
+    /// <summary>
+    /// Updates the list of manually attached assets in the UI.
+    /// </summary>
     public void UpdateManualAttachmentsList()
     {
         manualAttachmentsList.Clear();
@@ -419,6 +485,9 @@ public class ChatPanelController
         }
     }
 
+    /// <summary>
+    /// Updates the label for the auto-context toggle to reflect the current selection.
+    /// </summary>
     public void UpdateAutoContextLabel()
     {
         if (autoContextToggle == null) return;
@@ -432,11 +501,18 @@ public class ChatPanelController
         autoContextToggle.label = labelText;
     }
 
+    /// <summary>
+    /// Sets the status text in the UI.
+    /// </summary>
+    /// <param name="text">The text to display.</param>
     private void SetStatus(string text)
     {
         if (statusLabel != null) statusLabel.text = text;
     }
 
+    /// <summary>
+    /// Updates the empty state label and suggestion buttons based on whether there are messages.
+    /// </summary>
     private void UpdateEmptyState()
     {
         var hasMessages = chatController != null &&
@@ -449,12 +525,20 @@ public class ChatPanelController
             suggestions.style.display = hasMessages ? DisplayStyle.None : DisplayStyle.Flex;
     }
 
+    /// <summary>
+    /// Determines if a color is light or dark to decide on text color.
+    /// </summary>
+    /// <param name="color">The color to check.</param>
+    /// <returns>True if the color is light, false otherwise.</returns>
     private static bool IsColorLight(Color color)
     {
         var luminance = 0.299 * color.r + 0.587 * color.g + 0.114 * color.b;
         return luminance > 0.5;
     }
 
+    /// <summary>
+    /// Shows the object picker to attach an asset to the chat context.
+    /// </summary>
     private void ShowAttachmentObjectPicker()
     {
         objectPickerControlID = EditorGUIUtility.GetControlID(FocusType.Passive);
@@ -463,6 +547,9 @@ public class ChatPanelController
     }
 
     // --- Streaming Helpers ---
+    /// <summary>
+    /// Prepares the visual element for the assistant's streaming response.
+    /// </summary>
     private void PrepareStreamingAssistantElement()
     {
         // Reuse thinking bubble if present
@@ -500,6 +587,10 @@ public class ChatPanelController
         UpdateEmptyState();
     }
 
+    /// <summary>
+    /// Updates the content of the streaming assistant's visual element.
+    /// </summary>
+    /// <param name="fullText">The full text to display.</param>
     private void UpdateStreamingAssistantContent(string fullText)
     {
         if (streamingAssistantElement == null) return;

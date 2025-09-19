@@ -1,10 +1,10 @@
 using System;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System.Reflection;
 using Object = UnityEngine.Object;
 
 /// <summary>
@@ -155,6 +155,28 @@ public class ChatPanelController
                 evt.StopImmediatePropagation();
             }
         });
+        // Focus input on mouse hover
+        userInput.RegisterCallback<MouseEnterEvent>(_ => userInput.Focus());
+
+        // Placeholder hint label
+        var placeholderLabel = new Label("Edit files in your project in agent mode");
+        placeholderLabel.AddToClassList("input-placeholder");
+        placeholderLabel.pickingMode = PickingMode.Ignore;
+        userInput.Add(placeholderLabel);
+
+        void UpdatePlaceholderVisibility()
+        {
+            var empty = string.IsNullOrEmpty(userInput.value);
+            var focused = userInput.focusController?.focusedElement == userInput ||
+                          userInput.focusController?.focusedElement ==
+                          userInput.Q(className: "unity-text-field__input");
+            placeholderLabel.style.display = empty && !focused ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        userInput.RegisterValueChangedCallback(_ => UpdatePlaceholderVisibility());
+        userInput.RegisterCallback<FocusInEvent>(_ => UpdatePlaceholderVisibility());
+        userInput.RegisterCallback<FocusOutEvent>(_ => UpdatePlaceholderVisibility());
+        UpdatePlaceholderVisibility();
 
         root.Q<Button>("add-file-button").clicked += ShowAttachmentObjectPicker;
         autoContextToggle.RegisterValueChangedCallback(evt => chatController.AutoContext = evt.newValue);
@@ -165,8 +187,10 @@ public class ChatPanelController
     /// </summary>
     public async void SendMessage()
     {
-        if (string.IsNullOrWhiteSpace(userInput.value)) return;
-        var textToSend = userInput.value;
+        var raw = userInput.value ?? string.Empty;
+        var trimmed = raw.TrimEnd();
+        if (string.IsNullOrWhiteSpace(trimmed)) return;
+        var textToSend = trimmed;
         userInput.value = "";
         await SendMessageInternal(textToSend);
     }
@@ -236,14 +260,15 @@ public class ChatPanelController
             UpdateStreamingAssistantContent(message.Content);
             // Add copy button now that final content is ready
             var header = streamingAssistantElement.Q<VisualElement>(className: "message-header");
-            if (header != null && header.Q<Button>(className: "copy-button") == null)
+            var rightActions = streamingAssistantElement.Q<VisualElement>("message-header-right");
+            if (header != null && rightActions != null && rightActions.Q<Button>(className: "copy-button") == null)
             {
                 var copyButton = new Button(() => EditorGUIUtility.systemCopyBuffer = message.Content)
                 {
                     text = ArikoUIStrings.CopyButton
                 };
                 copyButton.AddToClassList("copy-button");
-                header.Add(copyButton);
+                rightActions.Add(copyButton);
             }
 
             streamingAssistantElement = null;
@@ -329,6 +354,13 @@ public class ChatPanelController
         roleLabel.AddToClassList("role-label");
         headerContainer.Add(roleLabel);
 
+        // Right side actions (timestamp and optional copy)
+        var rightActions = new VisualElement { name = "message-header-right" };
+        rightActions.AddToClassList("message-header-right");
+        var timestamp = new Label(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+        timestamp.AddToClassList("timestamp-label");
+        rightActions.Add(timestamp);
+
         if (message.Role == "Ariko" && message.Content != "...")
         {
             var copyButton = new Button(() => EditorGUIUtility.systemCopyBuffer = message.Content)
@@ -336,17 +368,16 @@ public class ChatPanelController
                 text = ArikoUIStrings.CopyButton
             };
             copyButton.AddToClassList("copy-button");
-            headerContainer.Add(copyButton);
+            rightActions.Add(copyButton);
         }
+
+        headerContainer.Add(rightActions);
 
         var contentContainer = new VisualElement { name = "content-container" };
         contentContainer.Add(markdownRenderer.Render(message.Content));
 
         messageContainer.Add(headerContainer);
-        // separator between header and content to delineate unrelated UI bits
-        var sep = new VisualElement();
-        sep.AddToClassList("separator");
-        messageContainer.Add(sep);
+        // No separator between role and text per request
         messageContainer.Add(contentContainer);
 
         chatHistoryScrollView.Add(messageContainer);
@@ -569,15 +600,19 @@ public class ChatPanelController
             string name = null;
             if (connectType != null)
             {
-                var instanceProp = connectType.GetProperty("instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                var instanceProp = connectType.GetProperty("instance",
+                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                 var instance = instanceProp?.GetValue(null);
-                var userInfoProp = connectType.GetProperty("userInfo", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                var userInfoProp = connectType.GetProperty("userInfo",
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 var userInfo = userInfoProp?.GetValue(instance);
                 if (userInfo != null)
                 {
                     var uiType = userInfo.GetType();
-                    var displayNameProp = uiType.GetProperty("displayName", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    var userNameProp = uiType.GetProperty("userName", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    var displayNameProp = uiType.GetProperty("displayName",
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    var userNameProp = uiType.GetProperty("userName",
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                     name = displayNameProp?.GetValue(userInfo) as string;
                     if (string.IsNullOrWhiteSpace(name)) name = userNameProp?.GetValue(userInfo) as string;
                 }
@@ -619,14 +654,18 @@ public class ChatPanelController
         roleLabel.AddToClassList("role-label");
         headerContainer.Add(roleLabel);
 
+        var rightActions = new VisualElement { name = "message-header-right" };
+        rightActions.AddToClassList("message-header-right");
+        var timestamp = new Label(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+        timestamp.AddToClassList("timestamp-label");
+        rightActions.Add(timestamp);
+        headerContainer.Add(rightActions);
+
         var contentContainer = new VisualElement { name = "content-container" };
         contentContainer.Add(markdownRenderer.Render(message.Content));
 
         container.Add(headerContainer);
-        // separator between header and content
-        var sep = new VisualElement();
-        sep.AddToClassList("separator");
-        container.Add(sep);
+        // No separator between role and text per request
         container.Add(contentContainer);
         chatHistoryScrollView.Add(container);
         ApplyChatStylesForElement(container);

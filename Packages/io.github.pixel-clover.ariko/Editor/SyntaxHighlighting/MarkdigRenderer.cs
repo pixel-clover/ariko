@@ -118,16 +118,12 @@ public class MarkdigRenderer
 
         var copyButton = new Button(() => GUIUtility.systemCopyBuffer = trimmed) { text = "Copy" };
         copyButton.AddToClassList("code-block-copy-button");
+        copyButton.AddToClassList("code-block-action-button");
 
-        // New: Save button (save to a file in the project)
+        // Save button (save to a file in the project)
         var saveButton = new Button(() => SaveCodeToProject(trimmed, language)) { text = "Save" };
         saveButton.AddToClassList("code-block-save-button");
-
-        // Keep existing buttons for convenience
-        var insertButton = new Button(() => InsertIntoSelectedScript(trimmed))
-            { text = "Insert into selected script" };
-        var createButton = new Button(() => CreateNewScriptFromContent(trimmed, language))
-            { text = "Create new script" };
+        saveButton.AddToClassList("code-block-action-button");
 
         header.Add(langLabel);
         // separator between language and actions
@@ -137,8 +133,6 @@ public class MarkdigRenderer
         header.Add(headerSep);
         header.Add(copyButton);
         header.Add(saveButton);
-        header.Add(insertButton);
-        header.Add(createButton);
 
         var codeLabel = new Label();
         codeLabel.AddToClassList("code-block-content");
@@ -227,7 +221,9 @@ public class MarkdigRenderer
     private void SaveCodeToProject(string code, string language)
     {
         // Let user choose any text-based extension, default to .txt if unknown language
-        var defaultExt = string.IsNullOrEmpty(language) ? "txt" : (language.Equals("csharp", StringComparison.OrdinalIgnoreCase) || language.Equals("cs", StringComparison.OrdinalIgnoreCase) ? "cs" : language.ToLowerInvariant());
+        var defaultExt = string.IsNullOrEmpty(language) ? "txt" :
+            language.Equals("csharp", StringComparison.OrdinalIgnoreCase) ||
+            language.Equals("cs", StringComparison.OrdinalIgnoreCase) ? "cs" : language.ToLowerInvariant();
         var defaultName = string.IsNullOrEmpty(language) ? "snippet.txt" : $"snippet.{defaultExt}";
         var path = EditorUtility.SaveFilePanelInProject("Save Code", defaultName, defaultExt,
             "Choose a location to save the code snippet in your project");

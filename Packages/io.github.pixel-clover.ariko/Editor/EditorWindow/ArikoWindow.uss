@@ -140,6 +140,7 @@
     white-space: normal;
     min-height: 40px; /* Ensure it has a minimum height */
     align-self: stretch; /* Stretch to fill parent height */
+    position: relative; /* enable absolute placeholder */
 }
 
 .boxed-input .unity-text-field__input {
@@ -186,6 +187,15 @@
 .code-block-copy-button {
     height: 24px;
     width: 60px;
+    font-size: 12px;
+}
+
+/* Ensure Copy and Save buttons use identical sizing */
+.code-block-action-button {
+    height: 24px;
+    min-width: 60px;
+    padding-left: 8px;
+    padding-right: 8px;
     font-size: 12px;
 }
 
@@ -445,4 +455,29 @@
 .generate-prompt-input .unity-text-field__input {
     max-height: 100px;
     white-space: normal;
+}
+
+/* Timestamp style for chat messages */
+.timestamp-label {
+    opacity: 0.5;
+    font-size: 10px;
+    margin-left: 8px;
+}
+
+/* Right actions container in message header */
+.message-header-right {
+    flex-direction: row;
+    align-items: center;
+}
+
+/* Placeholder hint inside the input field */
+.input-placeholder {
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    top: 8px;
+    color: var(--text-color);
+    opacity: 0.4;
+    pointer-events: none;
+    font-size: 14px;
 }

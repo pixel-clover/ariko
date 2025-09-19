@@ -2,21 +2,22 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 /// <summary>
-/// A UI Toolkit manipulator that allows a user to drag a visual element to resize two adjacent panels.
+///     A UI Toolkit manipulator that allows a user to drag a visual element to resize two adjacent panels.
 /// </summary>
 public class SplitterDragManipulator : Manipulator
 {
     /// <summary>
-    /// Specifies the orientation of the splitter.
+    ///     Specifies the orientation of the splitter.
     /// </summary>
     public enum Orientation
     {
         /// <summary>
-        /// The splitter adjusts the width of two horizontally adjacent panels.
+        ///     The splitter adjusts the width of two horizontally adjacent panels.
         /// </summary>
         Horizontal,
+
         /// <summary>
-        /// The splitter adjusts the height of two vertically adjacent panels.
+        ///     The splitter adjusts the height of two vertically adjacent panels.
         /// </summary>
         Vertical
     }
@@ -32,7 +33,7 @@ public class SplitterDragManipulator : Manipulator
     private float m_StartSizeSecond;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SplitterDragManipulator"/> class.
+    ///     Initializes a new instance of the <see cref="SplitterDragManipulator" /> class.
     /// </summary>
     /// <param name="parent">The parent container of the panels being resized.</param>
     /// <param name="firstPanel">The first panel (left or top).</param>

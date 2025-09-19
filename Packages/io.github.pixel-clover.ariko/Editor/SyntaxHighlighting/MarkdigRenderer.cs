@@ -7,6 +7,7 @@ using Markdig.Syntax.Inlines;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using Object = UnityEngine.Object;
 
 /// <summary>
 ///     Renders a Markdown string into a Unity UI Elements VisualElement hierarchy.
@@ -117,8 +118,10 @@ public class MarkdigRenderer
         var copyButton = new Button(() => GUIUtility.systemCopyBuffer = content.Trim()) { text = "Copy" };
         copyButton.AddToClassList("code-block-copy-button");
 
-        var insertButton = new Button(() => InsertIntoSelectedScript(content.Trim())) { text = "Insert into selected script" };
-        var createButton = new Button(() => CreateNewScriptFromContent(content.Trim(), language)) { text = "Create new script" };
+        var insertButton = new Button(() => InsertIntoSelectedScript(content.Trim()))
+            { text = "Insert into selected script" };
+        var createButton = new Button(() => CreateNewScriptFromContent(content.Trim(), language))
+            { text = "Create new script" };
 
         header.Add(langLabel);
         header.Add(copyButton);
@@ -157,15 +160,18 @@ public class MarkdigRenderer
         var obj = Selection.activeObject;
         if (obj == null)
         {
-            EditorUtility.DisplayDialog("Insert Code", "No asset is selected. Please select a script or text asset in the Project window.", "OK");
+            EditorUtility.DisplayDialog("Insert Code",
+                "No asset is selected. Please select a script or text asset in the Project window.", "OK");
             return;
         }
+
         var path = AssetDatabase.GetAssetPath(obj);
         if (string.IsNullOrEmpty(path))
         {
             EditorUtility.DisplayDialog("Insert Code", "Selected object is not a valid asset.", "OK");
             return;
         }
+
         try
         {
             var text = File.Exists(path) ? File.ReadAllText(path) : "";
@@ -182,15 +188,18 @@ public class MarkdigRenderer
 
     private void CreateNewScriptFromContent(string code, string language)
     {
-        var defaultName = string.IsNullOrEmpty(language) ? "NewScript.cs" : $"New{char.ToUpperInvariant(language[0]) + language.Substring(1)}.cs";
-        var path = EditorUtility.SaveFilePanelInProject("Create Script", defaultName, "cs", "Choose a location for the new script");
+        var defaultName = string.IsNullOrEmpty(language)
+            ? "NewScript.cs"
+            : $"New{char.ToUpperInvariant(language[0]) + language.Substring(1)}.cs";
+        var path = EditorUtility.SaveFilePanelInProject("Create Script", defaultName, "cs",
+            "Choose a location for the new script");
         if (string.IsNullOrEmpty(path)) return;
         try
         {
             File.WriteAllText(path, code);
             AssetDatabase.ImportAsset(path);
             AssetDatabase.Refresh();
-            var created = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path);
+            var created = AssetDatabase.LoadAssetAtPath<Object>(path);
             Selection.activeObject = created;
         }
         catch (Exception e)

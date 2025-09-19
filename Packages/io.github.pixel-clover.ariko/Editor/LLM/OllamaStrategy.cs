@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using UnityEngine;
 
 /// <summary>
 ///     Implements the <see cref="IApiProviderStrategy" /> for a local Ollama server.
@@ -77,9 +78,10 @@ public class OllamaStrategy : IApiProviderStrategy
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError($"[Ariko] Error parsing Ollama stream chunk: {e.Message}");
+                Debug.LogError($"[Ariko] Error parsing Ollama stream chunk: {e.Message}");
             }
         }
+
         return result;
     }
 

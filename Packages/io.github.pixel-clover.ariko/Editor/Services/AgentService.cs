@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 /// <summary>
-/// Manages the agentic workflow, including interpreting LLM responses as tool calls,
-/// handling user confirmation for tool execution, and orchestrating the agent-thought-tool loop.
+///     Manages the agentic workflow, including interpreting LLM responses as tool calls,
+///     handling user confirmation for tool execution, and orchestrating the agent-thought-tool loop.
 /// </summary>
 public class AgentService
 {

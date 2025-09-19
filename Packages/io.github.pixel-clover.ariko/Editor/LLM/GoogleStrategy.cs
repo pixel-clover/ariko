@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using UnityEngine;
 
 /// <summary>
 ///     Implements the <see cref="IApiProviderStrategy" /> for the Google AI (Gemini) API.
@@ -69,14 +70,13 @@ public class GoogleStrategy : IApiProviderStrategy
         {
             // As a fallback, if a full JSON arrives in one chunk, parse it like a normal response.
             if (!string.IsNullOrEmpty(streamChunk) && streamChunk.TrimStart().StartsWith("{"))
-            {
                 return ParseChatResponse(streamChunk);
-            }
         }
         catch (Exception e)
         {
-            UnityEngine.Debug.LogError($"[Ariko] Error parsing Google stream chunk: {e.Message}");
+            Debug.LogError($"[Ariko] Error parsing Google stream chunk: {e.Message}");
         }
+
         return string.Empty;
     }
 

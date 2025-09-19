@@ -38,7 +38,8 @@
                     <ui:VisualElement class="input-row">
                         <ui:TextField name="user-input" multiline="true" class="boxed-input"
                                       tooltip="Ask a question or paste an error here."/>
-                        <ui:Label name="thinking-indicator" text="Thinking" class="thinking-indicator" style="display: none; margin-left: 6px; margin-right: 6px;"/>
+                        <ui:Label name="thinking-indicator" text="Thinking" class="thinking-indicator"
+                                  style="display: none; margin-left: 6px; margin-right: 6px;"/>
                         <ui:Button text="Send" name="send-button" class="send-button"
                                    tooltip="Send the message (Enter). Shift+Enter inserts a newline."/>
                         <ui:Button text="Cancel" name="cancel-button" class="cancel-button" style="display: none;"
@@ -79,9 +80,11 @@
                 <ui:Foldout text="Agent" value="true">
                     <ui:Toggle label="Enable Delete Tools" name="enable-delete-tools-toggle"
                                tooltip="Enables agent tools for deleting files and GameObjects. Use with caution."/>
-                    <ui:HelpBox messageType="Warning" text="Use Delete Tools with caution. This can remove files and GameObjects." />
+                    <ui:HelpBox messageType="Warning"
+                                text="Use Delete Tools with caution. This can remove files and GameObjects."/>
                     <ui:Label text="System Prompt" class="sub-header-label"/>
-                    <ui:TextField name="system-prompt" multiline="true" style="flex-grow: 1;" class="system-prompt-field"/>
+                    <ui:TextField name="system-prompt" multiline="true" style="flex-grow: 1;"
+                                  class="system-prompt-field"/>
                     <ui:Label text="Agent System Prompt" class="sub-header-label"/>
                     <ui:TextField name="agent-system-prompt" multiline="true" style="flex-grow: 1;"
                                   class="system-prompt-field"/>

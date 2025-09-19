@@ -1,5 +1,3 @@
-// Packages/io.github.pixel-clover.ariko/Editor/ChatHistoryStorage.cs
-
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -1,13 +1,13 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 
 /// <summary>
-/// Manages the UI and logic for the main chat panel, including user input, message display, and context management.
+///     Manages the UI and logic for the main chat panel, including user input, message display, and context management.
 /// </summary>
 public class ChatPanelController
 {
@@ -26,18 +26,18 @@ public class ChatPanelController
     private readonly Button sendButton;
     private readonly ArikoSettings settings;
     private readonly Label statusLabel;
+    private readonly Label thinkingIndicator;
     private readonly TextField userInput;
-    private Label thinkingIndicator;
-    private IVisualElementScheduledItem thinkingSchedule;
-    private VisualElement thinkingMessage;
+    private VisualElement streamingAssistantContentContainer;
 
     // Streaming state
     private VisualElement streamingAssistantElement;
-    private VisualElement streamingAssistantContentContainer;
-    private System.Text.StringBuilder streamingAssistantText;
+    private StringBuilder streamingAssistantText;
+    private VisualElement thinkingMessage;
+    private IVisualElementScheduledItem thinkingSchedule;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ChatPanelController"/> class.
+    ///     Initializes a new instance of the <see cref="ChatPanelController" /> class.
     /// </summary>
     /// <param name="root">The root visual element of the chat panel.</param>
     /// <param name="controller">The main chat controller.</param>
@@ -76,6 +76,7 @@ public class ChatPanelController
         suggestionsContainer.style.flexDirection = FlexDirection.Row;
         suggestionsContainer.style.justifyContent = Justify.Center;
         suggestionsContainer.style.display = DisplayStyle.None;
+
         void AddSuggestion(string text)
         {
             var b = new Button(() =>
@@ -87,6 +88,7 @@ public class ChatPanelController
             b.style.marginRight = 3;
             suggestionsContainer.Add(b);
         }
+
         AddSuggestion("Explain the selected component");
         AddSuggestion("Refactor this script");
         AddSuggestion("Generate unit tests for this class");
@@ -113,8 +115,10 @@ public class ChatPanelController
                         if (!chatController.ManuallyAttachedAssets.Contains(obj))
                             chatController.ManuallyAttachedAssets.Add(obj);
                     }
+
                     UpdateManualAttachmentsList();
                 }
+
                 DragAndDrop.AcceptDrag();
                 evt.StopPropagation();
             });
@@ -126,12 +130,12 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Gets the control ID for the object picker.
+    ///     Gets the control ID for the object picker.
     /// </summary>
     public int objectPickerControlID { get; private set; }
 
     /// <summary>
-    /// Registers all the necessary callbacks for the chat panel UI.
+    ///     Registers all the necessary callbacks for the chat panel UI.
     /// </summary>
     private void RegisterCallbacks()
     {
@@ -156,7 +160,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Sends the message from the user input field to the chat controller.
+    ///     Sends the message from the user input field to the chat controller.
     /// </summary>
     public async void SendMessage()
     {
@@ -167,7 +171,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Sends a message from an external source to the chat controller.
+    ///     Sends a message from an external source to the chat controller.
     /// </summary>
     /// <param name="message">The message to send.</param>
     public async Task SendExternalMessage(string message)
@@ -176,7 +180,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Internal method to send a message to the assistant and handle the response.
+    ///     Internal method to send a message to the assistant and handle the response.
     /// </summary>
     /// <param name="text">The message text to send.</param>
     private async Task SendMessageInternal(string text)
@@ -185,7 +189,7 @@ public class ChatPanelController
         {
             // Create or reuse assistant visual for streaming
             PrepareStreamingAssistantElement();
-            streamingAssistantText = new System.Text.StringBuilder();
+            streamingAssistantText = new StringBuilder();
 
             await chatController.SendMessageToAssistantStreamed(
                 text,
@@ -204,6 +208,7 @@ public class ChatPanelController
                         UpdateStreamingAssistantContent(errorText);
                         streamingAssistantElement.AddToClassList("error-message");
                     }
+
                     streamingAssistantText = null;
                 }
             );
@@ -216,7 +221,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Handles the event when a new message is added to the chat.
+    ///     Handles the event when a new message is added to the chat.
     /// </summary>
     /// <param name="message">The new chat message.</param>
     /// <param name="session">The session the message was added to.</param>
@@ -264,7 +269,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Handles the event when the chat is cleared.
+    ///     Handles the event when the chat is cleared.
     /// </summary>
     private void HandleChatCleared()
     {
@@ -275,7 +280,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Handles the event when a chat session is reloaded.
+    ///     Handles the event when a chat session is reloaded.
     /// </summary>
     private void HandleChatReloaded()
     {
@@ -287,7 +292,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Handles an error by logging it and displaying it in the chat.
+    ///     Handles an error by logging it and displaying it in the chat.
     /// </summary>
     /// <param name="error">The error message.</param>
     private void HandleError(string error)
@@ -301,7 +306,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Adds a chat message to the chat history UI.
+    ///     Adds a chat message to the chat history UI.
     /// </summary>
     /// <param name="message">The chat message to add.</param>
     /// <returns>The created visual element for the message.</returns>
@@ -344,7 +349,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Sets the UI state to pending a response from the assistant.
+    ///     Sets the UI state to pending a response from the assistant.
     /// </summary>
     /// <param name="isPending">True if a response is pending, false otherwise.</param>
     private void SetResponsePending(bool isPending)
@@ -379,7 +384,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Applies the current chat styles to all messages in the chat history.
+    ///     Applies the current chat styles to all messages in the chat history.
     /// </summary>
     public void ApplyChatStyles()
     {
@@ -388,7 +393,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Applies the chat styles to a single message element.
+    ///     Applies the chat styles to a single message element.
     /// </summary>
     /// <param name="message">The message visual element.</param>
     private void ApplyChatStylesForElement(VisualElement message)
@@ -423,7 +428,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Scrolls the chat history to the bottom.
+    ///     Scrolls the chat history to the bottom.
     /// </summary>
     private void ScrollToBottom()
     {
@@ -432,7 +437,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Updates the list of manually attached assets in the UI.
+    ///     Updates the list of manually attached assets in the UI.
     /// </summary>
     public void UpdateManualAttachmentsList()
     {
@@ -449,7 +454,7 @@ public class ChatPanelController
             chip.style.paddingRight = 4;
             chip.style.paddingTop = 2;
             chip.style.paddingBottom = 2;
-            chip.style.backgroundColor = new Color(0.2f,0.2f,0.2f,0.5f);
+            chip.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
             chip.style.borderTopLeftRadius = 6;
             chip.style.borderTopRightRadius = 6;
             chip.style.borderBottomLeftRadius = 6;
@@ -465,6 +470,7 @@ public class ChatPanelController
                 icon.style.height = 16;
                 icon.style.marginRight = 4;
             }
+
             var nameLabel = new Label(asset.name);
             nameLabel.style.unityFontStyleAndWeight = FontStyle.Normal;
             nameLabel.style.fontSize = 12;
@@ -486,7 +492,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Updates the label for the auto-context toggle to reflect the current selection.
+    ///     Updates the label for the auto-context toggle to reflect the current selection.
     /// </summary>
     public void UpdateAutoContextLabel()
     {
@@ -502,7 +508,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Sets the status text in the UI.
+    ///     Sets the status text in the UI.
     /// </summary>
     /// <param name="text">The text to display.</param>
     private void SetStatus(string text)
@@ -511,7 +517,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Updates the empty state label and suggestion buttons based on whether there are messages.
+    ///     Updates the empty state label and suggestion buttons based on whether there are messages.
     /// </summary>
     private void UpdateEmptyState()
     {
@@ -526,7 +532,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Determines if a color is light or dark to decide on text color.
+    ///     Determines if a color is light or dark to decide on text color.
     /// </summary>
     /// <param name="color">The color to check.</param>
     /// <returns>True if the color is light, false otherwise.</returns>
@@ -537,7 +543,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Shows the object picker to attach an asset to the chat context.
+    ///     Shows the object picker to attach an asset to the chat context.
     /// </summary>
     private void ShowAttachmentObjectPicker()
     {
@@ -548,7 +554,7 @@ public class ChatPanelController
 
     // --- Streaming Helpers ---
     /// <summary>
-    /// Prepares the visual element for the assistant's streaming response.
+    ///     Prepares the visual element for the assistant's streaming response.
     /// </summary>
     private void PrepareStreamingAssistantElement()
     {
@@ -588,7 +594,7 @@ public class ChatPanelController
     }
 
     /// <summary>
-    /// Updates the content of the streaming assistant's visual element.
+    ///     Updates the content of the streaming assistant's visual element.
     /// </summary>
     /// <param name="fullText">The full text to display.</param>
     private void UpdateStreamingAssistantContent(string fullText)

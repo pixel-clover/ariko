@@ -1,5 +1,3 @@
-// Packages/io.github.pixel-clover.ariko/Editor/ChatSession.cs
-
 using System;
 using System.Collections.Generic;
 

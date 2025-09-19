@@ -1,5 +1,3 @@
-// csharp
-
 using System.Linq;
 using System.Reflection;
 using UnityEditor;

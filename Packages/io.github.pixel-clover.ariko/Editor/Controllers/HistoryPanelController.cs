@@ -1,8 +1,10 @@
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 /// <summary>
-/// Manages the UI and logic for the chat history panel, allowing users to view, switch, rename, and delete past chat sessions.
+///     Manages the UI and logic for the chat history panel, allowing users to view, switch, rename, and delete past chat
+///     sessions.
 /// </summary>
 public class HistoryPanelController
 {
@@ -13,7 +15,7 @@ public class HistoryPanelController
     private readonly VisualElement historyPanel;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="HistoryPanelController"/> class.
+    ///     Initializes a new instance of the <see cref="HistoryPanelController" /> class.
     /// </summary>
     /// <param name="root">The root visual element of the history panel.</param>
     /// <param name="controller">The main chat controller.</param>
@@ -40,7 +42,7 @@ public class HistoryPanelController
     }
 
     /// <summary>
-    /// Toggles the visibility of the history panel.
+    ///     Toggles the visibility of the history panel.
     /// </summary>
     private void ToggleHistoryPanel()
     {
@@ -50,7 +52,7 @@ public class HistoryPanelController
     }
 
     /// <summary>
-    /// Updates the history panel with the latest chat sessions.
+    ///     Updates the history panel with the latest chat sessions.
     /// </summary>
     private void UpdateHistoryPanel()
     {
@@ -70,7 +72,7 @@ public class HistoryPanelController
                     // Start rename
                     var textField = new TextField { value = session.SessionName };
                     textField.AddToClassList("history-item-label");
-                    int index = sessionContainer.IndexOf(sessionLabel);
+                    var index = sessionContainer.IndexOf(sessionLabel);
                     sessionContainer.Insert(index, textField);
                     sessionContainer.Remove(sessionLabel);
                     textField.Focus();
@@ -83,14 +85,14 @@ public class HistoryPanelController
                         var newLabel = new Label(session.SessionName);
                         newLabel.AddToClassList("history-item-label");
                         newLabel.RegisterCallback<MouseDownEvent>(_evt => chatController.SwitchToSession(session));
-                        int i = sessionContainer.IndexOf(textField);
+                        var i = sessionContainer.IndexOf(textField);
                         sessionContainer.Insert(i, newLabel);
                         sessionContainer.Remove(textField);
                     }
 
                     textField.RegisterCallback<KeyDownEvent>(kEvt =>
                     {
-                        if (kEvt.keyCode == UnityEngine.KeyCode.Return)
+                        if (kEvt.keyCode == KeyCode.Return)
                         {
                             Commit();
                             kEvt.StopImmediatePropagation();

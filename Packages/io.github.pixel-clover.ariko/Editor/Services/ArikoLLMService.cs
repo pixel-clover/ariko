@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -103,11 +104,14 @@ public class ArikoLLMService
             onComplete?.Invoke(WebRequestResult<string>.Fail("No AI model selected.", ErrorType.Unknown));
             return;
         }
+
         if (messages == null || messages.Count == 0)
         {
-            onComplete?.Invoke(WebRequestResult<string>.Fail("Cannot send an empty message history.", ErrorType.Unknown));
+            onComplete?.Invoke(
+                WebRequestResult<string>.Fail("Cannot send an empty message history.", ErrorType.Unknown));
             return;
         }
+
         if (!strategies.TryGetValue(provider, out var strategy))
         {
             onComplete?.Invoke(WebRequestResult<string>.Fail("Provider not supported.", ErrorType.Unknown));
@@ -120,6 +124,7 @@ public class ArikoLLMService
             onComplete?.Invoke(WebRequestResult<string>.Fail(urlResult.Error, urlResult.ErrorType));
             return;
         }
+
         var authResult = strategy.GetAuthHeader(settings, apiKeys);
         if (!authResult.IsSuccess)
         {
@@ -159,10 +164,20 @@ public class ArikoLLMService
             var token = cancellationTokenSource.Token;
             token.Register(() =>
             {
-                try { request.Abort(); } catch { /* ignore */ }
+                try
+                {
+                    request.Abort();
+                }
+                catch
+                {
+                    /* ignore */
+                }
             });
         }
-        catch { /* ignore */ }
+        catch
+        {
+            /* ignore */
+        }
 
         var lastLength = 0;
         var aggregate = new StringBuilder();
@@ -172,7 +187,7 @@ public class ArikoLLMService
         {
             if (cancellationTokenSource == null)
             {
-                UnityEditor.EditorApplication.update -= Tick;
+                EditorApplication.update -= Tick;
                 return;
             }
 
@@ -186,14 +201,21 @@ public class ArikoLLMService
                 if (!string.IsNullOrEmpty(parsed))
                 {
                     aggregate.Append(parsed);
-                    try { onChunk?.Invoke(parsed); } catch { /* ignore UI errors */ }
+                    try
+                    {
+                        onChunk?.Invoke(parsed);
+                    }
+                    catch
+                    {
+                        /* ignore UI errors */
+                    }
                 }
             }
 
             // Check completion
             if (operation.isDone)
             {
-                UnityEditor.EditorApplication.update -= Tick;
+                EditorApplication.update -= Tick;
                 try
                 {
                     var finalResult = HandleApiResponse(request, _ => aggregate.ToString());
@@ -206,12 +228,14 @@ public class ArikoLLMService
                     cancellationTokenSource = null;
                 }
             }
-            else if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.DataProcessingError)
+            else if (request.result == UnityWebRequest.Result.ConnectionError ||
+                     request.result == UnityWebRequest.Result.ProtocolError ||
+                     request.result == UnityWebRequest.Result.DataProcessingError)
             {
-                UnityEditor.EditorApplication.update -= Tick;
+                EditorApplication.update -= Tick;
                 try
                 {
-                    var errorResult = HandleApiResponse<string>(request, _ => aggregate.ToString());
+                    var errorResult = HandleApiResponse(request, _ => aggregate.ToString());
                     onComplete?.Invoke(errorResult);
                 }
                 finally
@@ -222,7 +246,8 @@ public class ArikoLLMService
                 }
             }
         }
-        UnityEditor.EditorApplication.update += Tick;
+
+        EditorApplication.update += Tick;
 #endif
     }
 

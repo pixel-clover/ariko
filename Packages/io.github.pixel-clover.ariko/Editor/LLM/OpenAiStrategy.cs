@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
+using UnityEngine;
 
 /// <summary>
 ///     Implements the <see cref="IApiProviderStrategy" /> for the OpenAI API.
@@ -78,9 +79,10 @@ public class OpenAiStrategy : IApiProviderStrategy
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError($"[Ariko] Error parsing OpenAI stream chunk: {e.Message}");
+                Debug.LogError($"[Ariko] Error parsing OpenAI stream chunk: {e.Message}");
             }
         }
+
         return result;
     }
 
@@ -111,7 +113,8 @@ public class OpenAiStrategy : IApiProviderStrategy
 
         [JsonProperty("messages")] public MessagePayload[] Messages { get; set; }
 
-        [JsonProperty("stream", NullValueHandling = NullValueHandling.Ignore)] public bool? Stream { get; set; }
+        [JsonProperty("stream", NullValueHandling = NullValueHandling.Ignore)]
+        public bool? Stream { get; set; }
     }
 
     private class OpenAIResponse

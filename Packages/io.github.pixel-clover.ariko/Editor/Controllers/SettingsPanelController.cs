@@ -4,7 +4,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 /// <summary>
-/// Manages the UI and logic for the settings panel, allowing users to configure API keys, appearance, and other preferences.
+///     Manages the UI and logic for the settings panel, allowing users to configure API keys, appearance, and other
+///     preferences.
 /// </summary>
 public class SettingsPanelController
 {
@@ -18,7 +19,7 @@ public class SettingsPanelController
     private bool settingsLayoutBuilt = false;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsPanelController"/> class.
+    ///     Initializes a new instance of the <see cref="SettingsPanelController" /> class.
     /// </summary>
     /// <param name="root">The root visual element of the settings panel.</param>
     /// <param name="controller">The main chat controller.</param>
@@ -42,7 +43,7 @@ public class SettingsPanelController
     }
 
     /// <summary>
-    /// Registers callbacks for the settings UI elements.
+    ///     Registers callbacks for the settings UI elements.
     /// </summary>
     private void RegisterSettingsCallbacks()
     {
@@ -78,7 +79,7 @@ public class SettingsPanelController
     }
 
     /// <summary>
-    /// Toggles the visibility of the settings panel.
+    ///     Toggles the visibility of the settings panel.
     /// </summary>
     private void ToggleSettingsPanel()
     {
@@ -100,7 +101,7 @@ public class SettingsPanelController
     }
 
     /// <summary>
-    /// Loads the current settings into the UI fields.
+    ///     Loads the current settings into the UI fields.
     /// </summary>
     private void LoadSettingsToUI()
     {
@@ -119,7 +120,7 @@ public class SettingsPanelController
     }
 
     /// <summary>
-    /// Saves the settings from the UI and closes the settings panel.
+    ///     Saves the settings from the UI and closes the settings panel.
     /// </summary>
     private void SaveAndCloseSettings()
     {

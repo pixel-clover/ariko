@@ -20,11 +20,11 @@ public static class AsyncOperationExtensions
     }
 
     /// <summary>
-    /// Allows awaiting an <see cref="AsyncOperation"/> with cancellation support.
+    ///     Allows awaiting an <see cref="AsyncOperation" /> with cancellation support.
     /// </summary>
     /// <param name="op">The async operation to convert to a task.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A <see cref="Task"/> that completes when the async operation finishes or is cancelled.</returns>
+    /// <returns>A <see cref="Task" /> that completes when the async operation finishes or is cancelled.</returns>
     public static Task AsTask(this AsyncOperation op, CancellationToken cancellationToken)
     {
         var tcs = new TaskCompletionSource<object>();

@@ -6,12 +6,12 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 /// <summary>
-/// Responsible for building a context string from the current Unity Editor selection and manually attached assets.
+///     Responsible for building a context string from the current Unity Editor selection and manually attached assets.
 /// </summary>
 public class ContextBuilder
 {
     /// <summary>
-    /// Builds a formatted string containing context from the current selection and manually attached assets.
+    ///     Builds a formatted string containing context from the current selection and manually attached assets.
     /// </summary>
     /// <param name="autoContext">Whether to include context from the current selection.</param>
     /// <param name="currentSelection">The currently selected object in the Unity Editor.</param>

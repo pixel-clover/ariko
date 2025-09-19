@@ -7,8 +7,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 /// <summary>
-/// The main editor window for the Ariko Assistant. This class is responsible for creating the UI,
-/// initializing controllers, and handling top-level UI events and state management.
+///     The main editor window for the Ariko Assistant. This class is responsible for creating the UI,
+///     initializing controllers, and handling top-level UI events and state management.
 /// </summary>
 public class ArikoWindow : EditorWindow
 {
@@ -242,16 +242,14 @@ public class ArikoWindow : EditorWindow
             confirmationLabel.enableRichText = true;
             var paramsText = string.Empty;
             if (toolCall.parameters != null && toolCall.parameters.Count > 0)
-            {
                 foreach (var kv in toolCall.parameters)
-                {
                     paramsText += $"\n - <b>{kv.Key}</b>: {kv.Value}";
-                }
-            }
+
             var thought = string.IsNullOrEmpty(toolCall.thought) ? "(no reasoning provided)" : toolCall.thought;
             confirmationLabel.text =
                 $"<b>Requested Tool</b>: <b>{toolCall.tool_name}</b>\n\n<b>Parameters</b>:{(string.IsNullOrEmpty(paramsText) ? "\n (none)" : paramsText)}\n\n<b>Reasoning</b>: {thought}\n\nApprove to continue?";
         }
+
         confirmationDialog.style.display = DisplayStyle.Flex;
         rootVisualElement.Q<TextField>("user-input").SetEnabled(false);
     }

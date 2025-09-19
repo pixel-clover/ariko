@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Ariko.Editor.Agent.Tools
 {
     /// <summary>
-    /// A tool for modifying an existing file with a prompt.
+    ///     A tool for modifying an existing file with a prompt.
     /// </summary>
     public class ModifyFileTool : IArikoTool
     {

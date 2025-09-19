@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Ariko.Editor.Agent.Tools
 {
     /// <summary>
-    /// A tool for reading the entire content of a file at a specified path.
+    ///     A tool for reading the entire content of a file at a specified path.
     /// </summary>
     public class ReadFileTool : IArikoTool
     {

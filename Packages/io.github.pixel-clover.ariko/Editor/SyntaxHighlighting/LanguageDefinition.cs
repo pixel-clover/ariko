@@ -20,9 +20,9 @@ public class LanguageDefinition : ScriptableObject
 
     [Header("Regex Patterns")]
     /// <summary>
-    /// The regex pattern to identify string literals.
+    /// The regex pattern to identify string literals. Handles escaped quotes within strings.
     /// </summary>
-    public string StringPattern = @"""""(.*?)""""";
+    public string StringPattern = "\"(?:\\\\.|[^\"\\\\])*\"";
 
     /// <summary>
     ///     The regex pattern to identify single-line comments.

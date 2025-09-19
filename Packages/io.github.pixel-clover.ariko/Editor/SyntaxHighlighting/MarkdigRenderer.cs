@@ -115,13 +115,16 @@ public class MarkdigRenderer
 
         var langLabel = new Label(string.IsNullOrEmpty(language) ? "code" : language);
         langLabel.AddToClassList("code-block-language");
+        langLabel.tooltip = string.IsNullOrEmpty(language) ? "Code block" : $"Language: {language}";
 
-        var copyButton = new Button(() => GUIUtility.systemCopyBuffer = trimmed) { text = "Copy" };
+        var copyButton = new Button(() => GUIUtility.systemCopyBuffer = trimmed) { text = "Copy code" };
+        copyButton.tooltip = "Copy code to clipboard";
         copyButton.AddToClassList("code-block-copy-button");
         copyButton.AddToClassList("code-block-action-button");
 
         // Save button (save to a file in the project)
-        var saveButton = new Button(() => SaveCodeToProject(trimmed, language)) { text = "Save" };
+        var saveButton = new Button(() => SaveCodeToProject(trimmed, language)) { text = "Save to Project" };
+        saveButton.tooltip = "Save this snippet into your project";
         saveButton.AddToClassList("code-block-save-button");
         saveButton.AddToClassList("code-block-action-button");
 
@@ -137,23 +140,35 @@ public class MarkdigRenderer
         var codeLabel = new Label();
         codeLabel.AddToClassList("code-block-content");
         codeLabel.AddToClassList("unity-text-element__selectable");
+        // Preserve formatting of whitespace and new lines for code
+        codeLabel.style.whiteSpace = WhiteSpace.Pre;
 
         // --- Syntax Highlighting ---
         var highlightedCode = trimmed;
+        var appliedHighlight = false;
         if (!string.IsNullOrEmpty(language))
         {
             var theme = settings.syntaxTheme;
-            var langDef =
-                settings.languageDefinitions?.Find(l => l.name.Equals(language, StringComparison.OrdinalIgnoreCase));
+            var normalized = (language ?? string.Empty).Trim();
+            // basic alias normalization
+            var lower = normalized.ToLowerInvariant();
+            if (lower is "cs" or "c#" or "csharp") normalized = "csharp";
+            else if (lower is "js" or "javascript") normalized = "javascript";
+            else if (lower is "ts" or "typescript") normalized = "typescript";
+            else if (lower is "py" or "python") normalized = "python";
+
+            var langDef = settings.languageDefinitions?.Find(l =>
+                string.Equals(l.name, normalized, StringComparison.OrdinalIgnoreCase));
 
             if (theme != null && langDef != null)
             {
                 highlightedCode = SyntaxHighlighter.Highlight(trimmed, langDef, theme);
-                codeLabel.enableRichText = true;
+                appliedHighlight = true;
             }
         }
 
-        codeLabel.text = highlightedCode;
+        codeLabel.enableRichText = appliedHighlight;
+        codeLabel.text = appliedHighlight ? highlightedCode : trimmed;
         // -------------------------
 
         container.Add(header);

@@ -14,7 +14,6 @@ public static class KnownModels
         "gpt-4.1-nano",
         "gpt-4.1-mini",
         "gpt-4.1",
-        "codex",
         "gpt-4o",
         "gpt-o3-mini",
         "gpt-o4-mini",
@@ -30,6 +29,5 @@ public static class KnownModels
     {
         "models/gemini-2.5-pro",
         "models/gemini-2.5-flash",
-        "models/gemini-2.0-flash"
     };
 }

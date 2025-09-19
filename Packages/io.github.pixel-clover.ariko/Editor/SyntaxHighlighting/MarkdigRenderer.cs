@@ -117,7 +117,7 @@ public class MarkdigRenderer
         langLabel.AddToClassList("code-block-language");
         langLabel.tooltip = string.IsNullOrEmpty(language) ? "Code block" : $"Language: {language}";
 
-        var copyButton = new Button(() => GUIUtility.systemCopyBuffer = trimmed) { text = "Copy Code" };
+        var copyButton = new Button(() => GUIUtility.systemCopyBuffer = trimmed) { text = " Copy " };
         copyButton.tooltip = "Copy code to clipboard";
         copyButton.AddToClassList("code-block-copy-button");
         copyButton.AddToClassList("code-block-action-button");

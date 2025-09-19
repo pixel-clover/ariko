@@ -13,7 +13,7 @@ It outlines the features to be implemented and their current status.
     -   [x] Sessions are saved and can be revisited later.
     -   [x] Code blocks in the chat are highlighted for readability.
     -   [x] Change chat colors and fonts via the settings asset.
-    -   [ ] Streaming responses from the AI.
+    -   [x] Streaming responses from the AI.
     -   [ ] Better handling of chat history (like summarizing and renaming sessions).
     -   [ ] Support for image-based prompts.
 

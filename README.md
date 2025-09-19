@@ -18,7 +18,8 @@ An AI assistant for Unity
 
 ---
 
-Ariko is an open-source AI assistant for Unity game engine similar to GitHub Copilot.
+Ariko is a friendly AI assistant for Unity game developers (with a user interface similar to GitHub Copilot).
+It can help you with common tasks like generating CSharp code, answering questions about your Unity project, and more.
 
 ### Features
 
@@ -60,20 +61,12 @@ To do this, follow these steps:
     *   Alternatively, you can paste your keys directly into the corresponding fields in the settings panel.
 3.  Click the "Save and Close" button to save your settings.
 
----
-
 ### Work Modes
 
 Ariko can operate in two modes, which you can switch between at the top of the window:
 
 -   **Ask Mode**: A standard question-and-answer chat mode. Ariko will use its knowledge and the context you provide to answer your questions.
--   **Agent Mode**: An experimental mode where Ariko can perform actions in the editor, such as creating, deleting, or modifying files and GameObjects. Ariko will ask for your approval before executing any action.
-
----
-
-### Documentation
-
-The codebase is fully documented using XML documentation comments, which can be viewed in your IDE or by browsing the source code. This provides detailed information on all public classes, methods, and properties.
+-   **Agent Mode**: An experimental mode where Ariko can perform actions in the editor, like creating, deleting, or modifying files and GameObjects.
 
 ---
 

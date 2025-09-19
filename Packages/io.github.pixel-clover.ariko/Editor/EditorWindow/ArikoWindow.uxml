@@ -75,17 +75,17 @@
                     <ui:Toggle label="Bold Role Labels" name="role-bold-toggle"/>
                 </ui:Foldout>
 
-                <ui:Foldout text="Agent" value="true">
-                    <ui:Toggle label="Enable Delete Tools" name="enable-delete-tools-toggle"
-                               tooltip="Enables agent tools for deleting files and GameObjects. Use with caution."/>
-                    <ui:HelpBox messageType="Warning"
-                                text="Use Delete Tools with caution. This can remove files and GameObjects."/>
+                <ui:Foldout text="LLM" value="true">
                     <ui:Label text="System Prompt" class="sub-header-label"/>
                     <ui:TextField name="system-prompt" multiline="true" style="flex-grow: 1;"
                                   class="system-prompt-field"/>
                     <ui:Label text="Agent System Prompt" class="sub-header-label"/>
                     <ui:TextField name="agent-system-prompt" multiline="true" style="flex-grow: 1;"
                                   class="system-prompt-field"/>
+                    <ui:Toggle label="Enable Delete Tools" name="enable-delete-tools-toggle"
+                               tooltip="Enables agent tools for deleting files and GameObjects. Use with caution."/>
+                    <ui:HelpBox messageType="Warning"
+                                text="Use Delete Tools with caution. This can remove files and GameObjects."/>
                 </ui:Foldout>
 
                 <ui:Button text="Save &amp; Close" name="save-settings-button" style="height: 30px;"/>

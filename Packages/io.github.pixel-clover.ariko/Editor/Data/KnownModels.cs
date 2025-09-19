@@ -28,6 +28,6 @@ public static class KnownModels
     public static readonly List<string> Google = new()
     {
         "models/gemini-2.5-pro",
-        "models/gemini-2.5-flash",
+        "models/gemini-2.5-flash"
     };
 }

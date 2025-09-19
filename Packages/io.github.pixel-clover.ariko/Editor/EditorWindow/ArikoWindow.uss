@@ -187,10 +187,11 @@
 .code-block-copy-button {
     height: 24px;
     width: 60px;
+    padding-left: 8px;
+    padding-right: 8px;
     font-size: 12px;
 }
 
-/* Ensure Copy and Save buttons use identical sizing */
 .code-block-action-button {
     height: 24px;
     min-width: 60px;

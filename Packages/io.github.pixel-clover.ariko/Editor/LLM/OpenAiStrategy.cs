@@ -76,9 +76,9 @@ public class OpenAiStrategy : IApiProviderStrategy
                 var delta = node?.Choices != null && node.Choices.Length > 0 ? node.Choices[0]?.Delta?.Content : null;
                 if (!string.IsNullOrEmpty(delta)) result += delta;
             }
-            catch
+            catch (Exception e)
             {
-                // Ignore partial/broken JSON fragments
+                UnityEngine.Debug.LogError($"[Ariko] Error parsing OpenAI stream chunk: {e.Message}");
             }
         }
         return result;

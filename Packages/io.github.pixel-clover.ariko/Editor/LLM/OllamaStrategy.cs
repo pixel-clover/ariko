@@ -75,9 +75,9 @@ public class OllamaStrategy : IApiProviderStrategy
                 var delta = node.Message?.Content;
                 if (!string.IsNullOrEmpty(delta)) result += delta;
             }
-            catch
+            catch (Exception e)
             {
-                // ignore non-JSON lines or partial fragments
+                UnityEngine.Debug.LogError($"[Ariko] Error parsing Ollama stream chunk: {e.Message}");
             }
         }
         return result;

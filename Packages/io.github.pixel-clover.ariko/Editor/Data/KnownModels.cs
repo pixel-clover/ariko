@@ -1,6 +1,3 @@
-// csharp
-// File: Assets/Ariko/Editor/KnownModels.cs
-
 using System.Collections.Generic;
 
 /// <summary>

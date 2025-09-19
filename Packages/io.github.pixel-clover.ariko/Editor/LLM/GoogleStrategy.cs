@@ -73,9 +73,9 @@ public class GoogleStrategy : IApiProviderStrategy
                 return ParseChatResponse(streamChunk);
             }
         }
-        catch
+        catch (Exception e)
         {
-            // ignore partials
+            UnityEngine.Debug.LogError($"[Ariko] Error parsing Google stream chunk: {e.Message}");
         }
         return string.Empty;
     }

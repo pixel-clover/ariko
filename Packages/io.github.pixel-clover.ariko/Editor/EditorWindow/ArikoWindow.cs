@@ -215,8 +215,9 @@ public class ArikoWindow : EditorWindow
         var provider = providerPopup.value;
         var model = modelPopup.value ?? "Not selected";
         var unityVersion = Application.unityVersion;
+        var arikoVersion = Ariko.ArikoInfo.Version;
         footerMetadataLabel.text =
-            $"Work Mode: {workMode} | Model Provider: {provider} | Model: {model} | Unity Version: {unityVersion}";
+            $"Work Mode: {workMode} | Model Provider: {provider} | Model: {model} | Unity Version: {unityVersion} | Ariko Version: {arikoVersion}";
     }
 
     private void UnregisterControllerCallbacks()

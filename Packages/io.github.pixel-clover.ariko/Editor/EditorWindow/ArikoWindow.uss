@@ -125,8 +125,6 @@
     flex-direction: row;
     align-items: center;
     padding: 10px;
-    min-height: 90px;
-    max-height: 220px;
     border-top-width: 1px;
     border-top-color: var(--input-border-color);
 }
@@ -148,7 +146,8 @@
     flex-basis: 0;
     font-size: 14px;
     white-space: normal;
-    min-height: 40px;
+    min-height: 100px;
+    max-height: 220px;
     align-self: stretch;
     position: relative;
 }
@@ -378,7 +377,7 @@
 }
 
 .history-panel {
-    min-width: 150px;
+    min-width: 200px;
     max-width: 500px;
     border-right-width: 1px;
     border-right-color: var(--separator-color);
@@ -483,7 +482,8 @@
 }
 
 .generate-prompt-input .unity-text-field__input {
-    max-height: 100px;
+    min-height: 200px;
+    max-height: 200px;
     white-space: normal;
 }
 

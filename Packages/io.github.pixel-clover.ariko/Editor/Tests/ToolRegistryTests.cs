@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UnityEngine;
 
 public class ToolRegistryTests
 {
@@ -7,7 +8,7 @@ public class ToolRegistryTests
     [SetUp]
     public void SetUp()
     {
-        settings = new ArikoSettings();
+        settings = ScriptableObject.CreateInstance<ArikoSettings>();
     }
 
     [Test]

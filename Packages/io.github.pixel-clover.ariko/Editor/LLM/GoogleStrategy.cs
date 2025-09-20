@@ -1,6 +1,8 @@
+// C#
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -9,6 +11,8 @@ using UnityEngine;
 /// </summary>
 public class GoogleStrategy : IApiProviderStrategy
 {
+    private readonly StringBuilder streamBuffer = new StringBuilder();
+
     /// <inheritdoc />
     public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
@@ -64,13 +68,40 @@ public class GoogleStrategy : IApiProviderStrategy
     /// <inheritdoc />
     public string ParseChatResponseStream(string streamChunk)
     {
-        // Google REST endpoint used here doesn't stream in this setup; return empty to avoid flicker.
-        // If a future streaming endpoint is used, implement parsing accordingly.
+        if (string.IsNullOrEmpty(streamChunk)) return string.Empty;
+
         try
         {
-            // As a fallback, if a full JSON arrives in one chunk, parse it like a normal response.
-            if (!string.IsNullOrEmpty(streamChunk) && streamChunk.TrimStart().StartsWith("{"))
-                return ParseChatResponse(streamChunk);
+            streamBuffer.Append(streamChunk);
+            var bufferStr = streamBuffer.ToString();
+            var firstOpen = bufferStr.IndexOf('{');
+            if (firstOpen == -1)
+            {
+                // No JSON start yet; prevent runaway buffer
+                if (streamBuffer.Length > 1024 * 64) streamBuffer.Clear();
+                return string.Empty;
+            }
+
+            // Iterate over candidate closing brace positions and attempt parse
+            for (int end = bufferStr.IndexOf('}', firstOpen); end >= 0; end = bufferStr.IndexOf('}', end + 1))
+            {
+                var candidate = bufferStr.Substring(firstOpen, end - firstOpen + 1);
+                try
+                {
+                    var parsed = ParseChatResponse(candidate);
+                    // Remove processed portion from buffer
+                    streamBuffer.Remove(0, end + 1);
+                    return parsed;
+                }
+                catch (JsonException)
+                {
+                    // Candidate still incomplete or invalid JSON; try next closing brace
+                }
+            }
+
+            // No complete JSON parsed yet. Trim if buffer grows too large.
+            if (streamBuffer.Length > 1024 * 1024)
+                streamBuffer.Clear();
         }
         catch (Exception e)
         {

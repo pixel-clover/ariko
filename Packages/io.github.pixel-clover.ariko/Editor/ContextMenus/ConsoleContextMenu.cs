@@ -36,12 +36,12 @@ public static class ConsoleContextMenu
     ///     This method is public for testability.
     /// </summary>
     /// <param name="logEntry">The log entry object from the Unity Editor's internal API.</param>
-    public static void ProcessLogEntry(object logEntry)
+    public static string ProcessLogEntry(object logEntry)
     {
         if (logEntry == null)
         {
             Debug.LogError("Ariko: Could not find LogEntry object from context.");
-            return;
+            return null;
         }
 
         var type = logEntry.GetType();
@@ -51,19 +51,32 @@ public static class ConsoleContextMenu
         if (messageField == null || conditionField == null)
         {
             Debug.LogError("Ariko: Could not find 'message' or 'condition' in LogEntry. Unity API may have changed.");
-            return;
+            return null;
         }
 
         var errorText = messageField.GetValue(logEntry) as string;
         var stackTrace = conditionField.GetValue(logEntry) as string;
 
+        // The 'condition' field contains both the error message and the stack trace.
+        // We need to remove the error message from the beginning of the condition to get a clean stack trace.
+        if (!string.IsNullOrEmpty(stackTrace) && !string.IsNullOrEmpty(errorText) && stackTrace.StartsWith(errorText))
+        {
+            stackTrace = stackTrace.Substring(errorText.Length).TrimStart();
+        }
+
         if (string.IsNullOrEmpty(errorText))
         {
             Debug.LogWarning("Ariko: The selected log entry appears to be empty.");
-            return;
+            return null;
         }
 
-        SendToAriko(errorText, stackTrace);
+        var prompt =
+            "Explain this Unity error and stack trace. Identify the likely cause. Provide a corrected C# code snippet.\n\n" +
+            $"\\*\\*Error:\\*\\*\n```\\n{errorText}\\n```\n\n" +
+            $"\\*\\*Stack Trace:\\*\\*\n```\\n{stackTrace}\\n```";
+
+        SendToAriko(prompt);
+        return prompt;
     }
 
     // Reads the ConsoleWindow's active text (works across many Unity versions).
@@ -94,18 +107,18 @@ public static class ConsoleContextMenu
         var errorText = parts.Length > 0 ? parts[0] : activeText;
         var stackTrace = parts.Length > 1 ? parts[1] : string.Empty;
 
-        SendToAriko(errorText, stackTrace);
-        return true;
-    }
-
-    private static void SendToAriko(string errorText, string stackTrace)
-    {
-        var arikoWindow = EditorWindow.GetWindow<ArikoWindow>("Ariko Assistant");
         var prompt =
             "Explain this Unity error and stack trace. Identify the likely cause. Provide a corrected C# code snippet.\n\n" +
             $"\\*\\*Error:\\*\\*\n```\\n{errorText}\\n```\n\n" +
             $"\\*\\*Stack Trace:\\*\\*\n```\\n{stackTrace}\\n```";
 
+        SendToAriko(prompt);
+        return true;
+    }
+
+    private static void SendToAriko(string prompt)
+    {
+        var arikoWindow = EditorWindow.GetWindow<ArikoWindow>("Ariko Assistant");
         EditorApplication.delayCall += () =>
         {
             if (arikoWindow != null && arikoWindow.controller != null)

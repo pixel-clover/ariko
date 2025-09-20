@@ -24,14 +24,13 @@ public class ArikoWindow : EditorWindow
 
     private Label fetchingModelsLabel;
     private VisualElement footer;
+    private Label footerMetadataLabel;
     private VisualElement historyPanel;
-    private HistoryPanelController historyPanelController;
     private MarkdigRenderer markdownRenderer;
     private PopupField<string> modelPopup;
 
     private PopupField<string> providerPopup;
     private ArikoSettings settings;
-    private SettingsPanelController settingsPanelController;
 
     private VisualElement splitter;
     private VisualElement verticalSplitter;
@@ -75,7 +74,10 @@ public class ArikoWindow : EditorWindow
     public async void CreateGUI()
     {
         settings = ArikoSettingsManager.LoadSettings();
-        controller = new ArikoChatController(settings);
+        if (!Application.isBatchMode)
+        {
+            controller = new ArikoChatController(settings);
+        }
         markdownRenderer = new MarkdigRenderer(settings);
 
         var visualTree =
@@ -97,19 +99,24 @@ public class ArikoWindow : EditorWindow
 
         var contentArea = rootVisualElement.Q<VisualElement>("content-area");
         splitter.AddManipulator(new SplitterDragManipulator(contentArea, historyPanel, chatPanel,
-            SplitterDragManipulator.Orientation.Horizontal));
+            SplitterDragManipulator.Orientation.Horizontal, "Ariko.Splitter.Horizontal"));
         verticalSplitter.AddManipulator(new SplitterDragManipulator(chatPanel, chatHistory, footer,
-            SplitterDragManipulator.Orientation.Vertical));
+            SplitterDragManipulator.Orientation.Vertical, "Ariko.Splitter.Vertical"));
 
-        chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer,
-            providerPopup, modelPopup);
-        historyPanelController = new HistoryPanelController(rootVisualElement, controller);
-        settingsPanelController = new SettingsPanelController(rootVisualElement, controller, settings,
-            chatPanelController.ApplyChatStyles);
+        if (!Application.isBatchMode)
+        {
+            chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer,
+                providerPopup, modelPopup);
+            new HistoryPanelController(rootVisualElement, controller);
+            chatPanelController.HandleChatReloaded();
+            new SettingsPanelController(rootVisualElement, controller, settings,
+                chatPanelController.ApplyChatStyles);
 
-        RegisterCallbacks();
+            RegisterCallbacks();
 
-        await FetchModelsForCurrentProviderAsync(providerPopup.value);
+            await FetchModelsForCurrentProviderAsync(providerPopup.value);
+        }
+        UpdateFooterMetadata();
     }
 
     [MenuItem("Tools/Ariko Assistant %&a")]
@@ -134,6 +141,7 @@ public class ArikoWindow : EditorWindow
         confirmationLabel = rootVisualElement.Q<Label>("confirmation-label");
         approveButton = rootVisualElement.Q<Button>("approve-button");
         denyButton = rootVisualElement.Q<Button>("deny-button");
+        footerMetadataLabel = rootVisualElement.Q<Label>("footer-metadata");
     }
 
     private void SetupUIStrings()
@@ -190,14 +198,33 @@ public class ArikoWindow : EditorWindow
         {
             settings.selectedProvider = evt.newValue;
             await FetchModelsForCurrentProviderAsync(evt.newValue);
+            UpdateFooterMetadata();
         });
         modelPopup.RegisterValueChangedCallback(evt =>
-            controller.SetSelectedModelForProvider(providerPopup.value, evt.newValue));
+        {
+            controller.SetSelectedModelForProvider(providerPopup.value, evt.newValue);
+            UpdateFooterMetadata();
+        });
         workModePopup.RegisterValueChangedCallback(evt =>
         {
             settings.selectedWorkMode = evt.newValue;
             controller.ReloadToolRegistry(evt.newValue);
+            UpdateFooterMetadata();
         });
+
+        UpdateFooterMetadata();
+    }
+
+    private void UpdateFooterMetadata()
+    {
+        if (footerMetadataLabel == null) return;
+        var workMode = workModePopup.value;
+        var provider = providerPopup.value;
+        var model = modelPopup.value ?? "Not selected";
+        var unityVersion = Application.unityVersion;
+        var arikoVersion = Ariko.ArikoInfo.Version;
+        footerMetadataLabel.text =
+            $"Work Mode: {workMode} | Model Provider: {provider} | Model: {model} | Unity Version: {unityVersion} | Ariko Version: {arikoVersion}";
     }
 
     private void UnregisterControllerCallbacks()
@@ -226,6 +253,7 @@ public class ArikoWindow : EditorWindow
             modelPopup.SetValueWithoutNotify(newModel);
             controller.SetSelectedModelForProvider(providerPopup.value, newModel);
         }
+        UpdateFooterMetadata();
     }
 
     private void HandleError(string error)

@@ -1,6 +1,6 @@
 <div align="center">
   <picture>
-    <img alt="Ariko Logo" src="logo.svg" height="15%" width="15%">
+    <img alt="Ariko Logo" src="logo.svg" height="20%" width="20%">
   </picture>
 <br>
 
@@ -9,9 +9,8 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/pixel-clover/ariko/tests.yml?branch=main&label=tests&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/actions/workflows/tests.yml)
 [![Code Quality](https://img.shields.io/codefactor/grade/github/pixel-clover/ariko?style=flat&label=code%20quality&labelColor=333333&logo=codefactor&logoColor=white)](https://www.codefactor.io/repository/github/pixel-clover/ariko)
 [![Unity Version](https://img.shields.io/badge/unity-2021.3+-green?style=flat&labelColor=282c34&logo=unity)](https://unity.com)
-[![License](https://img.shields.io/badge/License-MIT-007ec6?style=flat&labelColor=282c34&logo=open-source-initiative&label=license)](https://github.com/pixel-clover/ariko/blob/main/LICENSE)
 [![OpenUPM](https://img.shields.io/npm/v/io.github.pixel-clover.ariko?label=openupm&registry_uri=https://package.openupm.com&style=flat&labelColor=282c34)](https://openupm.com/packages/io.github.pixel-clover.ariko/)
-[![Latest Release](https://img.shields.io/github/v/release/pixel-clover/ariko?include_prereleases&label=release&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/releases/latest)
+[![License](https://img.shields.io/badge/License-MIT-007ec6?style=flat&labelColor=282c34&logo=open-source-initiative&label=license)](https://github.com/pixel-clover/ariko/blob/main/LICENSE)
 
 A friendly AI assistant for Unity
 
@@ -38,7 +37,23 @@ See the [ROADMAP.md](ROADMAP.md) file for the project roadmap.
 
 ---
 
-### Getting Started
+### Installation
+
+Ariko can be either installed from the [OpenUPM registry](https://openupm.com/packages/io.github.pixel-clover.ariko/)
+or directly from the Git URL.
+
+> [!NOTE]
+> Ariko is tested on Unity 2021.3, but should work on older versions of Unity too.
+
+#### Install from OpenUPM
+
+You can install Ariko using [OpenUPM-cli](https://github.com/openupm/openupm-cli) by running the following command:
+
+```shell
+openupm add io.github.pixel-clover.ariko
+```
+
+#### Install from Git URL
 
 1.  In the Unity Editor, go to `Window > Package Manager`.
 2.  Click the `+` icon in the top-left corner of the Package Manager window and select "Add package from git URL...".
@@ -48,9 +63,9 @@ See the [ROADMAP.md](ROADMAP.md) file for the project roadmap.
     ```
 4.  When the package is installed, you can open the assistant window by going to `Tools > Ariko Assistant`.
 
-### Configuration
+### Configuring the Model Providers
 
-To use Ariko, you need to provide an API key for the AI service you want to use (currently OpenAI and Google).
+To use Ariko, you need to provide an API key for the AI provider service you want to use (currently OpenAI and Google).
 To do this, follow these steps:
 
 1.  In the Ariko window, click the "Settings" button. This will open the settings panel.
@@ -62,18 +77,32 @@ To do this, follow these steps:
     *   Alternatively, you can paste your keys directly into the corresponding fields in the settings panel.
 3.  Click the "Save and Close" button to save your settings.
 
+> [!NOTE]
+> API keys are not stored between sessions due to security reasons.
+> You will need to re-enter them each time you restart Unity unless you set them as environment variables.
+
 ### Work Modes
 
 Ariko can operate in two modes, which you can switch between at the top of the window:
 
 -   **Ask Mode**: A standard question-and-answer chat mode. Ariko will use its knowledge and the context you provide to answer your questions.
--   **Agent Mode**: An experimental mode where Ariko can perform actions in the editor, like creating, deleting, or modifying files and GameObjects.
+-   **Agent Mode**: An mode where Ariko can perform actions in the editor, like creating, deleting, or modifying files and GameObjects.
+
+> [!NOTE]
+> Agent mode is currently experimental and may be buggy.
 
 ---
 
 ### Contributing
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
+
+### Supporting the Project
+
+If you find this project useful and want to support its development,
+please consider supporting it by making a donation via
+[GitHub Sponsors](https://github.com/sponsors/habedi) and giving it a star on GitHub.
+Thank you!
 
 ### License
 

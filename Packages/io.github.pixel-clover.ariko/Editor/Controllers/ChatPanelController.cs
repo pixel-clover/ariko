@@ -26,8 +26,8 @@ public class ChatPanelController
     private readonly VisualElement root;
     private readonly Button sendButton;
     private readonly ArikoSettings settings;
+    private readonly VisualElement statusIndicator;
     private readonly Label statusLabel;
-    private readonly Label thinkingIndicator;
     private readonly TextField userInput;
     private VisualElement streamingAssistantContentContainer;
 
@@ -63,7 +63,7 @@ public class ChatPanelController
         autoContextToggle = root.Q<Toggle>("auto-context-toggle");
         manualAttachmentsList = root.Q<VisualElement>("manual-attachments-list");
         statusLabel = root.Q<Label>("status-label");
-        thinkingIndicator = root.Q<Label>("thinking-indicator");
+        statusIndicator = root.Q<VisualElement>("status-indicator");
 
         emptyStateLabel = new Label(ArikoUIStrings.EmptyState);
         emptyStateLabel.AddToClassList("empty-state-label");
@@ -128,6 +128,7 @@ public class ChatPanelController
         RegisterCallbacks();
         UpdateEmptyState();
         UpdateAutoContextLabel();
+        SetResponsePending(false);
     }
 
     /// <summary>
@@ -143,6 +144,7 @@ public class ChatPanelController
         chatController.OnMessageAdded += (message, session) => HandleMessageAdded(message, session);
         chatController.OnChatCleared += HandleChatCleared;
         chatController.OnChatReloaded += HandleChatReloaded;
+        chatController.OnError += HandleError;
         chatController.OnResponseStatusChanged += SetResponsePending;
 
         sendButton.clicked += SendMessage;
@@ -308,7 +310,7 @@ public class ChatPanelController
     /// <summary>
     ///     Handles the event when a chat session is reloaded.
     /// </summary>
-    private void HandleChatReloaded()
+    public void HandleChatReloaded()
     {
         chatHistoryScrollView.Clear();
         foreach (var message in chatController.ActiveSession.Messages) AddMessageToChat(message);
@@ -324,7 +326,8 @@ public class ChatPanelController
     private void HandleError(string error)
     {
         Debug.LogError($"Ariko: {error}");
-        SetStatus(ArikoUIStrings.StatusError);
+        statusLabel.text = ArikoUIStrings.StatusError;
+        statusLabel.style.display = DisplayStyle.Flex;
         // Also show detailed error inline in the chat UI
         var msg = new ChatMessage { Role = "System", Content = error, IsError = true };
         AddMessageToChat(msg);
@@ -397,28 +400,16 @@ public class ChatPanelController
         sendButton.style.display = isPending ? DisplayStyle.None : DisplayStyle.Flex;
         cancelButton.style.display = isPending ? DisplayStyle.Flex : DisplayStyle.None;
 
-        SetStatus(isPending ? ArikoUIStrings.StatusThinking : ArikoUIStrings.StatusReady);
-
-        if (thinkingIndicator != null)
+        if (statusIndicator != null)
         {
-            thinkingIndicator.style.display = isPending ? DisplayStyle.Flex : DisplayStyle.None;
-            if (isPending)
-            {
-                var dots = 0;
-                thinkingIndicator.text = "Thinking";
-                thinkingSchedule?.Pause();
-                thinkingSchedule = thinkingIndicator.schedule.Execute(() =>
-                {
-                    dots = (dots + 1) % 4;
-                    thinkingIndicator.text = "Thinking" + new string('.', dots);
-                }).Every(300);
-            }
-            else
-            {
-                thinkingSchedule?.Pause();
-                thinkingIndicator.text = "Thinking";
-            }
+            statusIndicator.EnableInClassList("thinking", isPending);
+            statusIndicator.EnableInClassList("ready", !isPending);
         }
+
+        // Keep the text label for errors or other statuses
+        statusLabel.text = isPending ? "Thinking" : "Ready";
+        // The label is hidden by default via USS, but we can show it for important statuses like errors.
+        statusLabel.style.display = DisplayStyle.Flex;
     }
 
     /// <summary>
@@ -483,20 +474,7 @@ public class ChatPanelController
         foreach (var asset in chatController.ManuallyAttachedAssets)
         {
             var chip = new VisualElement();
-            chip.style.flexDirection = FlexDirection.Row;
-            chip.style.alignItems = Align.Center;
-            chip.style.marginTop = 2;
-            chip.style.marginBottom = 2;
-            chip.style.marginRight = 4;
-            chip.style.paddingLeft = 6;
-            chip.style.paddingRight = 4;
-            chip.style.paddingTop = 2;
-            chip.style.paddingBottom = 2;
-            chip.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
-            chip.style.borderTopLeftRadius = 6;
-            chip.style.borderTopRightRadius = 6;
-            chip.style.borderBottomLeftRadius = 6;
-            chip.style.borderBottomRightRadius = 6;
+            chip.AddToClassList("attachment-chip");
 
             var icon = new Image();
             var content = EditorGUIUtility.ObjectContent(asset, asset.GetType());
@@ -504,9 +482,7 @@ public class ChatPanelController
             {
                 icon.image = tex;
                 icon.scaleMode = ScaleMode.ScaleToFit;
-                icon.style.width = 16;
-                icon.style.height = 16;
-                icon.style.marginRight = 4;
+                icon.AddToClassList("attachment-chip__icon");
             }
 
             var nameLabel = new Label(asset.name);
@@ -519,8 +495,7 @@ public class ChatPanelController
                 chatController.ManuallyAttachedAssets.Remove(asset);
                 UpdateManualAttachmentsList();
             }) { text = "x" };
-            removeButton.style.width = 18;
-            removeButton.style.height = 18;
+            removeButton.AddToClassList("attachment-chip__remove");
 
             chip.Add(icon);
             chip.Add(nameLabel);
@@ -548,12 +523,6 @@ public class ChatPanelController
     /// <summary>
     ///     Sets the status text in the UI.
     /// </summary>
-    /// <param name="text">The text to display.</param>
-    private void SetStatus(string text)
-    {
-        if (statusLabel != null) statusLabel.text = text;
-    }
-
     /// <summary>
     ///     Updates the empty state label and suggestion buttons based on whether there are messages.
     /// </summary>

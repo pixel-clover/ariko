@@ -143,7 +143,6 @@ public class ChatPanelController
     {
         chatController.OnMessageAdded += (message, session) => HandleMessageAdded(message, session);
         chatController.OnChatCleared += HandleChatCleared;
-        chatController.OnChatReloaded += HandleChatReloaded;
         chatController.OnResponseStatusChanged += SetResponsePending;
 
         sendButton.clicked += SendMessage;
@@ -309,7 +308,7 @@ public class ChatPanelController
     /// <summary>
     ///     Handles the event when a chat session is reloaded.
     /// </summary>
-    private void HandleChatReloaded()
+    public void HandleChatReloaded()
     {
         chatHistoryScrollView.Clear();
         foreach (var message in chatController.ActiveSession.Messages) AddMessageToChat(message);

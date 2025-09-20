@@ -40,12 +40,12 @@ See the [ROADMAP.md](ROADMAP.md) file for the project roadmap.
 
 ### Installation
 
-Ariko can be either installed from the [OpenUPM registry](https://openupm.com/packages/io.github.pixel-clover.ariko/) or directly from the Git URL.
+Ariko can be either installed from the [OpenUPM registry](https://openupm.com/packages/io.github.pixel-clover.ariko/)
+or directly from the Git URL.
 
 #### Install from OpenUPM
 
-Ariko is available on the [OpenUPM registry](https://openupm.com/packages/io.github.pixel-clover.ariko/),
-so you can install it using [OpenUPM-cli](https://github.com/openupm/openupm-cli) by running the following command:
+You can install Ariko using [OpenUPM-cli](https://github.com/openupm/openupm-cli) by running the following command:
 
 ```shell
 openupm add io.github.pixel-clover.ariko
@@ -84,13 +84,23 @@ To do this, follow these steps:
 Ariko can operate in two modes, which you can switch between at the top of the window:
 
 -   **Ask Mode**: A standard question-and-answer chat mode. Ariko will use its knowledge and the context you provide to answer your questions.
--   **Agent Mode**: An experimental mode where Ariko can perform actions in the editor, like creating, deleting, or modifying files and GameObjects.
+-   **Agent Mode**: An mode where Ariko can perform actions in the editor, like creating, deleting, or modifying files and GameObjects.
+
+> [!NOTE]
+> Agent mode is currently experimental and may be buggy.
 
 ---
 
 ### Contributing
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
+
+### Supporting the Project
+
+If you find this project useful and want to support its development,
+please consider supporting it by making a donation via [GitHub Sponsors](
+https://github.com/sponsors/habedi) and giving it a star on GitHub.
+Thank you!
 
 ### License
 

@@ -62,7 +62,12 @@ public class FeatureTest
         }
 
         // 4. Call the public processing method directly for testing
-        ConsoleContextMenu.ProcessLogEntry(logEntry);
+        var prompt = ConsoleContextMenu.ProcessLogEntry(logEntry);
+
+        if (prompt != null)
+        {
+            Debug.Log("Ariko Test: Generated prompt:\n" + prompt);
+        }
 
         Debug.Log("Ariko Test: Feature test executed. Check the Ariko window for the explanation.");
     }

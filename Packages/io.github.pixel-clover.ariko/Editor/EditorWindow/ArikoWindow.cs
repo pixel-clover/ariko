@@ -103,6 +103,7 @@ public class ArikoWindow : EditorWindow
         chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer,
             providerPopup, modelPopup);
         new HistoryPanelController(rootVisualElement, controller);
+        chatPanelController.HandleChatReloaded();
         new SettingsPanelController(rootVisualElement, controller, settings,
             chatPanelController.ApplyChatStyles);
 
@@ -244,6 +245,7 @@ public class ArikoWindow : EditorWindow
             modelPopup.SetValueWithoutNotify(newModel);
             controller.SetSelectedModelForProvider(providerPopup.value, newModel);
         }
+        UpdateFooterMetadata();
     }
 
     private void HandleError(string error)

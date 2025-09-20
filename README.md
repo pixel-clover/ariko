@@ -38,7 +38,20 @@ See the [ROADMAP.md](ROADMAP.md) file for the project roadmap.
 
 ---
 
-### Getting Started
+### Installation
+
+Ariko can be either installed from the [OpenUPM registry](https://openupm.com/packages/io.github.pixel-clover.ariko/) or directly from the Git URL.
+
+#### Install from OpenUPM
+
+Ariko is available on the [OpenUPM registry](https://openupm.com/packages/io.github.pixel-clover.ariko/),
+so you can install it using [OpenUPM-cli](https://github.com/openupm/openupm-cli) by running the following command:
+
+```shell
+openupm add io.github.pixel-clover.ariko
+```
+
+#### Install from Git URL
 
 1.  In the Unity Editor, go to `Window > Package Manager`.
 2.  Click the `+` icon in the top-left corner of the Package Manager window and select "Add package from git URL...".
@@ -48,9 +61,9 @@ See the [ROADMAP.md](ROADMAP.md) file for the project roadmap.
     ```
 4.  When the package is installed, you can open the assistant window by going to `Tools > Ariko Assistant`.
 
-### Configuration
+### Configuring the Model Providers
 
-To use Ariko, you need to provide an API key for the AI service you want to use (currently OpenAI and Google).
+To use Ariko, you need to provide an API key for the AI provider service you want to use (currently OpenAI and Google).
 To do this, follow these steps:
 
 1.  In the Ariko window, click the "Settings" button. This will open the settings panel.
@@ -61,6 +74,10 @@ To do this, follow these steps:
         *   `OLLAMA_URL`: The URL for your local Ollama instance (default: `http://localhost:11434`).
     *   Alternatively, you can paste your keys directly into the corresponding fields in the settings panel.
 3.  Click the "Save and Close" button to save your settings.
+
+> [!NOTE]
+> API keys are not stored between sessions due to security reasons.
+> You will need to re-enter them each time you restart Unity unless you set them as environment variables.
 
 ### Work Modes
 

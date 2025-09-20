@@ -74,7 +74,10 @@ public class ArikoWindow : EditorWindow
     public async void CreateGUI()
     {
         settings = ArikoSettingsManager.LoadSettings();
-        controller = new ArikoChatController(settings);
+        if (!Application.isBatchMode)
+        {
+            controller = new ArikoChatController(settings);
+        }
         markdownRenderer = new MarkdigRenderer(settings);
 
         var visualTree =
@@ -100,16 +103,19 @@ public class ArikoWindow : EditorWindow
         verticalSplitter.AddManipulator(new SplitterDragManipulator(chatPanel, chatHistory, footer,
             SplitterDragManipulator.Orientation.Vertical, "Ariko.Splitter.Vertical"));
 
-        chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer,
-            providerPopup, modelPopup);
-        new HistoryPanelController(rootVisualElement, controller);
-        chatPanelController.HandleChatReloaded();
-        new SettingsPanelController(rootVisualElement, controller, settings,
-            chatPanelController.ApplyChatStyles);
+        if (!Application.isBatchMode)
+        {
+            chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer,
+                providerPopup, modelPopup);
+            new HistoryPanelController(rootVisualElement, controller);
+            chatPanelController.HandleChatReloaded();
+            new SettingsPanelController(rootVisualElement, controller, settings,
+                chatPanelController.ApplyChatStyles);
 
-        RegisterCallbacks();
+            RegisterCallbacks();
 
-        await FetchModelsForCurrentProviderAsync(providerPopup.value);
+            await FetchModelsForCurrentProviderAsync(providerPopup.value);
+        }
     }
 
     [MenuItem("Tools/Ariko Assistant %&a")]

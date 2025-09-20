@@ -9,9 +9,8 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/pixel-clover/ariko/tests.yml?branch=main&label=tests&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/actions/workflows/tests.yml)
 [![Code Quality](https://img.shields.io/codefactor/grade/github/pixel-clover/ariko?style=flat&label=code%20quality&labelColor=333333&logo=codefactor&logoColor=white)](https://www.codefactor.io/repository/github/pixel-clover/ariko)
 [![Unity Version](https://img.shields.io/badge/unity-2021.3+-green?style=flat&labelColor=282c34&logo=unity)](https://unity.com)
-[![License](https://img.shields.io/badge/License-MIT-007ec6?style=flat&labelColor=282c34&logo=open-source-initiative&label=license)](https://github.com/pixel-clover/ariko/blob/main/LICENSE)
 [![OpenUPM](https://img.shields.io/npm/v/io.github.pixel-clover.ariko?label=openupm&registry_uri=https://package.openupm.com&style=flat&labelColor=282c34)](https://openupm.com/packages/io.github.pixel-clover.ariko/)
-[![Latest Release](https://img.shields.io/github/v/release/pixel-clover/ariko?include_prereleases&label=release&style=flat&labelColor=282c34&logo=github)](https://github.com/pixel-clover/ariko/releases/latest)
+[![License](https://img.shields.io/badge/License-MIT-007ec6?style=flat&labelColor=282c34&logo=open-source-initiative&label=license)](https://github.com/pixel-clover/ariko/blob/main/LICENSE)
 
 A friendly AI assistant for Unity
 
@@ -98,8 +97,8 @@ Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
 ### Supporting the Project
 
 If you find this project useful and want to support its development,
-please consider supporting it by making a donation via [GitHub Sponsors](
-https://github.com/sponsors/habedi) and giving it a star on GitHub.
+please consider supporting it by making a donation via
+[GitHub Sponsors](https://github.com/sponsors/habedi) and giving it a star on GitHub.
 Thank you!
 
 ### License

@@ -41,8 +41,6 @@ public class SessionService
         {
             ActiveSession = ChatHistory[0];
         }
-
-        OnChatReloaded?.Invoke();
     }
 
     /// <summary>

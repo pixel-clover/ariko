@@ -1,4 +1,5 @@
 // C#
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ using UnityEngine;
 /// </summary>
 public class GoogleStrategy : IApiProviderStrategy
 {
-    private readonly StringBuilder streamBuffer = new StringBuilder();
+    private readonly StringBuilder streamBuffer = new();
 
     /// <inheritdoc />
     public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
@@ -83,7 +84,7 @@ public class GoogleStrategy : IApiProviderStrategy
             }
 
             // Iterate over candidate closing brace positions and attempt parse
-            for (int end = bufferStr.IndexOf('}', firstOpen); end >= 0; end = bufferStr.IndexOf('}', end + 1))
+            for (var end = bufferStr.IndexOf('}', firstOpen); end >= 0; end = bufferStr.IndexOf('}', end + 1))
             {
                 var candidate = bufferStr.Substring(firstOpen, end - firstOpen + 1);
                 try

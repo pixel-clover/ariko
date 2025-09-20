@@ -10,7 +10,7 @@ using UnityEngine;
 /// </summary>
 public class OllamaStrategy : IApiProviderStrategy
 {
-    private readonly StringBuilder streamBuffer = new StringBuilder();
+    private readonly StringBuilder streamBuffer = new();
 
     /// <inheritdoc />
     public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
@@ -78,7 +78,7 @@ public class OllamaStrategy : IApiProviderStrategy
             var processCount = endsWithNewline ? lines.Length : Math.Max(0, lines.Length - 1);
 
             var result = string.Empty;
-            for (int i = 0; i < processCount; i++)
+            for (var i = 0; i < processCount; i++)
             {
                 var line = lines[i].Trim();
                 if (string.IsNullOrEmpty(line)) continue;
@@ -96,7 +96,9 @@ public class OllamaStrategy : IApiProviderStrategy
 
             // Keep trailing partial line, if any
             if (endsWithNewline)
+            {
                 streamBuffer.Clear();
+            }
             else
             {
                 streamBuffer.Clear();

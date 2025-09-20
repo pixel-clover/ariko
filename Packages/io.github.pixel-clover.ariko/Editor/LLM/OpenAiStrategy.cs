@@ -10,7 +10,7 @@ using UnityEngine;
 /// </summary>
 public class OpenAiStrategy : IApiProviderStrategy
 {
-    private readonly StringBuilder streamBuffer = new StringBuilder();
+    private readonly StringBuilder streamBuffer = new();
 
     /// <inheritdoc />
     public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
@@ -76,7 +76,7 @@ public class OpenAiStrategy : IApiProviderStrategy
             var processCount = endsWithNewline ? lines.Length : Math.Max(0, lines.Length - 1);
 
             var result = string.Empty;
-            for (int i = 0; i < processCount; i++)
+            for (var i = 0; i < processCount; i++)
             {
                 var raw = lines[i].Trim();
                 if (string.IsNullOrEmpty(raw)) continue;
@@ -86,7 +86,9 @@ public class OpenAiStrategy : IApiProviderStrategy
                 try
                 {
                     var node = JsonConvert.DeserializeObject<OpenAIStreamChunk>(payload);
-                    var delta = node?.Choices != null && node.Choices.Length > 0 ? node.Choices[0]?.Delta?.Content : null;
+                    var delta = node?.Choices != null && node.Choices.Length > 0
+                        ? node.Choices[0]?.Delta?.Content
+                        : null;
                     if (!string.IsNullOrEmpty(delta)) result += delta;
                 }
                 catch (Exception e)
@@ -97,7 +99,9 @@ public class OpenAiStrategy : IApiProviderStrategy
 
             // Keep the last partial line (if any) in buffer
             if (endsWithNewline)
+            {
                 streamBuffer.Clear();
+            }
             else
             {
                 streamBuffer.Clear();

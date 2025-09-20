@@ -25,13 +25,11 @@ public class ArikoWindow : EditorWindow
     private Label fetchingModelsLabel;
     private VisualElement footer;
     private VisualElement historyPanel;
-    private HistoryPanelController historyPanelController;
     private MarkdigRenderer markdownRenderer;
     private PopupField<string> modelPopup;
 
     private PopupField<string> providerPopup;
     private ArikoSettings settings;
-    private SettingsPanelController settingsPanelController;
 
     private VisualElement splitter;
     private VisualElement verticalSplitter;
@@ -103,8 +101,8 @@ public class ArikoWindow : EditorWindow
 
         chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer,
             providerPopup, modelPopup);
-        historyPanelController = new HistoryPanelController(rootVisualElement, controller);
-        settingsPanelController = new SettingsPanelController(rootVisualElement, controller, settings,
+        new HistoryPanelController(rootVisualElement, controller);
+        new SettingsPanelController(rootVisualElement, controller, settings,
             chatPanelController.ApplyChatStyles);
 
         RegisterCallbacks();

@@ -28,14 +28,14 @@ public class SplitterDragManipulator : Manipulator
     private readonly Orientation m_Orientation;
 
     private readonly VisualElement m_Parent;
-    private readonly VisualElement m_SecondPanel;
 
     private readonly string m_PrefKey; // stores ratio relative to parent
+    private readonly VisualElement m_SecondPanel;
     private bool m_Active;
+    private bool m_InitialApplied;
     private float m_Start;
     private float m_StartSizeFirst;
     private float m_StartSizeSecond;
-    private bool m_InitialApplied;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="SplitterDragManipulator" /> class.
@@ -62,10 +62,8 @@ public class SplitterDragManipulator : Manipulator
         target.RegisterCallback<MouseUpEvent>(OnMouseUp);
 
         if (!string.IsNullOrEmpty(m_PrefKey))
-        {
             // Apply saved ratio on first valid layout of parent
             m_Parent.RegisterCallback<GeometryChangedEvent>(OnParentGeometryChanged);
-        }
     }
 
     protected override void UnregisterCallbacksFromTarget()

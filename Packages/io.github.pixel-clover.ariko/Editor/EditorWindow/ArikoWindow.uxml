@@ -54,13 +54,19 @@
             </ui:VisualElement>
 
             <ui:VisualElement name="settings-panel" class="settings-panel"
-                              style="display: none; min-width: 350px; max-width: 500px; padding: 5px;">
+                              style="display: none; min-width: 400px; max-width: 500px; padding: 5px;">
                 <ui:Label text="Ariko Assistant Settings" class="header-label"/>
 
                 <ui:Foldout text="API" value="true">
                     <ui:Label text="API Keys are read from environment variables first." class="help-box"/>
-                    <ui:TextField label="Google API Key" name="google-api-key" isPasswordField="true"/>
-                    <ui:TextField label="OpenAI API Key" name="openai-api-key" isPasswordField="true"/>
+                    <ui:VisualElement style="flex-direction: row; align-items: center;">
+                        <ui:TextField label="Google API Key" name="google-api-key" isPasswordField="true" style="flex-grow: 1;"/>
+                        <ui:Button text="Show" name="google-api-key-toggle" style="width: 50px;"/>
+                    </ui:VisualElement>
+                    <ui:VisualElement style="flex-direction: row; align-items: center;">
+                        <ui:TextField label="OpenAI API Key" name="openai-api-key" isPasswordField="true" style="flex-grow: 1;"/>
+                        <ui:Button text="Show" name="openai-api-key-toggle" style="width: 50px;"/>
+                    </ui:VisualElement>
                     <ui:TextField label="Ollama URL" name="ollama-url"/>
                 </ui:Foldout>
 

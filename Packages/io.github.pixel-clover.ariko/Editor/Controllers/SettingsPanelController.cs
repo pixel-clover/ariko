@@ -76,6 +76,22 @@ public class SettingsPanelController
         {
             settings.enableDeleteTools = evt.newValue;
         });
+
+        var googleApiKeyField = settingsPanel.Q<TextField>("google-api-key");
+        var googleApiKeyToggle = settingsPanel.Q<Button>("google-api-key-toggle");
+        googleApiKeyToggle.clicked += () =>
+        {
+            googleApiKeyField.isPasswordField = !googleApiKeyField.isPasswordField;
+            googleApiKeyToggle.text = googleApiKeyField.isPasswordField ? "Show" : "Hide";
+        };
+
+        var openaiApiKeyField = settingsPanel.Q<TextField>("openai-api-key");
+        var openaiApiKeyToggle = settingsPanel.Q<Button>("openai-api-key-toggle");
+        openaiApiKeyToggle.clicked += () =>
+        {
+            openaiApiKeyField.isPasswordField = !openaiApiKeyField.isPasswordField;
+            openaiApiKeyToggle.text = openaiApiKeyField.isPasswordField ? "Show" : "Hide";
+        };
     }
 
     /// <summary>
@@ -105,8 +121,18 @@ public class SettingsPanelController
     /// </summary>
     private void LoadSettingsToUI()
     {
-        settingsPanel.Q<TextField>("google-api-key").value = chatController.GetApiKey("Google");
-        settingsPanel.Q<TextField>("openai-api-key").value = chatController.GetApiKey("OpenAI");
+        var googleApiKeyField = settingsPanel.Q<TextField>("google-api-key");
+        googleApiKeyField.value = chatController.GetApiKey("Google");
+        googleApiKeyField.isPasswordField = true;
+        var googleApiKeyToggle = settingsPanel.Q<Button>("google-api-key-toggle");
+        googleApiKeyToggle.text = "Show";
+
+        var openaiApiKeyField = settingsPanel.Q<TextField>("openai-api-key");
+        openaiApiKeyField.value = chatController.GetApiKey("OpenAI");
+        openaiApiKeyField.isPasswordField = true;
+        var openaiApiKeyToggle = settingsPanel.Q<Button>("openai-api-key-toggle");
+        openaiApiKeyToggle.text = "Show";
+
         settingsPanel.Q<TextField>("ollama-url").value = settings.ollama_Url;
         settingsPanel.Q<ColorField>("ariko-bg-color").value = settings.assistantChatBackgroundColor;
         settingsPanel.Q<ColorField>("user-bg-color").value = settings.userChatBackgroundColor;

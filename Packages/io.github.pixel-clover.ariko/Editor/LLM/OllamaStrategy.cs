@@ -74,11 +74,10 @@ public class OllamaStrategy : IApiProviderStrategy
             var bufferStr = streamBuffer.ToString();
 
             var lines = bufferStr.Split(new[] { '\n' });
-            var endsWithNewline = bufferStr.EndsWith("\n");
-            var processCount = endsWithNewline ? lines.Length : Math.Max(0, lines.Length - 1);
+            var result = new StringBuilder();
 
-            var result = string.Empty;
-            for (var i = 0; i < processCount; i++)
+            // Process all but the last line segment.
+            for (var i = 0; i < lines.Length - 1; i++)
             {
                 var line = lines[i].Trim();
                 if (string.IsNullOrEmpty(line)) continue;
@@ -86,7 +85,7 @@ public class OllamaStrategy : IApiProviderStrategy
                 {
                     var node = JsonConvert.DeserializeObject<OllamaStreamChunk>(line);
                     var delta = node.Message?.Content;
-                    if (!string.IsNullOrEmpty(delta)) result += delta;
+                    if (!string.IsNullOrEmpty(delta)) result.Append(delta);
                 }
                 catch (Exception e)
                 {
@@ -94,22 +93,36 @@ public class OllamaStrategy : IApiProviderStrategy
                 }
             }
 
-            // Keep trailing partial line, if any
-            if (endsWithNewline)
+            // Attempt to process the last line segment.
+            var lastLine = lines.Length > 0 ? lines.Last().Trim() : string.Empty;
+            if (!string.IsNullOrEmpty(lastLine))
             {
-                streamBuffer.Clear();
+                try
+                {
+                    var node = JsonConvert.DeserializeObject<OllamaStreamChunk>(lastLine);
+                    var delta = node.Message?.Content;
+                    if (!string.IsNullOrEmpty(delta)) result.Append(delta);
+
+                    // If we successfully parsed it, clear the buffer.
+                    streamBuffer.Clear();
+                }
+                catch (JsonException)
+                {
+                    // It's an incomplete JSON object, so keep it in the buffer.
+                    streamBuffer.Clear();
+                    streamBuffer.Append(lastLine);
+                }
             }
             else
             {
+                // If the last line is empty, it means the buffer ended with a newline, so it's empty now.
                 streamBuffer.Clear();
-                var last = lines.Length > 0 ? lines.Last() : string.Empty;
-                streamBuffer.Append(last);
             }
 
             // Trim runaway buffer
             if (streamBuffer.Length > 1024 * 1024) streamBuffer.Clear();
 
-            return result;
+            return result.ToString();
         }
         catch (Exception e)
         {

@@ -42,6 +42,9 @@ See the [ROADMAP.md](ROADMAP.md) file for the project roadmap.
 Ariko can be either installed from the [OpenUPM registry](https://openupm.com/packages/io.github.pixel-clover.ariko/)
 or directly from the Git URL.
 
+> [!NOTE]
+> Ariko is tested on Unity 2021.3, but should work on older versions of Unity too.
+
 #### Install from OpenUPM
 
 You can install Ariko using [OpenUPM-cli](https://github.com/openupm/openupm-cli) by running the following command:

@@ -24,6 +24,7 @@ public class ArikoWindow : EditorWindow
 
     private Label fetchingModelsLabel;
     private VisualElement footer;
+    private Label footerMetadataLabel;
     private VisualElement historyPanel;
     private MarkdigRenderer markdownRenderer;
     private PopupField<string> modelPopup;
@@ -132,6 +133,7 @@ public class ArikoWindow : EditorWindow
         confirmationLabel = rootVisualElement.Q<Label>("confirmation-label");
         approveButton = rootVisualElement.Q<Button>("approve-button");
         denyButton = rootVisualElement.Q<Button>("deny-button");
+        footerMetadataLabel = rootVisualElement.Q<Label>("footer-metadata");
     }
 
     private void SetupUIStrings()
@@ -188,14 +190,29 @@ public class ArikoWindow : EditorWindow
         {
             settings.selectedProvider = evt.newValue;
             await FetchModelsForCurrentProviderAsync(evt.newValue);
+            UpdateFooterMetadata();
         });
         modelPopup.RegisterValueChangedCallback(evt =>
-            controller.SetSelectedModelForProvider(providerPopup.value, evt.newValue));
+        {
+            controller.SetSelectedModelForProvider(providerPopup.value, evt.newValue);
+            UpdateFooterMetadata();
+        });
         workModePopup.RegisterValueChangedCallback(evt =>
         {
             settings.selectedWorkMode = evt.newValue;
             controller.ReloadToolRegistry(evt.newValue);
         });
+
+        UpdateFooterMetadata();
+    }
+
+    private void UpdateFooterMetadata()
+    {
+        if (footerMetadataLabel == null) return;
+        var provider = providerPopup.value;
+        var model = modelPopup.value ?? "Not selected";
+        var unityVersion = Application.unityVersion;
+        footerMetadataLabel.text = $"Provider: {provider} | Model: {model} | Unity: {unityVersion}";
     }
 
     private void UnregisterControllerCallbacks()

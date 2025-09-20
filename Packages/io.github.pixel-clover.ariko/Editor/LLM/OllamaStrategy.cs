@@ -68,67 +68,54 @@ public class OllamaStrategy : IApiProviderStrategy
     {
         if (string.IsNullOrEmpty(streamChunk)) return string.Empty;
 
-        try
-        {
-            streamBuffer.Append(streamChunk);
-            var bufferStr = streamBuffer.ToString();
+        streamBuffer.Append(streamChunk);
+        var content = streamBuffer.ToString();
+        var result = new StringBuilder();
 
-            var lines = bufferStr.Split(new[] { '\n' });
-            var result = new StringBuilder();
+        var lastNewlineIndex = content.LastIndexOf('\n');
 
-            // Process all but the last line segment.
-            for (var i = 0; i < lines.Length - 1; i++)
+        // If there's no newline, the whole buffer is a single, potentially incomplete line.
+        // We don't process it yet and wait for the next chunk, unless it's a complete JSON object on its own.
+        if (lastNewlineIndex == -1)
+            try
             {
-                var line = lines[i].Trim();
-                if (string.IsNullOrEmpty(line)) continue;
-                try
-                {
-                    var node = JsonConvert.DeserializeObject<OllamaStreamChunk>(line);
-                    var delta = node.Message?.Content;
-                    if (!string.IsNullOrEmpty(delta)) result.Append(delta);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"[Ariko] Error parsing Ollama stream chunk: {e.Message}");
-                }
+                // Check if the buffer contains a single, complete JSON object.
+                var node = JsonConvert.DeserializeObject<OllamaStreamChunk>(content.Trim());
+                var delta = node.Message?.Content ?? "";
+                streamBuffer.Clear(); // Parsed successfully, clear the buffer.
+                return delta;
+            }
+            catch (JsonException)
+            {
+                // Incomplete JSON, wait for more data.
+                return string.Empty;
             }
 
-            // Attempt to process the last line segment.
-            var lastLine = lines.Length > 0 ? lines.Last().Trim() : string.Empty;
-            if (!string.IsNullOrEmpty(lastLine))
-            {
-                try
-                {
-                    var node = JsonConvert.DeserializeObject<OllamaStreamChunk>(lastLine);
-                    var delta = node.Message?.Content;
-                    if (!string.IsNullOrEmpty(delta)) result.Append(delta);
+        // We have at least one newline, so we can process the content up to the last newline.
+        var processable = content.Substring(0, lastNewlineIndex);
+        var remaining = content.Substring(lastNewlineIndex + 1);
 
-                    // If we successfully parsed it, clear the buffer.
-                    streamBuffer.Clear();
-                }
-                catch (JsonException)
-                {
-                    // It's an incomplete JSON object, so keep it in the buffer.
-                    streamBuffer.Clear();
-                    streamBuffer.Append(lastLine);
-                }
-            }
-            else
+        // Process all the complete lines.
+        var lines = processable.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (var line in lines)
+            try
             {
-                // If the last line is empty, it means the buffer ended with a newline, so it's empty now.
-                streamBuffer.Clear();
+                var node = JsonConvert.DeserializeObject<OllamaStreamChunk>(line.Trim());
+                result.Append(node.Message?.Content ?? "");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[Ariko] Error parsing Ollama stream chunk: {e.Message}");
             }
 
-            // Trim runaway buffer
-            if (streamBuffer.Length > 1024 * 1024) streamBuffer.Clear();
+        // The 'remaining' part is the new buffer content. It might be an incomplete line or empty.
+        streamBuffer.Clear();
+        streamBuffer.Append(remaining);
 
-            return result.ToString();
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"[Ariko] Error parsing Ollama stream chunk: {e.Message}");
-            return string.Empty;
-        }
+        // Trim runaway buffer
+        if (streamBuffer.Length > 1024 * 1024) streamBuffer.Clear();
+
+        return result.ToString();
     }
 
     /// <inheritdoc />

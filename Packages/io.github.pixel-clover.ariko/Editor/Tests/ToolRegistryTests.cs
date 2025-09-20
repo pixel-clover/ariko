@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using Ariko.Editor.Settings;
 
 public class ToolRegistryTests
 {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -9,6 +10,8 @@ using UnityEngine;
 /// </summary>
 public class OllamaStrategy : IApiProviderStrategy
 {
+    private readonly StringBuilder streamBuffer = new StringBuilder();
+
     /// <inheritdoc />
     public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
@@ -64,25 +67,53 @@ public class OllamaStrategy : IApiProviderStrategy
     public string ParseChatResponseStream(string streamChunk)
     {
         if (string.IsNullOrEmpty(streamChunk)) return string.Empty;
-        // Ollama streams JSON lines, each with a partial message under message.content
-        var result = string.Empty;
-        var lines = streamChunk.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (var raw in lines)
-        {
-            var line = raw.Trim();
-            try
-            {
-                var node = JsonConvert.DeserializeObject<OllamaStreamChunk>(line);
-                var delta = node.Message?.Content;
-                if (!string.IsNullOrEmpty(delta)) result += delta;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[Ariko] Error parsing Ollama stream chunk: {e.Message}");
-            }
-        }
 
-        return result;
+        try
+        {
+            streamBuffer.Append(streamChunk);
+            var bufferStr = streamBuffer.ToString();
+
+            var lines = bufferStr.Split(new[] { '\n' });
+            var endsWithNewline = bufferStr.EndsWith("\n");
+            var processCount = endsWithNewline ? lines.Length : Math.Max(0, lines.Length - 1);
+
+            var result = string.Empty;
+            for (int i = 0; i < processCount; i++)
+            {
+                var line = lines[i].Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+                try
+                {
+                    var node = JsonConvert.DeserializeObject<OllamaStreamChunk>(line);
+                    var delta = node.Message?.Content;
+                    if (!string.IsNullOrEmpty(delta)) result += delta;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[Ariko] Error parsing Ollama stream chunk: {e.Message}");
+                }
+            }
+
+            // Keep trailing partial line, if any
+            if (endsWithNewline)
+                streamBuffer.Clear();
+            else
+            {
+                streamBuffer.Clear();
+                var last = lines.Length > 0 ? lines.Last() : string.Empty;
+                streamBuffer.Append(last);
+            }
+
+            // Trim runaway buffer
+            if (streamBuffer.Length > 1024 * 1024) streamBuffer.Clear();
+
+            return result;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[Ariko] Error parsing Ollama stream chunk: {e.Message}");
+            return string.Empty;
+        }
     }
 
     /// <inheritdoc />

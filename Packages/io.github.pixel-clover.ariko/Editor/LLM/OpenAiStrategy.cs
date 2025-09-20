@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 using UnityEngine;
 
@@ -9,6 +10,8 @@ using UnityEngine;
 /// </summary>
 public class OpenAiStrategy : IApiProviderStrategy
 {
+    private readonly StringBuilder streamBuffer = new StringBuilder();
+
     /// <inheritdoc />
     public WebRequestResult<string> GetModelsUrl(ArikoSettings settings, Dictionary<string, string> apiKeys)
     {
@@ -61,29 +64,57 @@ public class OpenAiStrategy : IApiProviderStrategy
     /// <inheritdoc />
     public string ParseChatResponseStream(string streamChunk)
     {
-        // OpenAI streaming typically sends Server-Sent Events with lines starting with "data: {json}"
         if (string.IsNullOrEmpty(streamChunk)) return string.Empty;
-        var result = string.Empty;
-        var lines = streamChunk.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (var raw in lines)
-        {
-            var line = raw.Trim();
-            if (!line.StartsWith("data:")) continue;
-            var payload = line.Substring("data:".Length).Trim();
-            if (payload == "[DONE]") continue;
-            try
-            {
-                var node = JsonConvert.DeserializeObject<OpenAIStreamChunk>(payload);
-                var delta = node?.Choices != null && node.Choices.Length > 0 ? node.Choices[0]?.Delta?.Content : null;
-                if (!string.IsNullOrEmpty(delta)) result += delta;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[Ariko] Error parsing OpenAI stream chunk: {e.Message}");
-            }
-        }
 
-        return result;
+        try
+        {
+            streamBuffer.Append(streamChunk);
+            var bufferStr = streamBuffer.ToString();
+
+            var lines = bufferStr.Split(new[] { '\n' });
+            var endsWithNewline = bufferStr.EndsWith("\n");
+            var processCount = endsWithNewline ? lines.Length : Math.Max(0, lines.Length - 1);
+
+            var result = string.Empty;
+            for (int i = 0; i < processCount; i++)
+            {
+                var raw = lines[i].Trim();
+                if (string.IsNullOrEmpty(raw)) continue;
+                if (!raw.StartsWith("data:")) continue;
+                var payload = raw.Substring("data:".Length).Trim();
+                if (payload == "[DONE]") continue;
+                try
+                {
+                    var node = JsonConvert.DeserializeObject<OpenAIStreamChunk>(payload);
+                    var delta = node?.Choices != null && node.Choices.Length > 0 ? node.Choices[0]?.Delta?.Content : null;
+                    if (!string.IsNullOrEmpty(delta)) result += delta;
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[Ariko] Error parsing OpenAI stream chunk: {e.Message}");
+                }
+            }
+
+            // Keep the last partial line (if any) in buffer
+            if (endsWithNewline)
+                streamBuffer.Clear();
+            else
+            {
+                streamBuffer.Clear();
+                var last = lines.Length > 0 ? lines.Last() : string.Empty;
+                streamBuffer.Append(last);
+            }
+
+            // Prevent runaway buffer
+            if (streamBuffer.Length > 1024 * 1024) streamBuffer.Clear();
+
+            return result;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[Ariko] Error parsing OpenAI stream chunk: {e.Message}");
+            return string.Empty;
+        }
     }
 
     /// <inheritdoc />

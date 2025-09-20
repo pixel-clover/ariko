@@ -2,7 +2,7 @@
     <ui:VisualElement name="main-container" style="flex-grow: 1;">
         <uie:Toolbar>
             <ui:Button text="History" name="history-button" tooltip="Show or hide chat history."/>
-            <ui:Button text="New chat" name="new-chat-button" tooltip="Start a new chat session."/>
+            <ui:Button text="New Chat" name="new-chat-button" tooltip="Start a new chat session."/>
             <ui:VisualElement class="toolbar-vertical-separator"/>
             <ui:VisualElement style="flex-grow: 1;"/>
             <ui:VisualElement name="work-mode-popup-placeholder" style="width: 60px;"/>
@@ -16,8 +16,8 @@
         <ui:VisualElement name="content-area" style="flex-grow: 1; flex-direction: row;">
             <ui:VisualElement name="history-panel" class="history-panel" style="display: none;">
                 <ui:VisualElement name="history-header-container" class="history-header">
-                    <ui:Label text="Chat history" style="flex-grow: 1;"/>
-                    <ui:Button text="Clear all" name="clear-history-button" tooltip="Delete all saved chat sessions."/>
+                    <ui:Label text="Chat History" style="flex-grow: 1;"/>
+                    <ui:Button text="Clear All" name="clear-history-button" tooltip="Delete all saved chat sessions."/>
                 </ui:VisualElement>
                 <ui:ScrollView name="history-list" style="flex-grow: 1;"/>
             </ui:VisualElement>

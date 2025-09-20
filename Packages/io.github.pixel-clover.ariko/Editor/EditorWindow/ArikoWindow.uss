@@ -235,8 +235,8 @@
 .code-block-copy-button {
     height: 24px;
     width: 60px;
-    padding-left: 8px;
-    padding-right: 8px;
+    padding-left: 6px;
+    padding-right: 6px;
     font-size: 12px;
 }
 

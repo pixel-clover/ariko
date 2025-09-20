@@ -17,7 +17,7 @@ public static class ArikoUIStrings
     /// <summary>
     ///     Label for the button that starts a new chat session.
     /// </summary>
-    public const string NewChatButton = "New chat";
+    public const string NewChatButton = "New Chat";
 
     /// <summary>
     ///     Label for the button that opens the settings asset.
@@ -27,13 +27,13 @@ public static class ArikoUIStrings
     /// <summary>
     ///     Label for the button that clears all chat history.
     /// </summary>
-    public const string ClearAllButton = "Clear all";
+    public const string ClearAllButton = "Clear All";
 
     // Footer
     /// <summary>
     ///     Label for the toggle that enables or disables automatic context from selection.
     /// </summary>
-    public const string AutoContextToggle = "Auto‑context from selection";
+    public const string AutoContextToggle = "Include Seleced File";
 
     /// <summary>
     ///     Label for the button that opens the asset search window.
@@ -121,5 +121,5 @@ public static class ArikoUIStrings
     /// <summary>
     ///     Text displayed in the chat window when it is empty.
     /// </summary>
-    public const string EmptyState = "Start a conversation.\nType your question or paste an error log.";
+    public const string EmptyState = "Start a conversation.\nFor example, type your question or paste an error log.";
 }

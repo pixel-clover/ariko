@@ -97,9 +97,9 @@ public class ArikoWindow : EditorWindow
 
         var contentArea = rootVisualElement.Q<VisualElement>("content-area");
         splitter.AddManipulator(new SplitterDragManipulator(contentArea, historyPanel, chatPanel,
-            SplitterDragManipulator.Orientation.Horizontal));
+            SplitterDragManipulator.Orientation.Horizontal, "Ariko.Splitter.Horizontal"));
         verticalSplitter.AddManipulator(new SplitterDragManipulator(chatPanel, chatHistory, footer,
-            SplitterDragManipulator.Orientation.Vertical));
+            SplitterDragManipulator.Orientation.Vertical, "Ariko.Splitter.Vertical"));
 
         chatPanelController = new ChatPanelController(rootVisualElement, controller, settings, markdownRenderer,
             providerPopup, modelPopup);

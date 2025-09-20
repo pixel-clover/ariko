@@ -1,8 +1,10 @@
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 /// <summary>
 ///     A UI Toolkit manipulator that allows a user to drag a visual element to resize two adjacent panels.
+///     Now persists the splitter position via EditorPrefs.
 /// </summary>
 public class SplitterDragManipulator : Manipulator
 {
@@ -27,10 +29,13 @@ public class SplitterDragManipulator : Manipulator
 
     private readonly VisualElement m_Parent;
     private readonly VisualElement m_SecondPanel;
+
+    private readonly string m_PrefKey; // stores ratio relative to parent
     private bool m_Active;
     private float m_Start;
     private float m_StartSizeFirst;
     private float m_StartSizeSecond;
+    private bool m_InitialApplied;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="SplitterDragManipulator" /> class.
@@ -39,13 +44,15 @@ public class SplitterDragManipulator : Manipulator
     /// <param name="firstPanel">The first panel (left or top).</param>
     /// <param name="secondPanel">The second panel (right or bottom).</param>
     /// <param name="orientation">The orientation of the splitter.</param>
+    /// <param name="prefKey">Optional EditorPrefs key to persist splitter position.</param>
     public SplitterDragManipulator(VisualElement parent, VisualElement firstPanel, VisualElement secondPanel,
-        Orientation orientation)
+        Orientation orientation, string prefKey = null)
     {
         m_Parent = parent;
         m_FirstPanel = firstPanel;
         m_SecondPanel = secondPanel;
         m_Orientation = orientation;
+        m_PrefKey = prefKey;
     }
 
     protected override void RegisterCallbacksOnTarget()
@@ -53,6 +60,12 @@ public class SplitterDragManipulator : Manipulator
         target.RegisterCallback<MouseDownEvent>(OnMouseDown);
         target.RegisterCallback<MouseMoveEvent>(OnMouseMove);
         target.RegisterCallback<MouseUpEvent>(OnMouseUp);
+
+        if (!string.IsNullOrEmpty(m_PrefKey))
+        {
+            // Apply saved ratio on first valid layout of parent
+            m_Parent.RegisterCallback<GeometryChangedEvent>(OnParentGeometryChanged);
+        }
     }
 
     protected override void UnregisterCallbacksFromTarget()
@@ -60,6 +73,17 @@ public class SplitterDragManipulator : Manipulator
         target.UnregisterCallback<MouseDownEvent>(OnMouseDown);
         target.UnregisterCallback<MouseMoveEvent>(OnMouseMove);
         target.UnregisterCallback<MouseUpEvent>(OnMouseUp);
+        m_Parent.UnregisterCallback<GeometryChangedEvent>(OnParentGeometryChanged);
+    }
+
+    private void OnParentGeometryChanged(GeometryChangedEvent evt)
+    {
+        if (m_InitialApplied) return;
+        if (evt.newRect.width <= 0 || evt.newRect.height <= 0) return;
+        ApplyInitialFromPrefs();
+        m_InitialApplied = true;
+        // No longer need to listen
+        m_Parent.UnregisterCallback<GeometryChangedEvent>(OnParentGeometryChanged);
     }
 
     private void OnMouseDown(MouseDownEvent e)
@@ -123,5 +147,45 @@ public class SplitterDragManipulator : Manipulator
         m_Active = false;
         target.ReleaseMouse();
         e.StopPropagation();
+
+        SaveToPrefs();
+    }
+
+    private void ApplyInitialFromPrefs()
+    {
+        if (string.IsNullOrEmpty(m_PrefKey)) return;
+        if (!EditorPrefs.HasKey(m_PrefKey)) return;
+        var ratio = EditorPrefs.GetFloat(m_PrefKey, -1f);
+        if (ratio <= 0f || ratio >= 1f) return;
+
+        if (m_Orientation == Orientation.Horizontal)
+        {
+            var parentSize = Mathf.Max(1f, m_Parent.resolvedStyle.width);
+            m_FirstPanel.style.flexBasis = ratio * parentSize;
+        }
+        else
+        {
+            var parentSize = Mathf.Max(1f, m_Parent.resolvedStyle.height);
+            m_SecondPanel.style.flexBasis = ratio * parentSize;
+        }
+    }
+
+    private void SaveToPrefs()
+    {
+        if (string.IsNullOrEmpty(m_PrefKey)) return;
+        if (m_Orientation == Orientation.Horizontal)
+        {
+            var parentSize = Mathf.Max(1f, m_Parent.resolvedStyle.width);
+            var size = m_FirstPanel.resolvedStyle.width; // flexBasis reflected
+            var ratio = Mathf.Clamp01(size / parentSize);
+            EditorPrefs.SetFloat(m_PrefKey, ratio);
+        }
+        else
+        {
+            var parentSize = Mathf.Max(1f, m_Parent.resolvedStyle.height);
+            var size = m_SecondPanel.resolvedStyle.height;
+            var ratio = Mathf.Clamp01(size / parentSize);
+            EditorPrefs.SetFloat(m_PrefKey, ratio);
+        }
     }
 }

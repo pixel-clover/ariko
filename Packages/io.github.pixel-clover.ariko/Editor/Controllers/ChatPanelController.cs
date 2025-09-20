@@ -483,20 +483,7 @@ public class ChatPanelController
         foreach (var asset in chatController.ManuallyAttachedAssets)
         {
             var chip = new VisualElement();
-            chip.style.flexDirection = FlexDirection.Row;
-            chip.style.alignItems = Align.Center;
-            chip.style.marginTop = 2;
-            chip.style.marginBottom = 2;
-            chip.style.marginRight = 4;
-            chip.style.paddingLeft = 6;
-            chip.style.paddingRight = 4;
-            chip.style.paddingTop = 2;
-            chip.style.paddingBottom = 2;
-            chip.style.backgroundColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
-            chip.style.borderTopLeftRadius = 6;
-            chip.style.borderTopRightRadius = 6;
-            chip.style.borderBottomLeftRadius = 6;
-            chip.style.borderBottomRightRadius = 6;
+            chip.AddToClassList("attachment-chip");
 
             var icon = new Image();
             var content = EditorGUIUtility.ObjectContent(asset, asset.GetType());
@@ -504,9 +491,7 @@ public class ChatPanelController
             {
                 icon.image = tex;
                 icon.scaleMode = ScaleMode.ScaleToFit;
-                icon.style.width = 16;
-                icon.style.height = 16;
-                icon.style.marginRight = 4;
+                icon.AddToClassList("attachment-chip__icon");
             }
 
             var nameLabel = new Label(asset.name);
@@ -519,8 +504,7 @@ public class ChatPanelController
                 chatController.ManuallyAttachedAssets.Remove(asset);
                 UpdateManualAttachmentsList();
             }) { text = "x" };
-            removeButton.style.width = 18;
-            removeButton.style.height = 18;
+            removeButton.AddToClassList("attachment-chip__remove");
 
             chip.Add(icon);
             chip.Add(nameLabel);

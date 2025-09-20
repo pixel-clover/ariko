@@ -59,8 +59,8 @@
 
                 <ui:Foldout text="API" value="true">
                     <ui:Label text="API Keys are read from environment variables first." class="help-box"/>
-                    <ui:TextField label="Google API Key" name="google-api-key"/>
-                    <ui:TextField label="OpenAI API Key" name="openai-api-key"/>
+                    <ui:TextField label="Google API Key" name="google-api-key" isPasswordField="true"/>
+                    <ui:TextField label="OpenAI API Key" name="openai-api-key" isPasswordField="true"/>
                     <ui:TextField label="Ollama URL" name="ollama-url"/>
                 </ui:Foldout>
 
@@ -94,6 +94,7 @@
 
         <uie:Toolbar>
             <ui:VisualElement style="flex-grow: 1;"/>
+            <ui:Label name="thinking-indicator" text="Thinking" style="display: none; margin-right: 10px;"/>
             <ui:Label name="status-label" text="Ready" class="status-label"/>
         </uie:Toolbar>
     </ui:VisualElement>

@@ -7,10 +7,12 @@
     --button-text-color: rgb(255, 255, 255);
     --user-message-background-color: rgb(50, 70, 130);
     --ariko-message-background-color: rgb(55, 55, 55);
-    --code-block-background-color: rgb(220, 220, 220);
-    --code-block-header-background-color: rgb(220, 220, 220);
+    --code-block-background-color: rgb(32, 32, 32);
+    --code-block-header-background-color: rgb(38, 38, 38);
     --toolbar-background-color: rgb(50, 50, 50);
     --separator-color: rgb(70, 70, 70);
+    --danger-color: rgb(200, 70, 70);
+    --danger-color-hover: rgb(170, 55, 55);
 }
 
 .unity-editor-light-theme {
@@ -18,14 +20,16 @@
     --text-color: rgb(30, 30, 30);
     --input-background-color: rgb(240, 240, 240);
     --input-border-color: rgb(220, 220, 220);
-    --button-background-color: rgb(210, 225, 255);
-    --button-text-color: rgb(30, 30, 80);
+    --button-background-color: rgb(65, 115, 255);
+    --button-text-color: rgb(255, 255, 255);
     --user-message-background-color: rgb(230, 235, 255);
     --ariko-message-background-color: rgb(245, 245, 245);
-    --code-block-background-color: rgb(220, 220, 220);
-    --code-block-header-background-color: rgb(200, 200, 200);
+    --code-block-background-color: rgb(245, 245, 245);
+    --code-block-header-background-color: rgb(232, 232, 232);
     --toolbar-background-color: rgb(230, 230, 230);
     --separator-color: rgb(210, 210, 210);
+    --danger-color: rgb(210, 80, 80);
+    --danger-color-hover: rgb(185, 65, 65);
 }
 
 #main-container {
@@ -37,6 +41,12 @@
     color: var(--text-color);
     opacity: 0.7;
     margin-right: 8px;
+    font-size: 12px;
+}
+
+#thinking-indicator {
+    color: var(--text-color);
+    opacity: 0.6;
     font-size: 12px;
 }
 
@@ -78,24 +88,24 @@
 
 .chat-message {
     padding: 12px;
-    border-radius: 18px; /* More rounded corners */
+    border-radius: 18px;
     margin-bottom: 10px;
     white-space: normal;
-    max-width: 85%; /* Slightly less wide */
+    max-width: 85%;
     color: var(--text-color);
 }
 
 .user-message {
     background-color: var(--user-message-background-color);
-    align-self: flex-end; /* Align to the right */
-    border-bottom-right-radius: 4px; /* Google Chat style */
-    margin-left: 15%; /* Ensure it doesn't overlap */
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    margin-left: 15%;
 }
 
 .ariko-message {
     background-color: var(--ariko-message-background-color);
-    align-self: flex-start; /* Align to the left */
-    border-bottom-left-radius: 4px; /* Google Chat style */
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
     margin-right: 15%;
 }
 
@@ -115,8 +125,8 @@
     flex-direction: row;
     align-items: center;
     padding: 10px;
-    min-height: 110px;
-    max-height: 110px;
+    min-height: 90px;
+    max-height: 220px;
     border-top-width: 1px;
     border-top-color: var(--input-border-color);
 }
@@ -124,7 +134,7 @@
 #footer {
     flex-grow: 0;
     flex-shrink: 0;
-    min-height: 60px;
+    min-height: 80px;
 }
 
 .boxed-input {
@@ -132,33 +142,44 @@
     color: var(--text-color);
     border-color: var(--input-border-color);
     border-width: 1px;
-    border-radius: 20px; /* Rounded corners */
+    border-radius: 12px;
     padding: 0;
     flex-grow: 1;
     flex-basis: 0;
     font-size: 14px;
     white-space: normal;
-    min-height: 40px; /* Ensure it has a minimum height */
-    align-self: stretch; /* Stretch to fill parent height */
-    position: relative; /* enable absolute placeholder */
+    min-height: 40px;
+    align-self: stretch;
+    position: relative;
 }
 
 .boxed-input .unity-text-field__input {
     -unity-text-align: upper-left;
     margin: 0;
-    padding: 10px 15px; /* More padding */
+    padding: 10px 12px;
     background-color: transparent;
     border-width: 0;
 }
 
 .send-button, .cancel-button {
-    background-color: var(--button-background-color);
     color: var(--button-text-color);
-    border-radius: 20px; /* Rounded corners */
+    border-radius: 8px;
     margin-left: 10px;
-    height: 40px;
+    height: 36px;
     flex-shrink: 0;
-    padding: 0 15px;
+    padding: 0 14px;
+}
+
+.send-button {
+    background-color: var(--button-background-color);
+}
+
+.cancel-button {
+    background-color: var(--danger-color);
+}
+
+.cancel-button:hover {
+    background-color: var(--danger-color-hover);
 }
 
 .code-block-container {
@@ -337,15 +358,23 @@
 }
 
 .splitter {
-    width: 2px;
+    width: 3px;
     background-color: var(--separator-color);
     cursor: resize-horizontal;
 }
 
+.splitter:hover {
+    background-color: var(--button-background-color);
+}
+
 .vertical-splitter {
-    height: 2px;
+    height: 3px;
     background-color: var(--separator-color);
     cursor: resize-vertical;
+}
+
+.vertical-splitter:hover {
+    background-color: var(--button-background-color);
 }
 
 .history-panel {
@@ -397,12 +426,12 @@
 }
 
 .history-item-label {
-    flex-grow: 1;
     color: var(--text-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     padding: 10px 0;
+    flex-grow: 1;
 }
 
 .history-item-delete-button {
@@ -479,6 +508,68 @@
     top: 8px;
     color: var(--text-color);
     opacity: 0.4;
-    pointer-events: none;
     font-size: 14px;
+}
+
+/* Attachments UI */
+.attachment-box {
+    border-top-width: 1px;
+    border-top-color: var(--separator-color);
+    padding: 8px 10px 4px 10px;
+    /* background subtle tint fallback */
+    background-color: var(--toolbar-background-color);
+}
+
+#manual-attachments-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.attachment-chip {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    margin-right: 6px;
+    padding-left: 6px;
+    padding-right: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    background-color: var(--input-background-color);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.attachment-chip__icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}
+
+.attachment-chip__remove {
+    width: 18px;
+    height: 18px;
+}
+
+/* Help box in settings */
+.help-box {
+    opacity: 0.8;
+    font-size: 12px;
+    padding: 6px 8px;
+    border-left-width: 3px;
+    border-left-color: var(--button-background-color);
+    background-color: var(--input-background-color);
+    margin-bottom: 6px;
+}
+
+/* Empty suggestions buttons */
+#empty-suggestions Button, .empty-suggestions Button {
+    height: 22px;
+    font-size: 11px;
+    border-radius: 11px;
+    background-color: var(--input-background-color);
+    color: var(--text-color);
 }

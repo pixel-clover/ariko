@@ -116,6 +116,7 @@ public class ArikoWindow : EditorWindow
 
             await FetchModelsForCurrentProviderAsync(providerPopup.value);
         }
+        UpdateFooterMetadata();
     }
 
     [MenuItem("Tools/Ariko Assistant %&a")]

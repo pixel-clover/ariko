@@ -69,11 +69,11 @@ public class ToolRegistryTests
         var toolRegistry = new ToolRegistry(settings, "Agent");
 
         // Act
-        var tool = toolRegistry.GetTool("create_file");
+        var tool = toolRegistry.GetTool("CreateFile");
 
         // Assert
         Assert.IsNotNull(tool);
-        Assert.AreEqual("create_file", tool.Name);
+        Assert.AreEqual("CreateFile", tool.Name);
     }
 
     [Test]

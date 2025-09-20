@@ -7,8 +7,8 @@
     --button-text-color: rgb(255, 255, 255);
     --user-message-background-color: rgb(50, 70, 130);
     --ariko-message-background-color: rgb(55, 55, 55);
-    --code-block-background-color: rgb(32, 32, 32);
-    --code-block-header-background-color: rgb(38, 38, 38);
+    --code-block-background-color: rgb(245, 245, 245);
+    --code-block-header-background-color: rgb(245, 245, 245);
     --toolbar-background-color: rgb(50, 50, 50);
     --separator-color: rgb(70, 70, 70);
     --danger-color: rgb(200, 70, 70);

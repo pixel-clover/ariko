@@ -143,6 +143,8 @@ public class ChatPanelController
     {
         chatController.OnMessageAdded += (message, session) => HandleMessageAdded(message, session);
         chatController.OnChatCleared += HandleChatCleared;
+        chatController.OnChatReloaded += HandleChatReloaded;
+        chatController.OnError += HandleError;
         chatController.OnResponseStatusChanged += SetResponsePending;
 
         sendButton.clicked += SendMessage;

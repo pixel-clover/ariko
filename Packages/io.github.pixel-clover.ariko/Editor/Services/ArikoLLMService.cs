@@ -218,7 +218,28 @@ public class ArikoLLMService
                 EditorApplication.update -= Tick;
                 try
                 {
+                    // Flush any partial buffered line to ensure last delta is processed
+                    try
+                    {
+                        var flush = strategy.ParseChatResponseStream("\n");
+                        if (!string.IsNullOrEmpty(flush))
+                        {
+                            aggregate.Append(flush);
+                            try { onChunk?.Invoke(flush); } catch { /* ignore UI errors */ }
+                        }
+                    }
+                    catch { /* ignore parser errors on flush */ }
+
                     var finalResult = HandleApiResponse(request, _ => aggregate.ToString());
+
+                    // If the HTTP request reported success but we parsed no content, report a parsing error
+                    if (finalResult.IsSuccess && string.IsNullOrEmpty(aggregate.ToString()))
+                    {
+                        finalResult = WebRequestResult<string>.Fail(
+                            "Empty response from the model. The stream may have been parsed incorrectly.",
+                            ErrorType.Parsing);
+                    }
+
                     onComplete?.Invoke(finalResult);
                 }
                 finally

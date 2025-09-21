@@ -84,6 +84,13 @@ public class ArikoSettings : ScriptableObject
     [Tooltip("Enables agent tools for deleting files and GameObjects. Disabled by default for safety.")]
     public bool enableDeleteTools;
 
+    [Header("Debug")]
+    /// <summary>
+    ///     Enables debug logging to the Unity console.
+    /// </summary>
+    [Tooltip("Enables debug logging to the Unity console.")]
+    public bool debugMode;
+
     [Header("System Prompt")]
     /// <summary>
     /// The initial instruction given to the AI at the start of each new conversation in "Ask" mode.

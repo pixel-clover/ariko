@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using UnityEngine;
 
 /// <summary>
 ///     Manages the agentic workflow, including interpreting LLM responses as tool calls,
@@ -66,7 +67,12 @@ public class AgentService
             systemPromptBuilder.AppendLine(context);
         }
 
-        messagesToSend.Add(new ChatMessage { Role = "System", Content = systemPromptBuilder.ToString() });
+        var systemPrompt = systemPromptBuilder.ToString();
+        if (settings.debugMode)
+        {
+            Debug.Log($"<color=cyan>[Ariko Debug]</color> Sending system prompt:\n{systemPrompt}");
+        }
+        messagesToSend.Add(new ChatMessage { Role = "System", Content = systemPrompt });
         messagesToSend.AddRange(sessionForThisMessage.Messages);
 
         var provider = (ArikoLLMService.AIProvider)Enum.Parse(typeof(ArikoLLMService.AIProvider), selectedProvider);
@@ -75,8 +81,16 @@ public class AgentService
 
         if (result.IsSuccess)
         {
+            if (settings.debugMode)
+            {
+                Debug.Log($"<color=cyan>[Ariko Debug]</color> Received response:\n{result.Data}");
+            }
             if (TryParseToolCall(result.Data, out var toolCall))
             {
+                if (settings.debugMode)
+                {
+                    Debug.Log($"<color=cyan>[Ariko Debug]</color> Parsed tool call: {JsonConvert.SerializeObject(toolCall, Formatting.Indented)}");
+                }
                 pendingToolCall = toolCall;
                 onToolCallConfirmationRequested?.Invoke(toolCall);
             }
@@ -125,6 +139,10 @@ public class AgentService
             else
             {
                 executionResult = $"Error: Tool '{toolCall.tool_name}' not found.";
+            }
+            if (settings.debugMode)
+            {
+                Debug.Log($"<color=cyan>[Ariko Debug]</color> Tool execution result: {executionResult}");
             }
 
             var resultMessage = new ChatMessage { Role = "User", Content = $"Observation: {executionResult}" };

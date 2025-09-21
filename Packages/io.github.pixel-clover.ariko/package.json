@@ -10,5 +10,6 @@
     "author": {
         "name": "Pixel Clover",
         "email": "hassan.abedi.t+pixelclover@gmail.com"
-    }
+    },
+  "license": "MIT"
 }
